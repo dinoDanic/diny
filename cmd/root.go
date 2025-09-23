@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE dino.danic@gmail.com
-
 */
 package cmd
 
@@ -10,21 +9,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "diny",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Generate meaningful commit messages from git diff using AI",
+	Long: `diny is a simple CLI tool that analyzes your git diff 
+and generates commit messages using AI. 
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+It helps you maintain clean, consistent commit history without 
+spending time manually writing messages.
+
+Examples:
+  # Generate a commit message for staged changes
+  diny commit
+
+  # Generate a commit message in Croatian
+  diny commit --lang hr
+
+  # Customize the style (short, detailed, conventional)
+  diny commit --style conventional`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -47,5 +50,3 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-

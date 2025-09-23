@@ -72,7 +72,6 @@ Example:
 
 		fmt.Printf("Generated commit message:\n%s\n", commitMessage)
 
-		// Ask user for confirmation using Bubbletea
 		confirmed := confirmPrompt("Do you want to commit with this message?")
 
 		if confirmed {
