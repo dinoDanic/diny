@@ -52,12 +52,10 @@ Example:
 		gitDiffLen := len(gitDiff)
 		cleanDiffLen := len(cleanDiff)
 
-		fmt.Print("clean dif", cleanDiff)
-
 		fmt.Printf("Raw git diff: %d chars, Clean content: %d chars\n", gitDiffLen, cleanDiffLen)
-		if gitDiffLen > 2000 {
-			fmt.Println("Large changeset detected, but cleaned content should be more manageable.")
-			// os.Exit(1)
+
+		if cleanDiffLen > 2000 {
+			fmt.Println("Large changeset detected, it will take some time, hold tight!")
 		}
 
 		if cleanDiffLen == 0 {
