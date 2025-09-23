@@ -12,11 +12,10 @@ type Style string
 type Tone string
 type Length string
 
-// Style constants
+// Style constants (for non-conventional styles)
 const (
-	Conventional Style = "conventional"
-	Gitmoji      Style = "gitmoji"
-	Simple       Style = "simple"
+	Gitmoji Style = "gitmoji"
+	Simple  Style = "simple"
 )
 
 // Tone constants
@@ -34,15 +33,17 @@ const (
 )
 
 type UserConfig struct {
-	Style  Style  `json:"style"`
-	Tone   Tone   `json:"tone"`
-	Length Length `json:"length"`
+	Style        Style  `json:"style"`
+	Conventional bool   `json:"conventional"`
+	Tone         Tone   `json:"tone"`
+	Length       Length `json:"length"`
 }
 
 var defaultUserConfig = UserConfig{
-	Style:  Conventional,
-	Tone:   Professional,
-	Length: Short,
+	Style:        Gitmoji,
+	Conventional: true,
+	Tone:         Casual,
+	Length:       Normal,
 }
 
 func findGitRoot() (string, error) {

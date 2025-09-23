@@ -32,28 +32,41 @@ Rules:
 - Write only the commit message, no code snippets or explanations
 - Focus on what changed and why`
 
-	if userConfig.Length == config.Short {
+	switch userConfig.Length {
+	case config.Short:
 		prompt += "\n- Keep it under 50 characters"
-	} else if userConfig.Length == config.Normal {
+	case config.Normal:
 		prompt += "\n- Keep it concise but descriptive, around 50-72 characters"
-	} else if userConfig.Length == config.Long {
+	case config.Long:
 		prompt += "\n- Write a detailed message explaining the changes"
+	default:
+		panic(fmt.Sprintf("unhandled Length value: %v", userConfig.Length))
 	}
 
-	if userConfig.Style == config.Conventional {
+	// Handle conventional commits as boolean (can be mixed with other styles)
+	if userConfig.Conventional {
 		prompt += "\n- Use conventional commit format with type prefix like feat:, fix:, docs:"
-	} else if userConfig.Style == config.Gitmoji {
-		prompt += "\n- Start with an appropriate emoji"
-	} else if userConfig.Style == config.Simple {
-		prompt += "\n- Use simple, clear language without prefixes"
 	}
 
-	if userConfig.Tone == config.Casual {
-		prompt += "\n- Use casual language"
-	} else if userConfig.Tone == config.Friendly {
-		prompt += "\n- Use warm, approachable language"
-	} else {
+	// Handle other style options
+	switch userConfig.Style {
+	case config.Gitmoji:
+		prompt += "\n- Start with an appropriate emoji"
+	case config.Simple:
+		prompt += "\n- Use simple, clear language without prefixes"
+	default:
+		panic(fmt.Sprintf("unhandled Style value: %v", userConfig.Style))
+	}
+
+	switch userConfig.Tone {
+	case config.Professional:
 		prompt += "\n- Use professional language"
+	case config.Casual:
+		prompt += "\n- Use casual language"
+	case config.Friendly:
+		prompt += "\n- Use warm, approachable language"
+	default:
+		panic(fmt.Sprintf("unhandled Tone value: %v", userConfig.Tone))
 	}
 
 	prompt += "\n\nHere is the git diff:\n\n"
