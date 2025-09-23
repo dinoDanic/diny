@@ -60,15 +60,14 @@ Examples:
 			os.Exit(0)
 		}
 
-		fmt.Println("🦖 Diny is generating your commit message...")
-
 		commitMessage, err := ollama.Main(cleanDiff)
 		if err != nil {
 			fmt.Printf("💥 Error generating commit message: %v\n", err)
 			os.Exit(1)
 		}
-
-		fmt.Printf("\n📝 Suggested commit message:\n\n%s\n\n", commitMessage)
+		fmt.Printf("\n")
+		fmt.Printf("\n")
+		fmt.Printf("\n🦖 Suggested commit message:\n\n%s\n\n", commitMessage)
 
 		confirmed := confirmPrompt("👉 Do you want to commit with this message?")
 

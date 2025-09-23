@@ -47,7 +47,9 @@ Stage your changes, then run:
 
 ## Roadmap
 
-- 🌐 Language & style flags (--lang, --style)
-- ⚙️ Per-user/project config
-- ⏳ Streaming output
-- 🪝 Git hook integration
+- 🌐 Language & style flags (--lang, --style)  
+- ⏳ Streaming output (see the message as it’s generated)  
+- ⚙️ Per-user/project config  
+- 📦 Installation via popular package managers (Homebrew, Scoop, apt, etc.)  
+- ✍️ Edit message before committing  
+- 🔄 Request a new alternative message if not happy with the first one  
