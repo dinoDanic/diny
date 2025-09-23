@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
+
+	"diny/config"
 )
 
 const server = "http://127.0.0.1:11434"
@@ -24,87 +24,45 @@ type GenerateResponse struct {
 	Done     bool   `json:"done"`
 }
 
-type UserConfig struct {
-	Language string `json:"language"` // Options: "English", "Spanish", "French", "German", "Portuguese", "Italian", "Chinese", "Japanese"
-	Style    string `json:"style"`    // Options: "conventional", "gitmoji", "simple"
-	Tone     string `json:"tone"`     // Options: "professional", "casual", "friendly"
-}
+func buildSystemPrompt(userConfig config.UserConfig) string {
+	prompt := `You are an expert at writing Git commit messages. Generate a clear commit message based on the provided git diff. 
 
-var defaultUserConfig = UserConfig{
-	Language: "English",
-	Style:    "conventional",
-	Tone:     "professional",
-}
+Rules:
+- Use imperative mood
+- Write only the commit message, no code snippets or explanations
+- Focus on what changed and why`
 
-func findGitRoot() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
+	if userConfig.Length == config.Short {
+		prompt += "\n- Keep it under 50 characters"
+	} else if userConfig.Length == config.Normal {
+		prompt += "\n- Keep it concise but descriptive, around 50-72 characters"
+	} else if userConfig.Length == config.Long {
+		prompt += "\n- Write a detailed message explaining the changes"
 	}
 
-	for {
-		gitPath := filepath.Join(dir, ".git")
-		if _, err := os.Stat(gitPath); err == nil {
-			return dir, nil
-		}
-
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", fmt.Errorf("not in a git repository")
-		}
-		dir = parent
-	}
-}
-
-func loadUserConfig() UserConfig {
-	gitRoot, err := findGitRoot()
-	if err != nil {
-		return defaultUserConfig
+	if userConfig.Style == config.Conventional {
+		prompt += "\n- Use conventional commit format with type prefix like feat:, fix:, docs:"
+	} else if userConfig.Style == config.Gitmoji {
+		prompt += "\n- Start with an appropriate emoji"
+	} else if userConfig.Style == config.Simple {
+		prompt += "\n- Use simple, clear language without prefixes"
 	}
 
-	configPath := filepath.Join(gitRoot, ".diny.json")
-	data, err := os.ReadFile(configPath)
-	if err != nil {
-		return defaultUserConfig
-	}
-
-	var config UserConfig
-	if err := json.Unmarshal(data, &config); err != nil {
-		return defaultUserConfig
-	}
-
-	return config
-}
-
-func buildSystemPrompt(userConfig UserConfig) string {
-	prompt := `You are an expert at writing Git commit messages. Generate a concise, clear commit message based on the provided git diff. The message should:
-- Be in imperative mood (e.g., "Add feature" not "Added feature")
-- Be under 50 characters for the subject line
-- Focus on the "what" and "why", not the "how"`
-
-	if userConfig.Style == "conventional" {
-		prompt += "\n- Follow conventional commit format with type prefix (feat:, fix:, docs:, etc.)"
-	} else if userConfig.Style == "gitmoji" {
-		prompt += "\n- Include appropriate emoji at the beginning (✨ for new features, 🐛 for bug fixes, etc.)"
-	} else if userConfig.Style == "simple" {
-		prompt += "\n- Use simple, descriptive format without prefixes"
-	}
-
-	if userConfig.Tone == "casual" {
-		prompt += "\n- Use a casual, friendly tone"
-	} else if userConfig.Tone == "friendly" {
-		prompt += "\n- Use a warm, approachable tone"
+	if userConfig.Tone == config.Casual {
+		prompt += "\n- Use casual language"
+	} else if userConfig.Tone == config.Friendly {
+		prompt += "\n- Use warm, approachable language"
 	} else {
-		prompt += "\n- Use a professional tone"
+		prompt += "\n- Use professional language"
 	}
 
-	prompt += fmt.Sprintf("\n\nPlease respond in %s language.\n\nHere is the git diff:\n\n", userConfig.Language)
+	prompt += "\n\nHere is the git diff:\n\n"
 
 	return prompt
 }
 
 func Main(gitdiff string) (string, error) {
-	userConfig := loadUserConfig()
+	userConfig := config.Load()
 	systemPrompt := buildSystemPrompt(userConfig)
 
 	req := GenerateRequest{

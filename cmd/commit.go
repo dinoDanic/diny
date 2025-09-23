@@ -35,6 +35,7 @@ Example:
 			":(exclude)node_modules/", ":(exclude)dist/", ":(exclude)build/")
 
 		gitDiff, err := gitDiffCmd.Output()
+
 		if err != nil {
 			fmt.Printf("Error getting git diff: %v\n", err)
 			os.Exit(1)
