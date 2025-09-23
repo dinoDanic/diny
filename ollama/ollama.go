@@ -25,7 +25,7 @@ type GenerateResponse struct {
 }
 
 func buildSystemPrompt(userConfig config.UserConfig) string {
-	prompt := `You are an expert at writing Git commit messages. Generate a clear commit message based on the provided git diff. 
+	prompt := `You are an expert at writing Git commit messages. Generate a clear commit message based on the provided git diff in English language. 
 
 Rules:
 - Use imperative mood
