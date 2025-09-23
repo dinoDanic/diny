@@ -91,7 +91,8 @@ func Main(gitdiff string) (string, error) {
 		return "", fmt.Errorf("error marshaling JSON: %v", err)
 	}
 
-	fmt.Printf("loading..")
+	fmt.Println("⏳ Loading your commit message...")
+	fmt.Println("🐢 My tiny server is thinking hard, thanks for your patience!")
 
 	resp, err := http.Post(server+"/api/generate", "application/json", bytes.NewBuffer(jsonData))
 

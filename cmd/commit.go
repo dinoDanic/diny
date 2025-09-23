@@ -1,6 +1,3 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -16,16 +13,18 @@ import (
 // commitCmd represents the commit command
 var commitCmd = &cobra.Command{
 	Use:   "commit",
-	Short: "Generate AI-powered commit messages from staged changes",
-	Long: `Generate intelligent commit messages using AI based on your staged git changes.
-	
-This command analyzes your staged git changes and uses AI to generate a concise,
-well-formatted commit message following best practices.
+	Short: "🦖 Generate AI-powered commit messages from staged changes",
+	Long: `Diny analyzes your staged git changes and generates clear,
+well-formatted commit messages using AI. 
 
-Example:
-  diny commit`,
+This helps you keep a clean, consistent commit history with less effort.
+
+Examples:
+  diny commit
+  diny commit --lang hr
+  diny commit --style conventional`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Use optimized git diff with built-in filtering
+		// Optimized git diff (ignores noise like lock files, binaries, etc.)
 		gitDiffCmd := exec.Command("git", "diff", "--cached",
 			"-U0", "--no-color", "--ignore-all-space", "--ignore-blank-lines",
 			"--diff-filter=AM", // Only Added and Modified files
@@ -36,54 +35,53 @@ Example:
 			":(exclude)node_modules/", ":(exclude)dist/", ":(exclude)build/")
 
 		gitDiff, err := gitDiffCmd.Output()
-
 		if err != nil {
-			fmt.Printf("Error getting git diff: %v\n", err)
+			fmt.Printf("❌ Failed to get git diff: %v\n", err)
 			os.Exit(1)
 		}
 
 		if len(gitDiff) == 0 {
-			fmt.Println("No staged changes found. Please stage your changes with 'git add' first.")
-			os.Exit(1)
+			fmt.Println("🦴 No staged changes found. Stage files first with `git add`.")
+			os.Exit(0)
 		}
 
 		cleanDiff := slimdiff.CleanForAI(string(gitDiff))
-
 		gitDiffLen := len(gitDiff)
 		cleanDiffLen := len(cleanDiff)
 
-		fmt.Printf("Raw git diff: %d chars, Clean content: %d chars\n", gitDiffLen, cleanDiffLen)
+		fmt.Printf("📏 Diff size → Raw: %d chars | Cleaned: %d chars\n", gitDiffLen, cleanDiffLen)
 
 		if cleanDiffLen > 2000 {
-			fmt.Println("Large changeset detected, it will take some time, hold tight!")
+			fmt.Println("⚠️ Large changeset detected — this may take longer to process ⏳")
 		}
 
 		if cleanDiffLen == 0 {
-			fmt.Println("No meaningful content changes detected in the diff.")
-			os.Exit(1)
+			fmt.Println("🌱 No meaningful content detected in the diff.")
+			os.Exit(0)
 		}
+
+		fmt.Println("🦖 Diny is generating your commit message...")
 
 		commitMessage, err := ollama.Main(cleanDiff)
-
 		if err != nil {
-			fmt.Printf("Error generating commit message: %v\n", err)
+			fmt.Printf("💥 Error generating commit message: %v\n", err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("Generated commit message:\n%s\n", commitMessage)
+		fmt.Printf("\n📝 Suggested commit message:\n\n%s\n\n", commitMessage)
 
-		confirmed := confirmPrompt("Do you want to commit with this message?")
+		confirmed := confirmPrompt("👉 Do you want to commit with this message?")
 
 		if confirmed {
 			commitCmd := exec.Command("git", "commit", "-m", commitMessage)
 			err := commitCmd.Run()
 			if err != nil {
-				fmt.Printf("Error committing: %v\n", err)
+				fmt.Printf("❌ Commit failed: %v\n", err)
 				os.Exit(1)
 			}
-			fmt.Println("✅ Committed successfully!")
+			fmt.Println("✅ Commit successfully added to history!")
 		} else {
-			fmt.Println("❌ Commit cancelled.")
+			fmt.Println("🚫 Commit cancelled.")
 		}
 	},
 }
