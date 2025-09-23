@@ -48,7 +48,7 @@ Example:
 
 		gitDiffLen := len(gitDiff)
 
-		fmt.Print("git diff len: ", gitDiffLen, "token")
+		fmt.Print("git diff len: ", gitDiffLen, " tokens")
 		fmt.Print("\n")
 		if gitDiffLen > 5000 {
 			fmt.Print("ohh this will take some time.. will optimaze it! hold tight!")
