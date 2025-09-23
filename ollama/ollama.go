@@ -10,7 +10,9 @@ import (
 	"diny/config"
 )
 
-const server = "http://127.0.0.1:11434"
+// const server = "http://127.0.0.1:11434"
+const server = "http://167.235.150.40"
+
 const model = "qwen2.5:7b-instruct"
 
 type GenerateRequest struct {

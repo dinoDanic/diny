@@ -66,6 +66,7 @@ Example:
 		}
 
 		commitMessage, err := ollama.Main(cleanDiff)
+
 		if err != nil {
 			fmt.Printf("Error generating commit message: %v\n", err)
 			os.Exit(1)
