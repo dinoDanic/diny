@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"diny/helpers"
 	"diny/ollama"
 	"fmt"
 	"os"
@@ -46,35 +47,25 @@ Example:
 			os.Exit(1)
 		}
 
+		cleanDiff := slimdiff.CleanForAI(string(gitDiff))
+
 		gitDiffLen := len(gitDiff)
+		cleanDiffLen := len(cleanDiff)
 
-		fmt.Print("git diff len: ", gitDiffLen, " tokens")
-		fmt.Print("\n")
-		if gitDiffLen > 5000 {
-			fmt.Print("ohh this will take some time.. will optimaze it! hold tight!")
+		fmt.Print("clean dif", cleanDiff)
+
+		fmt.Printf("Raw git diff: %d chars, Clean content: %d chars\n", gitDiffLen, cleanDiffLen)
+		if gitDiffLen > 2000 {
+			fmt.Println("Large changeset detected, but cleaned content should be more manageable.")
+			// os.Exit(1)
 		}
-		fmt.Print("\n")
 
-		// NOTE: this is lame, should optimaze somehow
-		// FALLBACK TO NAME ONLY
-		// Fallback to file names for very large diffs
-		// if len(gitDiff) > 8000 {
-		// 	stagedFilesCmd := exec.Command("git", "diff", "--cached", "--name-only")
-		// 	stagedFiles, err := stagedFilesCmd.Output()
-		// 	if err == nil && len(stagedFiles) > 0 {
-		// 		fmt.Println("Large changeset detected, using file summary.")
-		// 		files := strings.TrimSpace(string(stagedFiles))
-		// 		commitMessage, err := ollama.Main(fmt.Sprintf("Files modified: %s", files))
-		// 		if err != nil {
-		// 			fmt.Printf("Error generating commit message: %v\n", err)
-		// 			os.Exit(1)
-		// 		}
-		// 		fmt.Printf("Generated commit message:\n%s\n", commitMessage)
-		// 		return
-		// 	}
-		// }
+		if cleanDiffLen == 0 {
+			fmt.Println("No meaningful content changes detected in the diff.")
+			os.Exit(1)
+		}
 
-		commitMessage, err := ollama.Main(string(gitDiff))
+		commitMessage, err := ollama.Main(cleanDiff)
 		if err != nil {
 			fmt.Printf("Error generating commit message: %v\n", err)
 			os.Exit(1)
