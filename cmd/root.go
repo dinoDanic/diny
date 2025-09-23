@@ -18,16 +18,7 @@ and generates commit messages using AI.
 
 It helps you maintain clean, consistent commit history without 
 spending time manually writing messages.
-
-Examples:
-  # Generate a commit message for staged changes
-  diny commit
-
-  # Generate a commit message in Croatian
-  diny commit --lang hr
-
-  # Customize the style (short, detailed, conventional)
-  diny commit --style conventional`,
+`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
