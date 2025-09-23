@@ -91,10 +91,14 @@ func Main(gitdiff string) (string, error) {
 		return "", fmt.Errorf("error marshaling JSON: %v", err)
 	}
 
+	fmt.Printf("loading..")
+
 	resp, err := http.Post(server+"/api/generate", "application/json", bytes.NewBuffer(jsonData))
+
 	if err != nil {
 		return "", fmt.Errorf("error calling Ollama: %v", err)
 	}
+
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
