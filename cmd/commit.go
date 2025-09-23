@@ -4,9 +4,9 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"diny/helpers"
-	"diny/ollama"
 	"fmt"
+	"github.com/dinoDanic/diny/helpers"
+	"github.com/dinoDanic/diny/ollama"
 	"os"
 	"os/exec"
 

@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"diny/config"
+	"github.com/dinoDanic/diny/config"
 )
 
 // const server = "http://127.0.0.1:11434"
