@@ -27,11 +27,7 @@ Examples:
 		// Optimized git diff (ignores noise like lock files, binaries, etc.)
 		gitDiffCmd := exec.Command("git", "diff", "--cached",
 			"-U0", "--no-color", "--ignore-all-space", "--ignore-blank-lines",
-			"--diff-filter=AM", // Only Added and Modified files
 			":(exclude)*.lock", ":(exclude)*package-lock.json", ":(exclude)*yarn.lock",
-			":(exclude)*.min.js", ":(exclude)*.min.css", ":(exclude)*.bundle.js",
-			":(exclude)*.jpg", ":(exclude)*.jpeg", ":(exclude)*.png", ":(exclude)*.gif",
-			":(exclude)*.pdf", ":(exclude)*.zip", ":(exclude)*.exe", ":(exclude)*.dll",
 			":(exclude)node_modules/", ":(exclude)dist/", ":(exclude)build/")
 
 		gitDiff, err := gitDiffCmd.Output()
@@ -49,22 +45,32 @@ Examples:
 		gitDiffLen := len(gitDiff)
 		cleanDiffLen := len(cleanDiff)
 
-		fmt.Printf("📏 Diff size → Raw: %d chars | Cleaned: %d chars\n", gitDiffLen, cleanDiffLen)
-
 		if cleanDiffLen > 2000 {
 			fmt.Println("⚠️ Large changeset detected — this may take longer to process ⏳")
 		}
 
-		fmt.Println(".............................CLEAN..........................")
-		fmt.Println(cleanDiff)
-		fmt.Println(".............................CLEAN END..........................")
+		// fmt.Println(".............................ORGINAL..........................")
+		// fmt.Println(gitDiff)
+		// fmt.Println(".............................ORGINAL END..........................")
+		// fmt.Printf("\n")
+		// fmt.Printf("\n")
+		//
+		// fmt.Println(".............................CLEAN..........................")
+		// fmt.Println(cleanDiff)
+		// fmt.Println(".............................CLEAN END..........................")
+		//
+		// fmt.Printf("\n")
+		// fmt.Printf("\n")
+		fmt.Printf("📏 Diff size → Raw: %d chars | Cleaned: %d chars\n", gitDiffLen, cleanDiffLen)
 
 		if cleanDiffLen == 0 {
 			fmt.Println("🌱 No meaningful content detected in the diff.")
 			os.Exit(0)
 		}
 
-		commitMessage, err := ollama.Main(cleanDiff)
+		systemPrompt := slimdiff.BuildSystemPrompt()
+		fullPrompt := systemPrompt + cleanDiff
+		commitMessage, err := ollama.Main(fullPrompt)
 		if err != nil {
 			fmt.Printf("💥 Error generating commit message: %v\n", err)
 			os.Exit(1)
@@ -76,7 +82,7 @@ Examples:
 		confirmed := confirmPrompt("👉 Do you want to commit with this message?")
 
 		if confirmed {
-			commitCmd := exec.Command("git", "commit", "-m", commitMessage)
+			commitCmd := exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
 			err := commitCmd.Run()
 			if err != nil {
 				fmt.Printf("❌ Commit failed: %v\n", err)

@@ -41,9 +41,9 @@ type UserConfig struct {
 
 var defaultUserConfig = UserConfig{
 	Style:        Simple,
-	Conventional: false,
+	Conventional: true,
 	Tone:         Casual,
-	Length:       Normal,
+	Length:       Short,
 }
 
 func findGitRoot() (string, error) {
