@@ -43,13 +43,12 @@ var askCmd = &cobra.Command{
 
 		fmt.Printf("\n🤔 Thinking about: %s\n\n", prompt)
 
-		response, err := ollama.MainStream(prompt)
+		_, err := ollama.MainStream(prompt)
 		if err != nil {
 			fmt.Printf("❌ Error getting response: %v\n", err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("\n\n✨ Response: %s\n", response)
 	},
 }
 
