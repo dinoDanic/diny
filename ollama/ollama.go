@@ -10,9 +10,8 @@ import (
 	"strings"
 )
 
-const server = "http://127.0.0.1:11434"
-// const server = "http://167.235.150.40"
-
+// const server = "http://127.0.0.1:11434"
+const server = "http://167.235.150.40"
 
 const model = "qwen2.5:7b-instruct"
 
@@ -39,8 +38,6 @@ func MainStream(prompt string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("error marshaling JSON: %v", err)
 	}
-
-	fmt.Println("🐢 Generating commit message...")
 
 	resp, err := http.Post(server+"/api/generate", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {

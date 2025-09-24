@@ -8,15 +8,8 @@ import (
 )
 
 // Custom types for type safety
-type Style string
 type Tone string
 type Length string
-
-// Style constants (for non-conventional styles)
-const (
-	Gitmoji Style = "gitmoji"
-	Simple  Style = "simple"
-)
 
 // Tone constants
 const (
@@ -33,17 +26,17 @@ const (
 )
 
 type UserConfig struct {
-	Style        Style  `json:"style"`
-	Conventional bool   `json:"conventional"`
-	Tone         Tone   `json:"tone"`
-	Length       Length `json:"length"`
+	UseEmoji        bool   `json:"use_emoji"`
+	UseConventional bool   `json:"use_conventional"`
+	Tone            Tone   `json:"tone"`
+	Length          Length `json:"length"`
 }
 
-var defaultUserConfig = UserConfig{
-	Style:        Simple,
-	Conventional: true,
-	Tone:         Casual,
-	Length:       Short,
+var DefaultUserConfig = UserConfig{
+	UseEmoji:        true,
+	UseConventional: true,
+	Tone:            Casual,
+	Length:          Normal,
 }
 
 func findGitRoot() (string, error) {
@@ -69,19 +62,40 @@ func findGitRoot() (string, error) {
 func Load() UserConfig {
 	gitRoot, err := findGitRoot()
 	if err != nil {
-		return defaultUserConfig
+		return DefaultUserConfig
 	}
 
-	configPath := filepath.Join(gitRoot, ".diny.json")
+	configPath := filepath.Join(gitRoot, ".git", "diny-config.json")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return defaultUserConfig
+		return DefaultUserConfig
 	}
 
 	var config UserConfig
 	if err := json.Unmarshal(data, &config); err != nil {
-		return defaultUserConfig
+		return DefaultUserConfig
 	}
 
 	return config
+}
+
+func Save(config UserConfig) error {
+	gitRoot, err := findGitRoot()
+	if err != nil {
+		return fmt.Errorf("not in a git repository: %w", err)
+	}
+
+	configPath := filepath.Join(gitRoot, ".git", "diny-config.json")
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	err = os.WriteFile(configPath, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	return nil
 }
