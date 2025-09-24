@@ -3,7 +3,7 @@ module github.com/dinoDanic/diny
 go 1.25.1
 
 require (
-	github.com/charmbracelet/bubbletea v1.3.4
+	github.com/charmbracelet/bubbletea v1.3.4 // indirect
 	github.com/charmbracelet/huh v0.7.0
 	github.com/spf13/cobra v1.10.1
 )

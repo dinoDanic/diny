@@ -26,7 +26,6 @@ type GenerateResponse struct {
 	Done     bool   `json:"done"`
 }
 
-// MainStream generates a commit message with live streaming output
 func MainStream(prompt string) (string, error) {
 	req := GenerateRequest{
 		Model:  model,

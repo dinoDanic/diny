@@ -17,14 +17,12 @@ import (
 )
 
 const (
-	maxTotalBytes     = 200_000 // final hard cap
+	maxTotalBytes     = 200_000
 	maxFiles          = 25
 	maxHunksPerFile   = 6
-	maxLinesPerHunk   = 60
 	maxLineLen        = 400
 	trimmedMarker     = "… [trimmed]"
 	truncatedFileMark = "[… file truncated …]"
-	truncatedHunkMark = "[… hunk truncated …]"
 )
 
 // Common “noise” to ignore completely.

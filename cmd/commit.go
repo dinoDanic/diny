@@ -70,6 +70,7 @@ Examples:
 		fmt.Print("🐢 My tiny server is thinking hard, hold tight!")
 		fmt.Print("\n")
 		fmt.Print("\n")
+
 		commitMessage, err := ollama.MainStream(fullPrompt)
 
 		if err != nil {
