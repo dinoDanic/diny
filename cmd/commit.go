@@ -70,14 +70,12 @@ Examples:
 
 		systemPrompt := slimdiff.BuildSystemPrompt()
 		fullPrompt := systemPrompt + cleanDiff
-		commitMessage, err := ollama.Main(fullPrompt)
+		commitMessage, err := ollama.MainStream(fullPrompt)
 		if err != nil {
 			fmt.Printf("💥 Error generating commit message: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("\n")
-		fmt.Printf("\n")
-		fmt.Printf("\n🦖 Suggested commit message:\n\n%s\n\n", commitMessage)
+		fmt.Printf("\n\n🦖 Suggested commit message:\n\n%s\n\n", commitMessage)
 
 		confirmed := confirmPrompt("👉 Do you want to commit with this message?")
 
