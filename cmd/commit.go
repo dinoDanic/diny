@@ -55,6 +55,10 @@ Examples:
 			fmt.Println("⚠️ Large changeset detected — this may take longer to process ⏳")
 		}
 
+		fmt.Println(".............................CLEAN..........................")
+		fmt.Println(cleanDiff)
+		fmt.Println(".............................CLEAN END..........................")
+
 		if cleanDiffLen == 0 {
 			fmt.Println("🌱 No meaningful content detected in the diff.")
 			os.Exit(0)

@@ -40,7 +40,7 @@ type UserConfig struct {
 }
 
 var defaultUserConfig = UserConfig{
-	Style:        Gitmoji,
+	Style:        Simple,
 	Conventional: false,
 	Tone:         Casual,
 	Length:       Normal,
