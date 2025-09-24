@@ -48,8 +48,6 @@ Examples:
 		gitDiffLen := len(gitDiff)
 		cleanDiffLen := len(cleanDiff)
 
-		fmt.Printf("📏 Diff size → Raw: %d chars | Cleaned: %d chars\n", gitDiffLen, cleanDiffLen)
-
 		if cleanDiffLen > 2000 {
 			fmt.Println("⚠️ Large changeset detected — this may take longer to process ⏳")
 		}
@@ -59,13 +57,19 @@ Examples:
 			os.Exit(0)
 		}
 
-		fmt.Print("🐢 My tiny server is thinking hard, hold tight! \n")
-
 		userConfig := config.Load()
 
 		systemPrompt := slimdiff.BuildSystemPrompt(userConfig)
 		fullPrompt := systemPrompt + cleanDiff
 
+		fmt.Print("\n")
+		fmt.Printf("📏 Diff   size → Raw:     %d chars \n", gitDiffLen)
+		fmt.Printf("📏 Diff   size → Cleaned: %d chars \n", cleanDiffLen)
+		fmt.Printf("📏 Inst   size → Raw:     %d chars \n", len(systemPrompt))
+		fmt.Print("\n")
+		fmt.Print("🐢 My tiny server is thinking hard, hold tight!")
+		fmt.Print("\n")
+		fmt.Print("\n")
 		commitMessage, err := ollama.MainStream(fullPrompt)
 
 		if err != nil {
@@ -76,6 +80,9 @@ Examples:
 		if err != nil {
 			fmt.Printf("Error displaying message: %v\n", err)
 		}
+
+		fmt.Print("\n")
+		fmt.Print("\n")
 
 		confirmed := confirmPrompt("👉 Do you want to commit with this message?")
 
