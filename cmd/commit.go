@@ -48,21 +48,21 @@ Examples:
 		gitDiffLen := len(gitDiff)
 		cleanDiffLen := len(cleanDiff)
 
-		if cleanDiffLen > 2000 {
-			fmt.Println("⚠️ Large changeset detected — this may take longer to process ⏳")
-		}
-
-		if cleanDiffLen == 0 {
-			fmt.Println("🌱 No meaningful content detected in the diff.")
-			os.Exit(0)
-		}
-
 		userConfig := config.Load()
 
 		systemPrompt := slimdiff.BuildSystemPrompt(userConfig)
 		fullPrompt := systemPrompt + cleanDiff
 
 		fmt.Print("\n")
+		if cleanDiffLen > 2000 {
+			fmt.Println("⚠️ Large changeset detected — this may take longer to process ⏳")
+			fmt.Print("\n")
+		}
+
+		if cleanDiffLen == 0 {
+			fmt.Println("🌱 No meaningful content detected in the diff.")
+			os.Exit(0)
+		}
 		fmt.Printf("📏 Diff   size → Raw:     %d chars \n", gitDiffLen)
 		fmt.Printf("📏 Diff   size → Cleaned: %d chars \n", cleanDiffLen)
 		fmt.Printf("📏 Inst   size → Raw:     %d chars \n", len(systemPrompt))
