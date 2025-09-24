@@ -7,7 +7,7 @@
 //   - Keep only +/- lines (no context lines) with per-file/hunk caps.
 //   - Truncate very long lines and add ellipses.
 //   - Hard-cap total output size.
-package slimdiff
+package helpers
 
 import (
 	"bufio"

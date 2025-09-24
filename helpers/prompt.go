@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 NAME HERE dino.danic@gmail.com
 */
-package slimdiff
+package helpers
 
 import (
 	"github.com/dinoDanic/diny/config"
