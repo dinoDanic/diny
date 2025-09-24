@@ -12,6 +12,74 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// RunConfigurationSetup runs the interactive configuration setup and returns the config
+func RunConfigurationSetup() config.UserConfig {
+	// Start with default configuration values
+	userConfig := config.DefaultUserConfig
+
+	// Emoji confirmation
+	err := huh.NewConfirm().
+		Title("Use emoji prefixes in commit messages?").
+		Description("Add emojis like ✨ feat: or 🐛 fix: to commit messages").
+		Affirmative("Yes").
+		Negative("No").
+		Value(&userConfig.UseEmoji).
+		Run()
+
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Conventional commits confirmation
+	err = huh.NewConfirm().
+		Title("Use Conventional Commits format?").
+		Description("Format: type(scope): description").
+		Affirmative("Yes").
+		Negative("No").
+		Value(&userConfig.UseConventional).
+		Run()
+
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Tone selection
+	err = huh.NewSelect[config.Tone]().
+		Title("Choose your commit message tone").
+		Options(
+			huh.NewOption("Professional - formal and matter-of-fact", config.Professional),
+			huh.NewOption("Casual - light but clear", config.Casual),
+			huh.NewOption("Friendly - warm and approachable", config.Friendly),
+		).
+		Value(&userConfig.Tone).
+		Run()
+
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Length selection
+	err = huh.NewSelect[config.Length]().
+		Title("Choose your commit message length").
+		Options(
+			huh.NewOption("Short - subject only (no body)", config.Short),
+			huh.NewOption("Normal - subject + optional body (1-4 bullets)", config.Normal),
+			huh.NewOption("Long - subject + detailed body (2-6 bullets)", config.Long),
+		).
+		Value(&userConfig.Length).
+		Run()
+
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	return userConfig
+}
+
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize Diny configuration with an interactive setup",
@@ -25,75 +93,10 @@ This command will guide you through configuring your commit message preferences:
 
 The configuration will be saved to .git/diny-config.json in your git repository.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Start with default configuration values
-		userConfig := config.DefaultUserConfig
-
-		// Emoji confirmation - use proper confirm component
-		err := huh.NewConfirm().
-			Title("Use emoji prefixes in commit messages?").
-			Description("Add emojis like ✨ feat: or 🐛 fix: to commit messages").
-			Affirmative("Yes").
-			Negative("No").
-			Value(&userConfig.UseEmoji).
-			Run()
-
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("UseEmoji: %t\n", userConfig.UseEmoji)
-
-		// Conventional commits confirmation - use proper confirm component
-		err = huh.NewConfirm().
-			Title("Use Conventional Commits format?").
-			Description("Format: type(scope): description").
-			Affirmative("Yes").
-			Negative("No").
-			Value(&userConfig.UseConventional).
-			Run()
-
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("UseConventional: %t\n", userConfig.UseConventional)
-
-		// Tone selection - use actual config types
-		err = huh.NewSelect[config.Tone]().
-			Title("Choose your commit message tone").
-			Options(
-				huh.NewOption("Professional - formal and matter-of-fact", config.Professional),
-				huh.NewOption("Casual - light but clear", config.Casual),
-				huh.NewOption("Friendly - warm and approachable", config.Friendly),
-			).
-			Value(&userConfig.Tone).
-			Run()
-
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("Tone: %s\n", userConfig.Tone)
-
-		// Length selection - use actual config types
-		err = huh.NewSelect[config.Length]().
-			Title("Choose your commit message length").
-			Options(
-				huh.NewOption("Short - subject only (no body)", config.Short),
-				huh.NewOption("Normal - subject + optional body (1-4 bullets)", config.Normal),
-				huh.NewOption("Long - subject + detailed body (2-6 bullets)", config.Long),
-			).
-			Value(&userConfig.Length).
-			Run()
-
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Printf("Length: %s\n", userConfig.Length)
+		userConfig := RunConfigurationSetup()
 
 		// Save the configuration
-		err = config.Save(userConfig)
+		err := config.Save(userConfig)
 		if err != nil {
 			fmt.Printf("Error saving configuration: %v\n", err)
 			os.Exit(1)

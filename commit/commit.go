@@ -54,6 +54,14 @@ func Main(cmd *cobra.Command, args []string) {
 	fmt.Printf("📏 Diff   size → Cleaned: %d chars \n", cleanDiffLen)
 	fmt.Printf("📏 Inst   size → Raw:     %d chars \n", len(systemPrompt))
 	fmt.Print("\n")
+
+	// Print configuration
+	fmt.Println("⚙️  Configuration:")
+	fmt.Printf("   • Emoji: %t\n", userConfig.UseEmoji)
+	fmt.Printf("   • Conventional: %t\n", userConfig.UseConventional)
+	fmt.Printf("   • Tone: %s\n", userConfig.Tone)
+	fmt.Printf("   • Length: %s\n", userConfig.Length)
+	fmt.Print("\n")
 	fmt.Print("🐢 My tiny server is thinking hard, hold tight!")
 	fmt.Print("\n")
 	fmt.Print("\n")

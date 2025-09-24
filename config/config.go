@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/dinoDanic/diny/git"
 )
 
 // Custom types for type safety
@@ -39,28 +41,8 @@ var DefaultUserConfig = UserConfig{
 	Length:          Normal,
 }
 
-func findGitRoot() (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-
-	for {
-		gitPath := filepath.Join(dir, ".git")
-		if _, err := os.Stat(gitPath); err == nil {
-			return dir, nil
-		}
-
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", fmt.Errorf("not in a git repository")
-		}
-		dir = parent
-	}
-}
-
 func Load() UserConfig {
-	gitRoot, err := findGitRoot()
+	gitRoot, err := git.FindGitRoot()
 	if err != nil {
 		return DefaultUserConfig
 	}
@@ -80,7 +62,7 @@ func Load() UserConfig {
 }
 
 func Save(config UserConfig) error {
-	gitRoot, err := findGitRoot()
+	gitRoot, err := git.FindGitRoot()
 	if err != nil {
 		return fmt.Errorf("not in a git repository: %w", err)
 	}
