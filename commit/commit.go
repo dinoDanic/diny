@@ -25,7 +25,7 @@ func Main(cmd *cobra.Command, args []string) {
 	}
 
 	if len(gitDiff) == 0 {
-		fmt.Println("🦴 No staged changes found. Stage files first with `git add`.")
+		fmt.Println("🦕 No staged changes found. Stage files first with `git add`.")
 		os.Exit(0)
 	}
 

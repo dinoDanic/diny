@@ -1,4 +1,4 @@
-# 🦖 diny — git diff commit messages 
+# 🦕 diny — git diff commit messages 
 
 diny is a tiny dinosaur that writes your git commit messages for you.  
 It looks at your staged changes and generates clear, conventional-friendly messages using AI.
@@ -20,11 +20,13 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 ## Install
 
-Requires Go (1.21+):
+### Homebrew (macOS/Linux)
 
-    go install github.com/dinoDanic/diny@latest
+    brew install dinoDanic/tap/diny
 
-Make sure `~/go/bin` (or your $GOPATH/bin) is on your PATH.
+### Download Binary
+
+Download pre-built binaries from [GitHub Releases](https://github.com/dinoDanic/diny/releases)
 
 ---
 
@@ -45,11 +47,12 @@ Stage your changes, then run:
 
 ---
 
-## Roadmap
+## TODO
 
-- 🌐 Language & style flags (--lang, --style)  
-- ⏳ Streaming output (see the message as it’s generated)  
-- ⚙️ Per-user/project config  
-- 📦 Installation via popular package managers (Homebrew, Scoop, apt, etc.)  
-- ✍️ Edit message before committing  
-- 🔄 Request a new alternative message if not happy with the first one  
+- [ ] 🌐 Language & style flags (--lang, --style)  
+- [ ] ⏳ Streaming output (see the message as it’s generated)  
+- [ ] ⚙️ Per-user/project config  
+- [x] 📦 Installation via popular package managers (Homebrew, Scoop, apt, etc.)  
+- [ ] ✍️ Edit message before committing  
+- [ ] 🔄 Request a new alternative message if not happy with the first one
+- [ ] 🔧 Config file validation and error handling
