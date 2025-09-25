@@ -38,6 +38,7 @@ func Main(cmd *cobra.Command, args []string) {
 
 	config.PrintConfiguration(userConfig)
 
+	fmt.Println("🦕 Generating commit message...")
 	commitMessage, err := CreateCommitMessage(fullPrompt, userConfig)
 
 	if err != nil {
@@ -45,22 +46,33 @@ func Main(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Print("commit message:", commitMessage)
-	fmt.Print("\n")
-	fmt.Print("\n")
+	fmt.Println()
+	err = huh.NewNote().
+		Title("🦕 Generated Commit Message").
+		Description(commitMessage).
+		Run()
 
-	confirmed := confirmPrompt("👉 Do you want to commit with this message?")
+	if err != nil {
+		fmt.Printf("Error displaying message: %v\n", err)
+		// Fallback to simple output
+		fmt.Printf("🦕 Generated Commit Message:\n%s\n\n", commitMessage)
+	}
+
+	confirmed := confirmPrompt("🦕 Do you want to commit with this message?")
 
 	if confirmed {
+		fmt.Println("🦕 Creating commit...")
 		commitCmd := exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
 		err := commitCmd.Run()
 		if err != nil {
 			fmt.Printf("❌ Commit failed: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Println("✅ Commit successfully added to history!")
+		fmt.Println()
+		fmt.Println("🦕 Success! Commit added to history.")
 	} else {
-		fmt.Println("🚫 Commit cancelled.")
+		fmt.Println()
+		fmt.Println("🦕 Commit cancelled.")
 	}
 }
 
