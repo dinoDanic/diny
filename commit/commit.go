@@ -36,9 +36,11 @@ func Main(cmd *cobra.Command, args []string) {
 	systemPrompt := helpers.BuildSystemPrompt(userConfig)
 	fullPrompt := diff + systemPrompt
 
+	fmt.Println()
 	config.PrintConfiguration(userConfig)
-
+	fmt.Println()
 	fmt.Println("🦕 Generating commit message...")
+
 	commitMessage, err := CreateCommitMessage(fullPrompt, userConfig)
 
 	if err != nil {
@@ -47,9 +49,12 @@ func Main(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println()
-	fmt.Printf("🦕 Generated Commit Message:\n%s\n\n", commitMessage)
+	fmt.Print(commitMessage)
+	fmt.Println()
+	fmt.Println()
 
 	confirmed := confirmPrompt("🦕 Do you want to commit with this message?")
+	fmt.Println()
 
 	if confirmed {
 		fmt.Println("🦕 Creating commit...")
