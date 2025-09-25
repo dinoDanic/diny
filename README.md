@@ -21,6 +21,7 @@ It looks at your staged changes and generates clear, conventional-friendly messa
   - **Exit** - Cancel the process
 - 🧠 Smart regeneration that learns from previous attempts
 - ✍️ Custom feedback system for precise message refinement
+- 📊 Timeline analysis of commit history and message patterns
 
 ---
 
