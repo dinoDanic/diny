@@ -1,4 +1,4 @@
-# 🦖 diny — AI commit messages 
+# 🦖 diny — git diff commit messages 
 
 diny is a tiny dinosaur that writes your git commit messages for you.  
 It looks at your staged changes and generates clear, conventional-friendly messages using AI.
