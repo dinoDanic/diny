@@ -38,7 +38,7 @@ func Main(cmd *cobra.Command, args []string) {
 	userConfig := config.Load()
 
 	systemPrompt := helpers.BuildSystemPrompt(userConfig)
-	fullPrompt := systemPrompt + cleanDiff
+	fullPrompt := systemPrompt + string(gitDiff)
 
 	fmt.Print("\n")
 	if cleanDiffLen > 2000 {

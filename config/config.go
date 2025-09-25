@@ -35,10 +35,10 @@ type UserConfig struct {
 }
 
 var DefaultUserConfig = UserConfig{
-	UseEmoji:        true,
-	UseConventional: true,
+	UseEmoji:        false,
+	UseConventional: false,
 	Tone:            Casual,
-	Length:          Normal,
+	Length:          Short,
 }
 
 func Load() UserConfig {
