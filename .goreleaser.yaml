@@ -18,6 +18,8 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
+    ldflags:
+      - -X github.com/dinoDanic/diny/cmd.Version={{.Version}}
     goos:
       - linux
       - windows
