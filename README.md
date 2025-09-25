@@ -10,7 +10,7 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 ## Features
 
-- 🔍 Reads staged changes with `git diff --cached`
+- 🔍 Reads staged changes with `git diff`
 - 🧹 Filters out noise (lockfiles, binaries, build artifacts)
 - ⚡ Generates commit messages via Ollama
 - 📝 Produces concise, consistent messages
@@ -43,18 +43,11 @@ Stage your changes, then run:
     git add -A
     diny commit
 
----
+### Configuration (Optional)
 
-## How it works
+Configure diny settings for your project:
 
-1. Collects a minimal version of your git diff (ignores lockfiles, builds, binaries).
-2. Sends meaningful content to the Ollama model
-3. Presents an interactive menu with multiple options:
-   - **Commit** with the current message
-   - **Generate different message** for alternative approaches
-   - **Refine message** with your specific feedback
-4. Smart regeneration tracks previous attempts to avoid repetition
-5. Custom feedback allows you to guide the AI toward your preferred style
+    diny init
 
 ---
 
@@ -66,3 +59,4 @@ Stage your changes, then run:
 - [x] ✍️ Interactive workflow with commit options
 - [x] 🔄 Request alternative messages with smart regeneration
 - [x] ✨ Custom feedback system for message refinement
+- [ ] 🦥 Lazy git integration
