@@ -53,3 +53,19 @@ release:
     ---
 
     Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
+
+brews:
+  - name: diny
+    description: "🦕 Generate meaningful commit messages from git diff"
+    homepage: "https://github.com/dinoDanic/diny"
+    license: "MIT"
+    repository:
+      owner: dinoDanic
+      name: homebrew-tap
+    commit_author:
+      name: "Dino Danic"
+      email: "dino.danic@gmail.com"
+    install: |
+      bin.install "diny"
+    test: |
+      system "#{bin}/diny --version"
