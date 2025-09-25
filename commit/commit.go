@@ -47,16 +47,7 @@ func Main(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println()
-	err = huh.NewNote().
-		Title("🦕 Generated Commit Message").
-		Description(commitMessage).
-		Run()
-
-	if err != nil {
-		fmt.Printf("Error displaying message: %v\n", err)
-		// Fallback to simple output
-		fmt.Printf("🦕 Generated Commit Message:\n%s\n\n", commitMessage)
-	}
+	fmt.Printf("🦕 Generated Commit Message:\n%s\n\n", commitMessage)
 
 	confirmed := confirmPrompt("🦕 Do you want to commit with this message?")
 
