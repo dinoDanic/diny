@@ -55,6 +55,22 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig co
 
 		updatedHistory := append(previousMessages, commitMessage)
 		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
+	case "custom":
+		fmt.Println("🦕 Generating commit message with your feedback...")
+
+		customInput := customInputPrompt("What changes would you like to see in the commit message?")
+		fmt.Println()
+
+		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent commit message:\n%s\n\nUser feedback: %s\n\nPlease generate a new commit message that addresses the user's feedback.", commitMessage, customInput)
+
+		newCommitMessage, err := CreateCommitMessage(modifiedPrompt, userConfig)
+		if err != nil {
+			fmt.Printf("💥 Error generating commit message: %v\n", err)
+			os.Exit(1)
+		}
+
+		updatedHistory := append(previousMessages, commitMessage)
+		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
 	case "exit":
 		fmt.Println()
 		fmt.Println("🦕 Goodbye!")
@@ -70,6 +86,7 @@ func choicePrompt(message string) string {
 		Options(
 			huh.NewOption("Commit", "commit"),
 			huh.NewOption("Generate different message", "regenerate"),
+			huh.NewOption("Refine message", "custom"),
 			huh.NewOption("Exit", "exit"),
 		).
 		Value(&choice).
@@ -81,4 +98,21 @@ func choicePrompt(message string) string {
 	}
 
 	return choice
+}
+
+func customInputPrompt(message string) string {
+	var input string
+
+	err := huh.NewInput().
+		Title(message).
+		Placeholder("e.g., make it shorter, use conventional format, focus on the bug fix...").
+		Value(&input).
+		Run()
+
+	if err != nil {
+		fmt.Printf("Error running prompt: %v\n", err)
+		os.Exit(1)
+	}
+
+	return input
 }
