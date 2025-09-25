@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
@@ -31,27 +30,25 @@ func Main(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	cleanDiff := helpers.CleanForAI(string(gitDiff))
 	gitDiffLen := len(gitDiff)
-	cleanDiffLen := len(cleanDiff)
+	diff := string(gitDiff)
 
 	userConfig := config.Load()
 
 	systemPrompt := helpers.BuildSystemPrompt(userConfig)
-	fullPrompt := systemPrompt + string(gitDiff)
+	fullPrompt := diff + systemPrompt
 
 	fmt.Print("\n")
-	if cleanDiffLen > 2000 {
+	if gitDiffLen > 2000 {
 		fmt.Println("⚠️ Large changeset detected — this may take longer to process ⏳")
 		fmt.Print("\n")
 	}
 
-	if cleanDiffLen == 0 {
+	if gitDiffLen == 0 {
 		fmt.Println("🌱 No meaningful content detected in the diff.")
 		os.Exit(0)
 	}
 	fmt.Printf("📏 Diff   size → Raw:     %d chars \n", gitDiffLen)
-	fmt.Printf("📏 Diff   size → Cleaned: %d chars \n", cleanDiffLen)
 	fmt.Printf("📏 Inst   size → Raw:     %d chars \n", len(systemPrompt))
 	fmt.Print("\n")
 
@@ -111,20 +108,4 @@ func confirmPrompt(message string) bool {
 	}
 
 	return confirmed
-}
-
-// ProcessGitDiff processes git diff output and returns cleaned diff and system prompt
-// This function is extracted for easier testing
-func ProcessGitDiff(gitDiffOutput []byte, userConfig config.UserConfig) (cleanedDiff string, systemPrompt string, err error) {
-	if len(gitDiffOutput) == 0 {
-		return "", "", fmt.Errorf("no staged changes found")
-	}
-
-	cleanDiff := helpers.CleanForAI(string(gitDiffOutput))
-	if len(strings.TrimSpace(cleanDiff)) == 0 {
-		return "", "", fmt.Errorf("no meaningful content detected in the diff")
-	}
-
-	systemPrompt = helpers.BuildSystemPrompt(userConfig)
-	return cleanDiff, systemPrompt, nil
 }

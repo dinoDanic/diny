@@ -44,6 +44,5 @@ func BuildSystemPrompt(userConfig config.UserConfig) string {
 		b.WriteString("\nStructure: subject (<=50, imperative) + 2–6 bullets w/ context & impact\n")
 	}
 
-	b.WriteString("\nNow read the diff and write the message:\n")
 	return b.String()
 }

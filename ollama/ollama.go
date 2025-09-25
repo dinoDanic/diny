@@ -14,7 +14,9 @@ import (
 const server = "http://167.235.150.40"
 
 // const model = "qwen2.5:7b-instruct"
-const model = "qwen2.5-coder:3b"
+// const model = "qwen2.5-coder:3b"
+// const model = "mistral:7b-instruct"
+const model = "llama3.2"
 
 type GenerateRequest struct {
 	Model  string `json:"model"`
@@ -28,6 +30,9 @@ type GenerateResponse struct {
 }
 
 func MainStream(prompt string) (string, error) {
+	// fmt.Print("OLLAMA RECIVED")
+	// fmt.Print(prompt)
+	// fmt.Print("OLLAMA RECIVED END")
 	req := GenerateRequest{
 		Model:  model,
 		Prompt: prompt,
