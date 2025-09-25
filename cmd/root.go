@@ -9,12 +9,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version of the application
+var Version = "0.1.0"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "diny",
-	Short: "Generate meaningful commit messages from git diff using AI",
+	Short: "Generate meaningful commit messages from git diff",
 	Long: `diny is a simple CLI tool that analyzes your git diff 
-and generates commit messages using AI. 
+and generates commit messages. 
 
 It helps you maintain clean, consistent commit history without 
 spending time manually writing messages.
@@ -31,6 +34,9 @@ func Execute() {
 }
 
 func init() {
+	// Set version for the root command
+	rootCmd.Version = Version
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
