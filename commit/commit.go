@@ -53,10 +53,11 @@ func Main(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println()
 
-	confirmed := confirmPrompt("🦕 Do you want to commit with this message?")
+	choice := choicePrompt("🦕 Choose your next task:")
 	fmt.Println()
 
-	if confirmed {
+	switch choice {
+	case "commit":
 		fmt.Println("🦕 Creating commit...")
 		commitCmd := exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
 		err := commitCmd.Run()
@@ -66,20 +67,23 @@ func Main(cmd *cobra.Command, args []string) {
 		}
 		fmt.Println()
 		fmt.Println("🦕 Success! Commit added to history.")
-	} else {
+	case "exit":
 		fmt.Println()
-		fmt.Println("🦕 Commit cancelled.")
+		fmt.Println("🦕 Goodbye!")
+		os.Exit(0)
 	}
 }
 
-func confirmPrompt(message string) bool {
-	var confirmed bool
+func choicePrompt(message string) string {
+	var choice string
 
-	err := huh.NewConfirm().
+	err := huh.NewSelect[string]().
 		Title(message).
-		Affirmative("Yes").
-		Negative("No").
-		Value(&confirmed).
+		Options(
+			huh.NewOption("Commit", "commit"),
+			huh.NewOption("Exit", "exit"),
+		).
+		Value(&choice).
 		Run()
 
 	if err != nil {
@@ -87,5 +91,5 @@ func confirmPrompt(message string) bool {
 		os.Exit(1)
 	}
 
-	return confirmed
+	return choice
 }
