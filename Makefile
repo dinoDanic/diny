@@ -6,7 +6,7 @@ LDFLAGS=-ldflags "-X github.com/dinoDanic/diny/cmd.Version=$(VERSION_CLEAN)"
 
 # bump tag 
 .PHONY: bump
-release:
+bump:
 	@echo "Current version: $(VERSION)"
 	@read -p "Enter new version (e.g., 0.1.2): " NEW_VERSION; \
 	git tag -a v$$NEW_VERSION -m "Release v$$NEW_VERSION"; \
