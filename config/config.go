@@ -81,3 +81,11 @@ func Save(config UserConfig) error {
 
 	return nil
 }
+
+func PrintConfiguration(userConfig UserConfig) {
+	fmt.Println("⚙️  Configuration:")
+	fmt.Printf("   • Emoji: %t\n", userConfig.UseEmoji)
+	fmt.Printf("   • Conventional: %t\n", userConfig.UseConventional)
+	fmt.Printf("   • Tone: %s\n", userConfig.Tone)
+	fmt.Printf("   • Length: %s\n", userConfig.Length)
+}

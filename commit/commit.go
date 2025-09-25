@@ -8,7 +8,6 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/helpers"
-	"github.com/dinoDanic/diny/ollama"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +29,6 @@ func Main(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	gitDiffLen := len(gitDiff)
 	diff := string(gitDiff)
 
 	userConfig := config.Load()
@@ -38,42 +36,16 @@ func Main(cmd *cobra.Command, args []string) {
 	systemPrompt := helpers.BuildSystemPrompt(userConfig)
 	fullPrompt := diff + systemPrompt
 
-	fmt.Print("\n")
-	if gitDiffLen > 2000 {
-		fmt.Println("⚠️ Large changeset detected — this may take longer to process ⏳")
-		fmt.Print("\n")
-	}
+	config.PrintConfiguration(userConfig)
 
-	if gitDiffLen == 0 {
-		fmt.Println("🌱 No meaningful content detected in the diff.")
-		os.Exit(0)
-	}
-	fmt.Printf("📏 Diff   size → Raw:     %d chars \n", gitDiffLen)
-	fmt.Printf("📏 Inst   size → Raw:     %d chars \n", len(systemPrompt))
-	fmt.Print("\n")
-
-	// Print configuration
-	fmt.Println("⚙️  Configuration:")
-	fmt.Printf("   • Emoji: %t\n", userConfig.UseEmoji)
-	fmt.Printf("   • Conventional: %t\n", userConfig.UseConventional)
-	fmt.Printf("   • Tone: %s\n", userConfig.Tone)
-	fmt.Printf("   • Length: %s\n", userConfig.Length)
-	fmt.Print("\n")
-	fmt.Print("🐢 My tiny server is thinking hard, hold tight!")
-	fmt.Print("\n")
-	fmt.Print("\n")
-
-	commitMessage, err := ollama.MainStream(fullPrompt)
+	commitMessage, err := CreateCommitMessage(fullPrompt, userConfig)
 
 	if err != nil {
 		fmt.Printf("💥 Error generating commit message: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err != nil {
-		fmt.Printf("Error displaying message: %v\n", err)
-	}
-
+	fmt.Print("commit message:", commitMessage)
 	fmt.Print("\n")
 	fmt.Print("\n")
 
