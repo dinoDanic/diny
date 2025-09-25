@@ -14,23 +14,15 @@ import (
 	"github.com/dinoDanic/diny/server"
 )
 
-type commitReq struct {
-	GitDiff     string `json:"git_diff"`
-	SystemPropt string `json:"system_propt"`
-}
+func CreateTimelineWithGroq(prompt string, userConfig config.UserConfig) (string, error) {
+	systemPrompt := helpers.BuildTimelinePrompt(userConfig)
 
-type commitResp struct {
-	Message string      `json:"message"`
-	Error   string      `json:"error"`
-	Details interface{} `json:"details"`
-}
-
-func CreateCommitMessageWithGroq(gitDiff string, userConfig config.UserConfig) (string, error) {
-	systemPropt := helpers.BuildSystemPrompt(userConfig)
-
-	payload := commitReq{
-		GitDiff:     gitDiff,
-		SystemPropt: systemPropt,
+	payload := struct {
+		Prompt       string `json:"prompt"`
+		SystemPrompt string `json:"system_prompt"`
+	}{
+		Prompt:       prompt,
+		SystemPrompt: systemPrompt,
 	}
 
 	buf, err := json.Marshal(payload)
@@ -40,7 +32,7 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig config.UserConfig) (
 
 	req, err := http.NewRequestWithContext(context.Background(),
 		http.MethodPost,
-		server.ServerConfig.BaseURL+"/api/commit",
+		server.ServerConfig.BaseURL+"/api/timeline",
 		bytes.NewReader(buf),
 	)
 	if err != nil {
@@ -61,7 +53,10 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig config.UserConfig) (
 	body, _ := io.ReadAll(res.Body)
 
 	if res.StatusCode != http.StatusOK {
-		var e commitResp
+		var e struct {
+			Error   string      `json:"error"`
+			Details interface{} `json:"details"`
+		}
 		_ = json.Unmarshal(body, &e)
 		if e.Error != "" {
 			return "", fmt.Errorf("proxy %d: %s", res.StatusCode, e.Error)
@@ -69,7 +64,9 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig config.UserConfig) (
 		return "", fmt.Errorf("proxy %d: %s", res.StatusCode, string(body))
 	}
 
-	var out commitResp
+	var out struct {
+		Message string `json:"message"`
+	}
 	if err := json.Unmarshal(body, &out); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
