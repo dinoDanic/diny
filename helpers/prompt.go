@@ -70,21 +70,19 @@ func BuildTimelinePrompt(userConfig config.UserConfig) string {
 	var b strings.Builder
 
 	// Role & Goal
-	b.WriteString("You analyze a sequence of git commits and produce a client-facing daily work log.\n")
-	b.WriteString("Write only what was accomplished, as concise past-tense bullet points suitable for copy-paste.\n")
-	b.WriteString("Do not explain methodology or rationale; just state the completed actions.\n\n")
+	b.WriteString("You analyze git commits and produce a client-facing daily work log.\n")
+	b.WriteString("Start with ONE summary sentence (past tense), then bullet points of completed actions.\n\n")
 
 	// Hard rules
 	b.WriteString("Rules:\n")
-	b.WriteString("- Output plain text only (no code fences, no markdown headings, no bold).\n")
-	b.WriteString("- Do NOT write an intro line like 'Today’s changes...' or any conclusions.\n")
-	b.WriteString("- Do NOT echo full commit messages or diffs; synthesize them into clean bullets.\n")
-	b.WriteString("- Use past tense, action-oriented phrasing (e.g., 'Added', 'Refactored', 'Fixed').\n")
-	b.WriteString("- Keep each bullet ≤ 16 words. Prefer one line per bullet.\n")
-	b.WriteString("- If helpful, prefix with a compact tag like [feat], [fix], [refactor], [chore], [docs], [perf], [test].\n")
-	b.WriteString("- Quantify when obvious (files/modules/areas touched), but avoid guessing.\n")
-	b.WriteString("- No tables. No numbered lists. Bullets only.\n")
-	b.WriteString("- If input is too vague, produce 3–5 best-effort bullets and say 'Consolidated minor tweaks' as one bullet.\n\n")
+	b.WriteString("- Output plain text only (no code fences, no markdown headings).\n")
+	b.WriteString("- First line: single-sentence summary (≤20 words), past tense, no prefix labels.\n")
+	b.WriteString("- Then a blank line, then bullets of what was done (no explanations or methodology).\n")
+	b.WriteString("- Do NOT echo full commit messages or diffs; synthesize clean outcomes.\n")
+	b.WriteString("- Use past tense, action verbs (Added, Fixed, Refactored, Created, Updated).\n")
+	b.WriteString("- Keep each bullet ≤16 words. One line per bullet.\n")
+	b.WriteString("- Optional compact tags: [feat], [fix], [docs], [refactor], [test], [chore], [perf].\n")
+	b.WriteString("- Be concrete; quantify when obvious. No guesses.\n\n")
 
 	// Tone
 	switch userConfig.Tone {
@@ -98,37 +96,37 @@ func BuildTimelinePrompt(userConfig config.UserConfig) string {
 		b.WriteString("Tone: professional and concise.\n")
 	}
 
-	// Length / Structure -> bullets only, no overview
+	// Length / Structure
 	b.WriteString("\nStructure:\n")
 	switch userConfig.Length {
 	case config.Short:
-		b.WriteString("- 3–5 bullets. No header or footer.\n")
+		b.WriteString("- 1 summary sentence, then 3–5 bullets.\n")
 	case config.Normal:
-		b.WriteString("- 5–9 bullets. No header or footer.\n")
+		b.WriteString("- 1 summary sentence, then 5–9 bullets.\n")
 	case config.Long:
-		b.WriteString("- 8–12 bullets, grouped implicitly by tag if applicable. No header or footer.\n")
+		b.WriteString("- 1 summary sentence, then 8–12 bullets; group implicitly by tag if helpful.\n")
 	default:
-		b.WriteString("- 5–9 bullets. No header or footer.\n")
+		b.WriteString("- 1 summary sentence, then 5–9 bullets.\n")
 	}
 
 	// Content guidance
 	b.WriteString("\nFocus on extracting:\n")
-	b.WriteString("- Concrete outcomes per commit/theme (features added, endpoints created, refactors, config changes).\n")
-	b.WriteString("- Scope hints (API names, endpoints, modules) when obvious from context.\n")
-	b.WriteString("- Brief metrics if explicit (counts of files, tokens, or latency improvements).\n")
+	b.WriteString("- Concrete outcomes (features, endpoints, refactors, config/schema changes).\n")
+	b.WriteString("- Scope hints (APIs, modules) when obvious.\n")
+	b.WriteString("- Clear user/business impact only if explicit; otherwise omit.\n")
 
 	// Edge cases
 	b.WriteString("\nEdge cases:\n")
-	b.WriteString("- If commits are noisy/repetitive, collapse them into one bullet per theme.\n")
-	b.WriteString("- If timeframe mixes tasks, still output a single bullet list with clear actions.\n")
+	b.WriteString("- If commits are noisy/repetitive, collapse to one bullet per theme.\n")
+	b.WriteString("- If data is sparse, produce best-effort summary + 3–4 bullets.\n")
 
-	// Few-shot examples to anchor the style
+	// Few-shot style anchors (no headings, just examples of format)
 	b.WriteString("\nExamples:\n")
+	b.WriteString("Delivered timeline logging and simplified commit workflow.\n\n")
 	b.WriteString("- [feat] Added timeline API with background DB logging (after()).\n")
-	b.WriteString("- [refactor] Simplified commit API; removed crypto and trimmed telemetry fields.\n")
-	b.WriteString("- [chore] Updated model config; aligned service port.\n")
-	b.WriteString("- [sql] Created minimal commits table and timeline schema.\n")
-	b.WriteString("- [feat] Replaced prompt truncation with explicit system prompt.\n")
+	b.WriteString("- [refactor] Simplified commit API; removed crypto; trimmed telemetry fields.\n")
+	b.WriteString("- [chore] Updated model config; adjusted service port.\n")
+	b.WriteString("- [sql] Created minimal commits table for telemetry.\n")
 
 	return b.String()
 }
