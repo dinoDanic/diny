@@ -49,7 +49,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig co
 
 		newCommitMessage, err := CreateCommitMessage(modifiedPrompt, userConfig)
 		if err != nil {
-			fmt.Printf("💥 Error generating commit message: %v\n", err)
+			fmt.Printf("💥: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -65,7 +65,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig co
 
 		newCommitMessage, err := CreateCommitMessage(modifiedPrompt, userConfig)
 		if err != nil {
-			fmt.Printf("💥 Error generating commit message: %v\n", err)
+			fmt.Printf("💥: %v\n", err)
 			os.Exit(1)
 		}
 

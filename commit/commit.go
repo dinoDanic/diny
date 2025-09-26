@@ -6,7 +6,6 @@ import (
 	"os/exec"
 
 	"github.com/dinoDanic/diny/config"
-	"github.com/dinoDanic/diny/helpers"
 	"github.com/spf13/cobra"
 )
 
@@ -32,20 +31,17 @@ func Main(cmd *cobra.Command, args []string) {
 
 	userConfig := config.Load()
 
-	systemPrompt := helpers.BuildSystemPrompt(userConfig)
-	fullPrompt := systemPrompt + diff
-
 	fmt.Println()
 	config.PrintConfiguration(userConfig)
 	fmt.Println()
 	fmt.Println("🦕 Generating commit message...")
 
-	commitMessage, err := CreateCommitMessage(fullPrompt, userConfig)
+	commitMessage, err := CreateCommitMessage(diff, userConfig)
 
 	if err != nil {
 		fmt.Printf("💥 Error generating commit message: %v\n", err)
 		os.Exit(1)
 	}
 
-	HandleCommitFlow(commitMessage, fullPrompt, userConfig)
+	HandleCommitFlow(commitMessage, diff, userConfig)
 }

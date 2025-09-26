@@ -10,19 +10,16 @@ import (
 	"time"
 
 	"github.com/dinoDanic/diny/config"
-	"github.com/dinoDanic/diny/helpers"
 	"github.com/dinoDanic/diny/server"
 )
 
 func CreateTimelineWithGroq(prompt string, userConfig config.UserConfig) (string, error) {
-	systemPrompt := helpers.BuildTimelinePrompt(userConfig)
-
 	payload := struct {
-		Prompt       string `json:"prompt"`
-		SystemPrompt string `json:"system_prompt"`
+		Prompt     string            `json:"prompt"`
+		UserConfig config.UserConfig `json:"user_config"`
 	}{
-		Prompt:       prompt,
-		SystemPrompt: systemPrompt,
+		Prompt:     prompt,
+		UserConfig: userConfig,
 	}
 
 	buf, err := json.Marshal(payload)

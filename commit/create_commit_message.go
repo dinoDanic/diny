@@ -5,8 +5,8 @@ import (
 	"github.com/dinoDanic/diny/groq"
 )
 
-func CreateCommitMessage(prompt string, userConfig config.UserConfig) (string, error) {
-	commitMessage, err := groq.CreateCommitMessageWithGroq(prompt, userConfig)
+func CreateCommitMessage(gitDiff string, userConfig config.UserConfig) (string, error) {
+	commitMessage, err := groq.CreateCommitMessageWithGroq(gitDiff, userConfig)
 
 	if err != nil {
 		return "", err

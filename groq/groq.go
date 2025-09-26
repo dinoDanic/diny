@@ -10,13 +10,12 @@ import (
 	"time"
 
 	"github.com/dinoDanic/diny/config"
-	"github.com/dinoDanic/diny/helpers"
 	"github.com/dinoDanic/diny/server"
 )
 
 type commitReq struct {
-	GitDiff     string `json:"git_diff"`
-	SystemPropt string `json:"system_propt"`
+	GitDiff    string            `json:"git_diff"`
+	UserConfig config.UserConfig `json:"user_config"`
 }
 
 type commitResp struct {
@@ -26,11 +25,9 @@ type commitResp struct {
 }
 
 func CreateCommitMessageWithGroq(gitDiff string, userConfig config.UserConfig) (string, error) {
-	systemPropt := helpers.BuildSystemPrompt(userConfig)
-
 	payload := commitReq{
-		GitDiff:     gitDiff,
-		SystemPropt: systemPropt,
+		GitDiff:    gitDiff,
+		UserConfig: userConfig,
 	}
 
 	buf, err := json.Marshal(payload)
