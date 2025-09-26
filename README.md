@@ -31,7 +31,21 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
     brew install dinoDanic/tap/diny
 
-### Download Binary
+### Windows
+
+#### Download Binary
+Download the Windows zip from [GitHub Releases](https://github.com/dinoDanic/diny/releases) and extract `diny.exe` to a folder in your PATH.
+
+#### PowerShell (One-liner)
+```powershell
+# Download and install latest release
+$url = (Invoke-RestMethod "https://api.github.com/repos/dinoDanic/diny/releases/latest").assets | Where-Object {$_.name -like "*Windows*"} | Select-Object -ExpandProperty browser_download_url
+Invoke-WebRequest -Uri $url -OutFile "diny.zip"
+Expand-Archive -Path "diny.zip" -DestinationPath "$env:USERPROFILE\bin" -Force
+$env:PATH += ";$env:USERPROFILE\bin"
+```
+
+### Download Binary (All Platforms)
 
 Download pre-built binaries from [GitHub Releases](https://github.com/dinoDanic/diny/releases)
 
