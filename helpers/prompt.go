@@ -12,37 +12,56 @@ import (
 func BuildSystemPrompt(userConfig config.UserConfig) string {
 	var b strings.Builder
 
-	b.WriteString("Write ONLY a git commit message for the provided diff.\n\n")
-	b.WriteString("Rules:\n")
-	b.WriteString("- Output only the message (no pre/post text)\n")
-	b.WriteString("- Don’t echo the diff\n")
-	b.WriteString("- No explanations, comments, or markdown\n")
-	b.WriteString("- Emphasize WHY and WHAT, not HOW\n")
+	// Core task
+	b.WriteString("Write ONLY a git commit message for the provided diff.\n")
 
+	// Global constraints
+	b.WriteString("\nRules:\n")
+	b.WriteString("- Output only the commit message (no pre/post text).\n")
+	b.WriteString("- Do not echo the diff or include code.\n")
+	b.WriteString("- No explanations, comments, or markdown.\n")
+	b.WriteString("- Use imperative mood and focus on WHAT changed and WHY it matters (not HOW).\n")
+	b.WriteString("- Avoid vague terms (e.g., 'various', 'some'); be specific and concise.\n")
+
+	// Optional formats
 	if userConfig.UseConventional {
-		b.WriteString("\nFormat: type(scope): subject. Types: feat, fix, docs, style, refactor, test, chore, perf\n")
+		b.WriteString("\nFormat: type(scope): subject  — types: feat, fix, docs, style, refactor, test, chore, perf.\n")
 	}
 	if userConfig.UseEmoji {
-		b.WriteString("\nPrefix emoji: 🚀 feat, 🐛 fix, 📚 docs, 🎨 style, ♻️ refactor, ✅ test, 🔧 chore, ⚡ perf\n")
+		b.WriteString("\nOptional emoji prefixes: 🚀 feat  🐛 fix  📚 docs  🎨 style  ♻️ refactor  ✅ test  🔧 chore  ⚡ perf.\n")
 	}
 
+	// Tone hint
 	switch userConfig.Tone {
 	case config.Professional:
-		b.WriteString("\nTone: professional\n")
+		b.WriteString("\nTone: professional.\n")
 	case config.Casual:
-		b.WriteString("\nTone: casual\n")
+		b.WriteString("\nTone: casual.\n")
 	case config.Friendly:
-		b.WriteString("\nTone: friendly\n")
+		b.WriteString("\nTone: friendly.\n")
 	}
 
+	// Length/structure
+	b.WriteString("\nStructure:\n")
 	switch userConfig.Length {
 	case config.Short:
-		b.WriteString("\nStructure: subject only (<=50 chars)\n")
+		b.WriteString("- Subject only, ≤50 chars, imperative verb first word.\n")
 	case config.Normal:
-		b.WriteString("\nStructure: subject (<=50, imperative) + 1–4 bullets starting with '-'\n")
+		b.WriteString("- Subject ≤50 chars (imperative). If needed, add 1–4 bullets starting with '- ' for key WHY.\n")
 	case config.Long:
-		b.WriteString("\nStructure: subject (<=50, imperative) + 2–6 bullets w/ context & impact\n")
+		b.WriteString("- Subject ≤50 chars (imperative). Then 2–6 terse bullets for context/impact (no code, no diff).\n")
+	default:
+		b.WriteString("- Subject ≤50 chars (imperative). Add up to 3 bullets only if essential.\n")
 	}
+
+	// Edge handling
+	b.WriteString("\nEdge cases:\n")
+	b.WriteString("- If diff is large/noisy, summarize main intent and primary impact.\n")
+	b.WriteString("- If changes are mechanical (format/rename), state it plainly.\n")
+	b.WriteString("- Never include secrets, paths, or identifiers from the diff.\n")
+
+	// Explicit diff label
+	b.WriteString("\ngit diff:\n")
 
 	return b.String()
 }
@@ -51,73 +70,65 @@ func BuildTimelinePrompt(userConfig config.UserConfig) string {
 	var b strings.Builder
 
 	// Role & Goal
-	b.WriteString("You analyze a sequence of git commits and produce a clear timeline summary.\n")
-	b.WriteString("Your job is to summarize WHAT changed and WHY it mattered, not HOW it was implemented.\n\n")
+	b.WriteString("You analyze a sequence of git commits and produce a client-facing daily work log.\n")
+	b.WriteString("Write only what was accomplished, as concise past-tense bullet points suitable for copy-paste.\n")
+	b.WriteString("Do not explain methodology or rationale; just state the completed actions.\n\n")
 
 	// Hard rules
 	b.WriteString("Rules:\n")
-	b.WriteString("- Output plain text only (no code fences, no markdown headings).\n")
-	b.WriteString("- Do NOT echo diffs or full commit messages; summarize themes and impact.\n")
-	b.WriteString("- Be concrete and specific (quantify when possible: files touched, modules, scope).\n")
-	b.WriteString("- Group changes by category (feat, fix, docs, refactor, test, chore, perf) and/or by area/scope if available.\n")
-	b.WriteString("- Prefer ISO dates for ranges (YYYY-MM-DD) when referencing time.\n")
-	b.WriteString("- Keep it skimmable and consistent with the requested tone and length.\n")
-
-	// Optional emoji legend
-	if userConfig.UseEmoji {
-		b.WriteString("\nIf helpful, prefix bullets with these emojis:\n")
-		b.WriteString("🚀 feat  🐛 fix  📚 docs  🎨 style  ♻️ refactor  ✅ test  🔧 chore  ⚡ perf\n")
-		b.WriteString("Use them only at the start of bullets; avoid overuse.\n")
-	}
+	b.WriteString("- Output plain text only (no code fences, no markdown headings, no bold).\n")
+	b.WriteString("- Do NOT write an intro line like 'Today’s changes...' or any conclusions.\n")
+	b.WriteString("- Do NOT echo full commit messages or diffs; synthesize them into clean bullets.\n")
+	b.WriteString("- Use past tense, action-oriented phrasing (e.g., 'Added', 'Refactored', 'Fixed').\n")
+	b.WriteString("- Keep each bullet ≤ 16 words. Prefer one line per bullet.\n")
+	b.WriteString("- If helpful, prefix with a compact tag like [feat], [fix], [refactor], [chore], [docs], [perf], [test].\n")
+	b.WriteString("- Quantify when obvious (files/modules/areas touched), but avoid guessing.\n")
+	b.WriteString("- No tables. No numbered lists. Bullets only.\n")
+	b.WriteString("- If input is too vague, produce 3–5 best-effort bullets and say 'Consolidated minor tweaks' as one bullet.\n\n")
 
 	// Tone
 	switch userConfig.Tone {
 	case config.Professional:
-		b.WriteString("\nTone: professional, neutral, analytical.\n")
+		b.WriteString("Tone: professional and concise.\n")
 	case config.Casual:
-		b.WriteString("\nTone: casual and concise, still precise.\n")
+		b.WriteString("Tone: casual but precise.\n")
 	case config.Friendly:
-		b.WriteString("\nTone: friendly, encouraging, and clear.\n")
+		b.WriteString("Tone: friendly and clear.\n")
+	default:
+		b.WriteString("Tone: professional and concise.\n")
 	}
 
-	// Length / Structure
+	// Length / Structure -> bullets only, no overview
 	b.WriteString("\nStructure:\n")
 	switch userConfig.Length {
 	case config.Short:
-		b.WriteString("- 1–2 line high-level summary.\n")
-		b.WriteString("- 3–5 short bullets of key themes (group by category or area).\n")
+		b.WriteString("- 3–5 bullets. No header or footer.\n")
 	case config.Normal:
-		b.WriteString("- 2–4 line overview summarizing the period, focus, and impact.\n")
-		b.WriteString("- 5–9 bullets grouped by category/area (each bullet <= 20 words).\n")
-		b.WriteString("- Finish with a 1-line outlook/next steps if discernible.\n")
+		b.WriteString("- 5–9 bullets. No header or footer.\n")
 	case config.Long:
-		b.WriteString("- 1 short overview paragraph (3–6 lines) with time span and main objectives.\n")
-		b.WriteString("- Thematic sections as bullet blocks (feat/fix/refactor/test/etc.), 2–5 bullets per block.\n")
-		b.WriteString("- Add a compact metrics block if derivable (e.g., commits: N, dominant category, notable scopes).\n")
-		b.WriteString("- Close with risks/debt and next focus (if inferable from commits).\n")
+		b.WriteString("- 8–12 bullets, grouped implicitly by tag if applicable. No header or footer.\n")
 	default:
-		b.WriteString("- 2–4 line overview, then 5–9 bullets by category.\n")
+		b.WriteString("- 5–9 bullets. No header or footer.\n")
 	}
 
-	// Content guidance: what to extract
+	// Content guidance
 	b.WriteString("\nFocus on extracting:\n")
-	b.WriteString("- Objectives/themes (e.g., 'auth revamp', 'performance in X', 'bugfixes in payments').\n")
-	b.WriteString("- Impact/benefit (e.g., 'reduced cold start', 'fewer 500s', 'unlock feature Y').\n")
-	b.WriteString("- Notable scopes/modules/packages.\n")
-	b.WriteString("- Any visible progression (early groundwork → refactor → feature; or bug surge → stabilization).\n")
-	b.WriteString("- Risks/tech debt signals (temporary workarounds, TODOs, follow-ups) if apparent.\n")
+	b.WriteString("- Concrete outcomes per commit/theme (features added, endpoints created, refactors, config changes).\n")
+	b.WriteString("- Scope hints (API names, endpoints, modules) when obvious from context.\n")
+	b.WriteString("- Brief metrics if explicit (counts of files, tokens, or latency improvements).\n")
 
-	// Formatting constraints
-	b.WriteString("\nFormatting constraints:\n")
-	b.WriteString("- No tables. No numbered lists unless explicitly helpful.\n")
-	b.WriteString("- Start bullets with a category keyword or emoji (if enabled), then a crisp summary.\n")
-	b.WriteString("- Keep phrasing action-oriented; avoid vague words like 'various' or 'some'.\n")
-
-	// Safety rails / edge cases
+	// Edge cases
 	b.WriteString("\nEdge cases:\n")
-	b.WriteString("- If commits are noisy or repetitive, state that and collapse into a single summarized bullet per theme.\n")
-	b.WriteString("- If timeframe is mixed, call out shifts in focus (e.g., 'Early week: tests; Late week: perf').\n")
-	b.WriteString("- If insufficient data, say so briefly and provide the best-effort high-level view.\n")
+	b.WriteString("- If commits are noisy/repetitive, collapse them into one bullet per theme.\n")
+	b.WriteString("- If timeframe mixes tasks, still output a single bullet list with clear actions.\n")
+
+	// Few-shot examples to anchor the style
+	b.WriteString("\nExamples:\n")
+	b.WriteString("- [feat] Added timeline API with background DB logging (after()).\n")
+	b.WriteString("- [refactor] Simplified commit API; removed crypto and trimmed telemetry fields.\n")
+	b.WriteString("- [chore] Updated model config; aligned service port.\n")
+	b.WriteString("- [sql] Created minimal commits table and timeline schema.\n")
+	b.WriteString("- [feat] Replaced prompt truncation with explicit system prompt.\n")
 
 	return b.String()
 }

@@ -33,7 +33,7 @@ func Main(cmd *cobra.Command, args []string) {
 	userConfig := config.Load()
 
 	systemPrompt := helpers.BuildSystemPrompt(userConfig)
-	fullPrompt := diff + systemPrompt
+	fullPrompt := systemPrompt + diff
 
 	fmt.Println()
 	config.PrintConfiguration(userConfig)
