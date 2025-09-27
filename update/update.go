@@ -93,8 +93,6 @@ func (uc *UpdateChecker) CheckForUpdate() {
 		return
 	}
 
-	println(uc.currentVersion, " ", latestVersion)
-
 	if uc.compareVersions(uc.currentVersion, latestVersion) {
 		uc.printUpdateNotification(latestVersion)
 	}
@@ -108,12 +106,19 @@ func (uc *UpdateChecker) printUpdateNotification(version string) {
 		Padding(1, 2)
 
 	title := fmt.Sprintf("New version %s available!", version)
-	command := "macOS / Linux: brew update && brew upgrade dinoDanic/tap/diny"
-	commandWIndow := "\nwindows: https://github.com/dinoDanic/diny"
+	command := "Run: diny update"
 
-	content := fmt.Sprintf("%s\n\n%s", title, command+commandWIndow)
+	content := fmt.Sprintf("%s\n\n%s", title, command)
 
 	fmt.Println()
 	fmt.Println(style.Render(content))
 	fmt.Println()
+}
+
+func (uc *UpdateChecker) GetLatestVersion() (string, error) {
+	return uc.getLatestVersion()
+}
+
+func (uc *UpdateChecker) CompareVersions(current, latest string) bool {
+	return uc.compareVersions(current, latest)
 }
