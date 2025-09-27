@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -23,38 +21,13 @@ type GitHubRelease struct {
 type UpdateChecker struct {
 	currentVersion string
 	repoURL        string
-	cacheFile      string
 }
 
 func NewUpdateChecker(currentVersion string) *UpdateChecker {
-	homeDir, _ := os.UserHomeDir()
-	cacheDir := filepath.Join(homeDir, ".diny")
-	os.MkdirAll(cacheDir, 0755)
-
 	return &UpdateChecker{
 		currentVersion: currentVersion,
 		repoURL:        "https://api.github.com/repos/dinoDanic/diny/releases/latest",
-		cacheFile:      filepath.Join(cacheDir, "last_check"),
 	}
-}
-
-func (uc *UpdateChecker) shouldCheck() bool {
-	data, err := os.ReadFile(uc.cacheFile)
-	if err != nil {
-		return true
-	}
-
-	lastCheck, err := strconv.ParseInt(string(data), 10, 64)
-	if err != nil {
-		return true
-	}
-
-	return time.Now().Unix()-lastCheck > 24*60*60
-}
-
-func (uc *UpdateChecker) updateCache() {
-	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	os.WriteFile(uc.cacheFile, []byte(timestamp), 0644)
 }
 
 func (uc *UpdateChecker) getLatestVersion() (string, error) {
@@ -114,16 +87,10 @@ func (uc *UpdateChecker) compareVersions(current, latest string) bool {
 }
 
 func (uc *UpdateChecker) CheckForUpdate() {
-	if !uc.shouldCheck() {
-		return
-	}
-
 	latestVersion, err := uc.getLatestVersion()
 	if err != nil {
 		return
 	}
-
-	uc.updateCache()
 
 	if uc.compareVersions(uc.currentVersion, latestVersion) {
 		uc.printUpdateNotification(latestVersion)
@@ -135,13 +102,13 @@ func (uc *UpdateChecker) printUpdateNotification(version string) {
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color("46")).
 		Foreground(lipgloss.Color("46")).
-		Padding(1, 2).
-		Bold(true)
+		Padding(1, 2)
 
-	title := fmt.Sprintf("🎉 New version %s available!", version)
-	command := "update here https://github.com/dinoDanic/diny"
+	title := fmt.Sprintf("New version %s available!", version)
+	command := "macOS / Linux: brew install dinoDanic/tap/diny"
+	commandWIndow := "\nwindows: https://github.com/dinoDanic/diny"
 
-	content := fmt.Sprintf("%s\n\nRun: %s", title, command)
+	content := fmt.Sprintf("%s\n\n%s", title, command+commandWIndow)
 
 	fmt.Println()
 	fmt.Println(style.Render(content))
