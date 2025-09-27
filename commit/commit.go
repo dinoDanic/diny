@@ -29,19 +29,22 @@ func Main(cmd *cobra.Command, args []string) {
 
 	diff := string(gitDiff)
 
-	userConfig := config.Load()
+	userConfig, err := config.Load()
+
+	if err == nil && userConfig != nil {
+		config.PrintConfiguration(*userConfig)
+	}
 
 	fmt.Println()
-	config.PrintConfiguration(userConfig)
 	fmt.Println()
 	fmt.Println("🦕 Generating commit message...")
 
-	commitMessage, err := CreateCommitMessage(diff, userConfig)
+	commitMessage, note, err := CreateCommitMessage(diff, userConfig)
 
 	if err != nil {
 		fmt.Printf("💥 Error generating commit message: %v\n", err)
 		os.Exit(1)
 	}
 
-	HandleCommitFlow(commitMessage, diff, userConfig)
+	HandleCommitFlow(commitMessage, note, diff, userConfig)
 }

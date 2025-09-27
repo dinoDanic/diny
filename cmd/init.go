@@ -15,7 +15,12 @@ import (
 // RunConfigurationSetup runs the interactive configuration setup and returns the config
 func RunConfigurationSetup() config.UserConfig {
 	// Start with default configuration values
-	userConfig := config.DefaultUserConfig
+	userConfig := config.UserConfig{
+		UseEmoji:        false,
+		UseConventional: false,
+		Tone:            config.Casual,
+		Length:          config.Short,
+	}
 
 	// Emoji confirmation
 	err := huh.NewConfirm().

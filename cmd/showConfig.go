@@ -34,9 +34,7 @@ Configuration is stored in .git/diny-config.json in your git repository.`,
 	},
 }
 
-// showUserConfig displays the current configuration or prompts to create one
 func showUserConfig() {
-	// Check if we're in a git repository and get config
 	gitRoot, gitErr := git.FindGitRoot()
 	if gitErr != nil {
 		fmt.Println("❌ Error: Not in a git repository")
@@ -73,31 +71,32 @@ func showUserConfig() {
 			return
 		}
 
-		// Run the init command logic
 		runInitSetup()
 		return
 	}
 
-	// Config exists, load and display it
-	userConfig := config.Load()
-	displayConfig(userConfig)
+	userConfig, err := config.Load()
+	if err != nil {
+		fmt.Printf("❌ Error loading configuration: %v\n", err)
+		os.Exit(1)
+	}
+	if userConfig != nil {
+		displayConfig(*userConfig)
+	}
 }
 
-// configFileExists checks if the config file exists
 func configFileExists(gitRoot string) bool {
 	configPath := filepath.Join(gitRoot, ".git", "diny-config.json")
 	_, err := os.Stat(configPath)
 	return err == nil
 }
 
-// runInitSetup runs the init command setup logic
 func runInitSetup() {
 	fmt.Println("🚀 Starting Diny configuration setup...")
 	fmt.Println()
 
 	userConfig := RunConfigurationSetup()
 
-	// Save the configuration
 	err := config.Save(userConfig)
 	if err != nil {
 		fmt.Printf("Error saving configuration: %v\n", err)
@@ -109,7 +108,6 @@ func runInitSetup() {
 	displayConfig(userConfig)
 }
 
-// displayConfig shows the current configuration
 func displayConfig(userConfig config.UserConfig) {
 	fmt.Println()
 	fmt.Println("⚙️  Diny Configuration")

@@ -9,18 +9,15 @@ import (
 	"github.com/dinoDanic/diny/git"
 )
 
-// Custom types for type safety
 type Tone string
 type Length string
 
-// Tone constants
 const (
 	Professional Tone = "professional"
 	Casual       Tone = "casual"
 	Friendly     Tone = "friendly"
 )
 
-// Length constants
 const (
 	Short  Length = "short"
 	Normal Length = "normal"
@@ -34,31 +31,24 @@ type UserConfig struct {
 	Length          Length `json:"length"`
 }
 
-var DefaultUserConfig = UserConfig{
-	UseEmoji:        false,
-	UseConventional: false,
-	Tone:            Casual,
-	Length:          Short,
-}
-
-func Load() UserConfig {
+func Load() (*UserConfig, error) {
 	gitRoot, err := git.FindGitRoot()
 	if err != nil {
-		return DefaultUserConfig
+		return nil, err
 	}
 
 	configPath := filepath.Join(gitRoot, ".git", "diny-config.json")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return DefaultUserConfig
+		return nil, err
 	}
 
 	var config UserConfig
 	if err := json.Unmarshal(data, &config); err != nil {
-		return DefaultUserConfig
+		return nil, err
 	}
 
-	return config
+	return &config, nil
 }
 
 func Save(config UserConfig) error {

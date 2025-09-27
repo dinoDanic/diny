@@ -57,10 +57,12 @@ func Main() {
 		fmt.Printf("%d. %s\n", i+1, commit)
 	}
 
-	userConfig := config.Load()
+	userConfig, err := config.Load()
 
 	fmt.Println()
-	config.PrintConfiguration(userConfig)
+	if err == nil && userConfig != nil {
+		config.PrintConfiguration(*userConfig)
+	}
 
 	prompt := fmt.Sprintf("Timeline: %s\nCommits:\n%s", dateRange, strings.Join(timelineCommits, "\n"))
 

@@ -9,14 +9,21 @@ import (
 	"github.com/dinoDanic/diny/config"
 )
 
-func HandleCommitFlow(commitMessage, fullPrompt string, userConfig config.UserConfig) {
-	HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, []string{})
+func HandleCommitFlow(commitMessage, note, fullPrompt string, userConfig *config.UserConfig) {
+	HandleCommitFlowWithHistory(commitMessage, note, fullPrompt, userConfig, []string{})
 }
 
-func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig config.UserConfig, previousMessages []string) {
+func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userConfig *config.UserConfig, previousMessages []string) {
+	fmt.Println()
+	if note != "" {
+		fmt.Printf("💡 %s\n", note)
+		fmt.Println()
+		fmt.Printf("🦕 %s\n", "Commit message:")
+	}
 	fmt.Println()
 	fmt.Print(commitMessage)
 	fmt.Println()
+
 	fmt.Println()
 
 	choice := choicePrompt("🦕 Choose your next task:")
@@ -47,14 +54,14 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig co
 			modifiedPrompt += "\n\nPlease provide an alternative commit message with a different approach or focus."
 		}
 
-		newCommitMessage, err := CreateCommitMessage(modifiedPrompt, userConfig)
+		newCommitMessage, newNote, err := CreateCommitMessage(modifiedPrompt, userConfig)
 		if err != nil {
 			fmt.Printf("💥: %v\n", err)
 			os.Exit(1)
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, newNote, fullPrompt, userConfig, updatedHistory)
 	case "custom":
 		fmt.Println("🦕 Generating commit message with your feedback...")
 
@@ -63,14 +70,14 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig co
 
 		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent commit message:\n%s\n\nUser feedback: %s\n\nPlease generate a new commit message that addresses the user's feedback.", commitMessage, customInput)
 
-		newCommitMessage, err := CreateCommitMessage(modifiedPrompt, userConfig)
+		newCommitMessage, newNote, err := CreateCommitMessage(modifiedPrompt, userConfig)
 		if err != nil {
 			fmt.Printf("💥: %v\n", err)
 			os.Exit(1)
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, newNote, fullPrompt, userConfig, updatedHistory)
 	case "exit":
 		fmt.Println()
 		fmt.Println("🦕 Goodbye!")
