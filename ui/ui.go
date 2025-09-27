@@ -48,7 +48,6 @@ var (
 	successBoxStyle = lipgloss.NewStyle().
 			Background(lipgloss.Color("#1A3A20")).
 			Foreground(SuccessColor).
-			Bold(true).
 			Padding(1, 2)
 
 	warningBoxStyle = lipgloss.NewStyle().
