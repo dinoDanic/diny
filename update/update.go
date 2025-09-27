@@ -58,6 +58,9 @@ func (uc *UpdateChecker) compareVersions(current, latest string) bool {
 		return false
 	}
 
+	current = uc.normalizeVersion(current)
+	latest = uc.normalizeVersion(latest)
+
 	currentParts := strings.Split(current, ".")
 	latestParts := strings.Split(latest, ".")
 
@@ -84,6 +87,13 @@ func (uc *UpdateChecker) compareVersions(current, latest string) bool {
 	}
 
 	return false
+}
+
+func (uc *UpdateChecker) normalizeVersion(version string) string {
+	if idx := strings.Index(version, "-"); idx != -1 {
+		return version[:idx]
+	}
+	return version
 }
 
 func (uc *UpdateChecker) CheckForUpdate() {
