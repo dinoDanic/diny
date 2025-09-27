@@ -18,7 +18,6 @@ It looks at your staged changes and generates clear, conventional-friendly messa
   - **Commit** - Use the generated message
   - **Generate different message** - Get a completely new approach
   - **Refine message** - Provide custom feedback for targeted improvements
-  - **Exit** - Cancel the process
 - 🧠 Smart regeneration that learns from previous attempts
 - ✍️ Custom feedback system for precise message refinement
 - 📊 Timeline analysis of commit history and message patterns
@@ -33,17 +32,17 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 ### Windows
 
-#### Download Binary
-Download the Windows zip from [GitHub Releases](https://github.com/dinoDanic/diny/releases) and extract `diny.exe`.
-
-#### Add to PATH
-Move `diny.exe` to a folder in your PATH (e.g. `C:\Windows\System32`)  
-or create `C:\Users\<You>\bin`, add it to PATH via *System Properties → Environment Variables*, then restart the terminal.
-
 #### PowerShell (One-liner)
 ```powershell
 $dest=Join-Path $env:LOCALAPPDATA 'diny\bin'; if(Test-Path $dest -PathType Leaf){throw "A FILE named '$dest' exists. Delete/rename it."}; New-Item -ItemType Directory -Path $dest -Force|Out-Null; $zip=Join-Path $env:TEMP 'diny.zip'; $tmp=Join-Path $env:TEMP ("diny_"+[guid]::NewGuid()); $arch=if($env:PROCESSOR_ARCHITECTURE -match 'ARM64'){'arm64|aarch64'}else{'amd64|x86_64|x64'}; $rel=Invoke-RestMethod "https://api.github.com/repos/dinoDanic/diny/releases/latest" -Headers @{ 'User-Agent'='PowerShell' }; $asset=$rel.assets|?{ $_.name -match "(?i)(windows|win).*($arch).*\.zip$"}|select -f 1; if(-not $asset){$asset=$rel.assets|?{ $_.name -match "(?i)(windows|win).*\.zip$"}|select -f 1}; if(-not $asset){throw "No Windows .zip asset found. Available:`n$($rel.assets.name -join "`n")"}; Invoke-WebRequest $asset.browser_download_url -OutFile $zip; Expand-Archive -Path $zip -DestinationPath $tmp -Force; Remove-Item $zip -Force; $exe=Get-ChildItem $tmp -Recurse -Filter "diny*.exe"|select -f 1; if(-not $exe){throw "Couldn't find diny.exe in the archive."}; $target=Join-Path $dest 'diny.exe'; if(Test-Path $target){Remove-Item $target -Force}; Move-Item $exe.FullName $target -Force; Get-ChildItem (Split-Path $exe.FullName) -Filter *.dll -ErrorAction SilentlyContinue | % { Copy-Item $_.FullName $dest -Force }; Remove-Item $tmp -Recurse -Force; if($env:PATH -notmatch [regex]::Escape($dest)){ $u=[Environment]::GetEnvironmentVariable('Path','User'); [Environment]::SetEnvironmentVariable('Path', ($u+";"+$dest).Trim(';'), 'User'); $env:PATH+=";$dest" }; & $target --help
 ```
+
+#### Download Binary
+Download the Windows zip from [GitHub Releases](https://github.com/dinoDanic/diny/releases) and extract `diny.exe`.
+
+##### Add to PATH
+Move `diny.exe` to a folder in your PATH (e.g. `C:\Windows\System32`)  
+or create `C:\Users\<You>\bin`, add it to PATH via *System Properties → Environment Variables*, then restart the terminal.
 
 ### Download Binary (All Platforms)
 
@@ -57,6 +56,21 @@ Stage your changes, then run:
 
     git add -A
     diny commit
+
+### Auto Command (Git Alias)
+
+Set up a git alias that creates a `git auto` command for diny-generated commit messages.
+
+```bash
+diny auto          # Set up the git auto alias
+diny auto remove   # Remove the git auto alias
+```
+
+After setup, you can run: 
+```bash
+git auto          # uses diny to generate commit message
+```
+
 
 ### Configuration (Optional)
 
