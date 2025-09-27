@@ -95,13 +95,21 @@ func isHomebrewInstalled() bool {
 }
 
 func updateViaHomebrew() bool {
+	fmt.Println("📦 Running brew update...")
 	cmd := exec.Command("brew", "update")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
+		fmt.Printf("❌ brew update failed: %v\n", err)
 		return false
 	}
 
+	fmt.Println("⬆️  Running brew upgrade...")
 	cmd = exec.Command("brew", "upgrade", "dinoDanic/tap/diny")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
+		fmt.Printf("❌ brew upgrade failed: %v\n", err)
 		return false
 	}
 
