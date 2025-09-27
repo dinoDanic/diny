@@ -13,25 +13,31 @@ import (
 	"github.com/dinoDanic/diny/server"
 )
 
-type commitResp struct {
-	Message string      `json:"message"`
-	Note    string      `json:"note"`
-	Error   string      `json:"error"`
-	Details interface{} `json:"details"`
+type commitData struct {
+	CommitMessage string `json:"commitMessage"`
 }
 
-func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) (string, string, error) {
+type commitResp struct {
+	Error *string     `json:"error,omitempty"`
+	Data  *commitData `json:"data,omitempty"`
+}
+
+func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) (string, error) {
 	payload := map[string]interface{}{
-		"git_diff": gitDiff,
+		"gitDiff": gitDiff,
+		"version": "1.0.0", // TODO: Get actual version
+		"name":    "diny",  // TODO: Get actual name
 	}
 
 	if userConfig != nil {
-		payload["user_config"] = *userConfig
+		payload["userConfig"] = *userConfig
+	} else {
+		payload["userConfig"] = nil
 	}
 
 	buf, err := json.Marshal(payload)
 	if err != nil {
-		return "", "", fmt.Errorf("marshal payload: %w", err)
+		return "", fmt.Errorf("marshal payload: %w", err)
 	}
 
 	req, err := http.NewRequestWithContext(context.Background(),
@@ -40,7 +46,7 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) 
 		bytes.NewReader(buf),
 	)
 	if err != nil {
-		return "", "", fmt.Errorf("new request: %w", err)
+		return "", fmt.Errorf("new request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -49,29 +55,30 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) 
 	res, err := client.Do(req)
 
 	if err != nil {
-		return "", "", fmt.Errorf("do request: %w", err)
+		return "", fmt.Errorf("do request: %w", err)
 	}
 
 	defer res.Body.Close()
 
 	body, _ := io.ReadAll(res.Body)
 
-	if res.StatusCode != http.StatusOK {
-		var e commitResp
-		_ = json.Unmarshal(body, &e)
-		if e.Error != "" {
-			return "", "", fmt.Errorf("proxy %d: %s", res.StatusCode, e.Error)
-		}
-		return "", "", fmt.Errorf("proxy %d: %s", res.StatusCode, string(body))
-	}
-
 	var out commitResp
+
 	if err := json.Unmarshal(body, &out); err != nil {
-		return "", "", fmt.Errorf("decode response: %w", err)
-	}
-	if out.Message == "" {
-		return "", "", fmt.Errorf("empty message from proxy")
+		return "", fmt.Errorf("decode response: %w", err)
 	}
 
-	return out.Message, out.Note, nil
+	if out.Error != nil {
+		return "", fmt.Errorf("commit generation failed: %s", *out.Error)
+	}
+
+	if out.Data == nil {
+		return "", fmt.Errorf("no data in response")
+	}
+
+	if out.Data.CommitMessage == "" {
+		return "", fmt.Errorf("empty commit message from server")
+	}
+
+	return out.Data.CommitMessage, nil
 }

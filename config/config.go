@@ -25,8 +25,8 @@ const (
 )
 
 type UserConfig struct {
-	UseEmoji        bool   `json:"use_emoji"`
-	UseConventional bool   `json:"use_conventional"`
+	UseConventional bool   `json:"useConventional"`
+	UseEmoji        bool   `json:"useEmoji"`
 	Tone            Tone   `json:"tone"`
 	Length          Length `json:"length"`
 }

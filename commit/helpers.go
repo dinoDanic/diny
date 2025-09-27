@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
+	"github.com/dinoDanic/diny/ui"
 )
 
 func HandleCommitFlow(commitMessage, note, fullPrompt string, userConfig *config.UserConfig) {
@@ -18,6 +19,7 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 		fmt.Println(RenderNote(note))
 	}
 
+	ui.RenderTitle("Commit message:")
 	fmt.Println(RenderCommitMessage(commitMessage))
 	fmt.Println()
 
@@ -48,10 +50,10 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 			modifiedPrompt += "\n\nPlease provide an alternative commit message with a different approach or focus."
 		}
 
-		var newCommitMessage, newNote string
+		var newCommitMessage string
 		err := WithSpinner("Generating alternative commit message...", func() error {
 			var genErr error
-			newCommitMessage, newNote, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
+			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
 			return genErr
 		})
 		if err != nil {
@@ -60,7 +62,7 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, newNote, fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, "", fullPrompt, userConfig, updatedHistory)
 	case "custom":
 		fmt.Println()
 		customInput := customInputPrompt("What changes would you like to see in the commit message?")
@@ -68,10 +70,10 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 
 		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent commit message:\n%s\n\nUser feedback: %s\n\nPlease generate a new commit message that addresses the user's feedback.", commitMessage, customInput)
 
-		var newCommitMessage, newNote string
+		var newCommitMessage string
 		err := WithSpinner("Refining commit message with your feedback...", func() error {
 			var genErr error
-			newCommitMessage, newNote, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
+			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
 			return genErr
 		})
 		if err != nil {
@@ -80,7 +82,7 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, newNote, fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, "", fullPrompt, userConfig, updatedHistory)
 	case "exit":
 		fmt.Println()
 		fmt.Println(RenderInfo("Thanks for using Diny!"))
