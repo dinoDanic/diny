@@ -105,7 +105,7 @@ func (uc *UpdateChecker) printUpdateNotification(version string) {
 		Padding(1, 2)
 
 	title := fmt.Sprintf("New version %s available!", version)
-	command := "macOS / Linux: brew upgrade dinoDanic/tap/diny"
+	command := "macOS / Linux: brew update brew upgrade dinoDanic/tap/diny"
 	commandWIndow := "\nwindows: https://github.com/dinoDanic/diny"
 
 	content := fmt.Sprintf("%s\n\n%s", title, command+commandWIndow)
