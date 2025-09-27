@@ -11,7 +11,7 @@ import (
 
 func Main(cmd *cobra.Command, args []string) {
 	fmt.Println()
-	fmt.Println(RenderTitle("diny commiting"))
+	fmt.Println(RenderTitle("diny commit"))
 
 	gitDiffCmd := exec.Command("git", "diff", "--cached",
 		"-U0", "--no-color", "--ignore-all-space", "--ignore-blank-lines",
@@ -34,10 +34,10 @@ func Main(cmd *cobra.Command, args []string) {
 
 	userConfig, err := config.Load()
 
-	var commitMessage, note string
+	var commitMessage string
 	err = WithSpinner("Generating your commit message...", func() error {
 		var genErr error
-		commitMessage, note, genErr = CreateCommitMessage(diff, userConfig)
+		commitMessage, genErr = CreateCommitMessage(diff, userConfig)
 		return genErr
 	})
 
@@ -46,5 +46,5 @@ func Main(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	HandleCommitFlow(commitMessage, note, diff, userConfig)
+	HandleCommitFlow(commitMessage, "", diff, userConfig)
 }
