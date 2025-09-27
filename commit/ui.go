@@ -4,7 +4,6 @@ import (
 	"github.com/dinoDanic/diny/ui"
 )
 
-// Commit-specific UI functions using shared components
 func RenderTitle(text string) string {
 	return ui.RenderTitle(text)
 }
