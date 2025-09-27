@@ -10,12 +10,14 @@ import (
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/groq"
+	"github.com/dinoDanic/diny/ui"
 )
 
 func Main() {
+	fmt.Println()
 
 	// Show date selection menu
-	choice := timelinePrompt("📅 Choose timeline for commit analysis:")
+	choice := timelinePrompt("Choose timeline for commit analysis:")
 	fmt.Println()
 
 	var timelineCommits []string
@@ -24,77 +26,79 @@ func Main() {
 
 	switch choice {
 	case "today":
-		fmt.Println("🦕 Analyzing today's commits...")
+		fmt.Println(ui.RenderStep("Analyzing today's commits..."))
 		timelineCommits, err = git.GetCommitsToday()
 		dateRange = "today"
 	case "date":
 		selectedDate := dateInputPrompt("Enter date (DD MM YYYY):")
-		fmt.Printf("🦕 Analyzing commits from %s...\n", selectedDate)
+		fmt.Println(ui.RenderStep(fmt.Sprintf("Analyzing commits from %s...", selectedDate)))
 		timelineCommits, err = git.GetCommitsByDate(selectedDate)
 		dateRange = selectedDate
 	case "range":
 		startDate := dateInputPrompt("Enter start date (DD MM YYYY):")
 		endDate := dateInputPrompt("Enter end date (DD MM YYYY):")
-		fmt.Printf("🦕 Analyzing commits from %s to %s...\n", startDate, endDate)
+		fmt.Println(ui.RenderStep(fmt.Sprintf("Analyzing commits from %s to %s...", startDate, endDate)))
 		timelineCommits, err = git.GetCommitsByDateRange(startDate+" 00:00:00", endDate+" 23:59:59")
 		dateRange = fmt.Sprintf("%s to %s", startDate, endDate)
 	}
 
 	if err != nil {
-		fmt.Printf("❌ Failed to get timeline commits: %v\n", err)
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to get timeline commits: %v", err)))
 		os.Exit(1)
 	}
 
 	if len(timelineCommits) == 0 {
-		fmt.Printf("🦕 No commits found for the selected period (%s).\n", dateRange)
+		fmt.Println(ui.RenderWarning(fmt.Sprintf("No commits found for the selected period (%s).", dateRange)))
 		return
 	}
 
-	fmt.Printf("🦕 Found %d commits from %s:\n\n", len(timelineCommits), dateRange)
+	fmt.Println()
+	fmt.Println(ui.RenderInfo(fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange)))
+	fmt.Println()
 
-	// Display the commit messages
+	// Display the commit messages in a box
+	commitList := ""
 	for i, commit := range timelineCommits {
-		fmt.Printf("%d. %s\n", i+1, commit)
+		commitList += fmt.Sprintf("%d. %s\n", i+1, commit)
 	}
+	fmt.Println(ui.RenderBox("Commits Found", strings.TrimSpace(commitList)))
 
 	userConfig, err := config.Load()
-
-	fmt.Println()
-	if err == nil && userConfig != nil {
-		config.PrintConfiguration(*userConfig)
-	}
-
 	prompt := fmt.Sprintf("Timeline: %s\nCommits:\n%s", dateRange, strings.Join(timelineCommits, "\n"))
 
-	fmt.Println()
-	fmt.Println("🦕 Generating timeline analysis...")
-	fmt.Println()
+	var analysis string
+	err = ui.WithSpinner("Generating timeline analysis...", func() error {
+		var genErr error
+		analysis, genErr = groq.CreateTimelineWithGroq(prompt, userConfig)
+		return genErr
+	})
 
-	// Call Groq API for analysis
-	analysis, err := groq.CreateTimelineWithGroq(prompt, userConfig)
 	if err != nil {
-		fmt.Printf("❌ Failed to generate analysis: %v\n", err)
+		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to generate analysis: %v", err)))
 		os.Exit(1)
 	}
 
-	fmt.Printf("\n📊 Timeline Analysis:\n%s\n", analysis)
+	fmt.Println()
+	fmt.Println(ui.RenderBox("Timeline Analysis", analysis))
 }
 
 func timelinePrompt(message string) string {
 	var choice string
 
 	err := huh.NewSelect[string]().
-		Title(message).
+		Title("🦕 "+message).
+		Description("Select an option using arrow keys and press Enter").
 		Options(
 			huh.NewOption("Today", "today"),
 			huh.NewOption("Pick specific date", "date"),
 			huh.NewOption("Choose date range", "range"),
 		).
 		Value(&choice).
+		Height(5).
 		Run()
 
 	if err != nil {
-		fmt.Printf("Error running prompt: %v\n", err)
+		fmt.Println(ui.RenderError(fmt.Sprintf("Error running prompt: %v", err)))
 		os.Exit(1)
 	}
 
@@ -105,7 +109,8 @@ func dateInputPrompt(message string) string {
 	var input string
 
 	err := huh.NewInput().
-		Title(message).
+		Title("🦕 " + message).
+		Description("Use format: DD MM YYYY (e.g., 15 01 2025)").
 		Placeholder("15 01 2025").
 		Validate(func(s string) error {
 			_, err := time.Parse("02 01 2006", s)
@@ -118,7 +123,7 @@ func dateInputPrompt(message string) string {
 		Run()
 
 	if err != nil {
-		fmt.Printf("Error running prompt: %v\n", err)
+		fmt.Println(ui.RenderError(fmt.Sprintf("Error running prompt: %v", err)))
 		os.Exit(1)
 	}
 

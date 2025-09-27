@@ -11,7 +11,7 @@ import (
 
 func Main(cmd *cobra.Command, args []string) {
 	fmt.Println()
-	// fmt.Println(RenderTitle("diny commiting"))
+	fmt.Println(RenderTitle("diny commiting"))
 
 	gitDiffCmd := exec.Command("git", "diff", "--cached",
 		"-U0", "--no-color", "--ignore-all-space", "--ignore-blank-lines",
