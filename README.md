@@ -1,7 +1,7 @@
 # 🦕 diny — git diff commit messages 
 
 diny is a tiny dinosaur that writes your git commit messages for you.  
-It looks at your staged changes and generates clear, conventional-friendly messages using AI.
+It looks at your staged changes and generates clear, conventional-friendly messages.
 
 ✅ No API key required — powered by my self hosted Ollama server  
 🚀 Fast and reliable processing for all users  
@@ -34,15 +34,15 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 ### Windows
 
 #### Download Binary
-Download the Windows zip from [GitHub Releases](https://github.com/dinoDanic/diny/releases) and extract `diny.exe` to a folder in your PATH.
+Download the Windows zip from [GitHub Releases](https://github.com/dinoDanic/diny/releases) and extract `diny.exe`.
+
+#### Add to PATH
+Move `diny.exe` to a folder in your PATH (e.g. `C:\Windows\System32`)  
+or create `C:\Users\<You>\bin`, add it to PATH via *System Properties → Environment Variables*, then restart the terminal.
 
 #### PowerShell (One-liner)
 ```powershell
-# Download and install latest release
-$url = (Invoke-RestMethod "https://api.github.com/repos/dinoDanic/diny/releases/latest").assets | Where-Object {$_.name -like "*Windows*"} | Select-Object -ExpandProperty browser_download_url
-Invoke-WebRequest -Uri $url -OutFile "diny.zip"
-Expand-Archive -Path "diny.zip" -DestinationPath "$env:USERPROFILE\bin" -Force
-$env:PATH += ";$env:USERPROFILE\bin"
+$dest=Join-Path $env:LOCALAPPDATA 'diny\bin'; if(Test-Path $dest -PathType Leaf){throw "A FILE named '$dest' exists. Delete/rename it."}; New-Item -ItemType Directory -Path $dest -Force|Out-Null; $zip=Join-Path $env:TEMP 'diny.zip'; $tmp=Join-Path $env:TEMP ("diny_"+[guid]::NewGuid()); $arch=if($env:PROCESSOR_ARCHITECTURE -match 'ARM64'){'arm64|aarch64'}else{'amd64|x86_64|x64'}; $rel=Invoke-RestMethod "https://api.github.com/repos/dinoDanic/diny/releases/latest" -Headers @{ 'User-Agent'='PowerShell' }; $asset=$rel.assets|?{ $_.name -match "(?i)(windows|win).*($arch).*\.zip$"}|select -f 1; if(-not $asset){$asset=$rel.assets|?{ $_.name -match "(?i)(windows|win).*\.zip$"}|select -f 1}; if(-not $asset){throw "No Windows .zip asset found. Available:`n$($rel.assets.name -join "`n")"}; Invoke-WebRequest $asset.browser_download_url -OutFile $zip; Expand-Archive -Path $zip -DestinationPath $tmp -Force; Remove-Item $zip -Force; $exe=Get-ChildItem $tmp -Recurse -Filter "diny*.exe"|select -f 1; if(-not $exe){throw "Couldn't find diny.exe in the archive."}; $target=Join-Path $dest 'diny.exe'; if(Test-Path $target){Remove-Item $target -Force}; Move-Item $exe.FullName $target -Force; Get-ChildItem (Split-Path $exe.FullName) -Filter *.dll -ErrorAction SilentlyContinue | % { Copy-Item $_.FullName $dest -Force }; Remove-Item $tmp -Recurse -Force; if($env:PATH -notmatch [regex]::Escape($dest)){ $u=[Environment]::GetEnvironmentVariable('Path','User'); [Environment]::SetEnvironmentVariable('Path', ($u+";"+$dest).Trim(';'), 'User'); $env:PATH+=";$dest" }; & $target --help
 ```
 
 ### Download Binary (All Platforms)
