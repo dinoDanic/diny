@@ -1,15 +1,15 @@
 package commit
 
 import (
-	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 )
 
 var (
 	// Color scheme
-	primaryColor    = lipgloss.Color("#00D7FF")
+	primaryColor    = lipgloss.Color("#726FF2")
 	successColor    = lipgloss.Color("#00FF87")
 	errorColor      = lipgloss.Color("#FF5F87")
 	warningColor    = lipgloss.Color("#FFAF00")
@@ -49,11 +49,8 @@ var (
 
 	// Box styles
 	commitBoxStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(primaryColor).
-			Padding(1, 2).
-			MarginTop(1).
-			MarginBottom(1)
+			Background(lipgloss.Color("#25253A")).
+			Padding(1, 2)
 
 	configBoxStyle = lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder()).
@@ -62,10 +59,20 @@ var (
 			MarginBottom(1)
 
 	noteBoxStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(warningColor).
-			Padding(1, 2).
-			MarginBottom(1)
+			Background(lipgloss.Color("#3A3320")).
+			Padding(1, 2)
+
+	errorBoxStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("#3A2025")).
+			Padding(1, 2)
+
+	successBoxStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("#1A3A20")).
+			Padding(1, 2)
+
+	warningBoxStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("#3A3320")).
+			Padding(1, 2)
 
 	// Text styles
 	mutedStyle = lipgloss.NewStyle().
@@ -82,24 +89,24 @@ func RenderTitle(text string) string {
 }
 
 func RenderSuccess(text string) string {
-	return successStyle.Render("✅ " + text)
+	return successBoxStyle.Render(successStyle.Render(text))
 }
 
 func RenderError(text string) string {
-	return errorStyle.Render("❌ " + text)
+	return errorBoxStyle.Render(errorStyle.Render(text))
 }
 
 func RenderWarning(text string) string {
-	return warningStyle.Render("⚠️  " + text)
+	return warningBoxStyle.Render(warningStyle.Render(text))
 }
 
 func RenderInfo(text string) string {
-	return infoStyle.Render("💡 " + text)
+	return infoStyle.Render(text)
 }
 
 func RenderCommitMessage(message string) string {
 	return commitBoxStyle.Render(
-		boldStyle.Render("Generated Commit Message:") + "\n\n" +
+		boldStyle.Render("Commit Message:") + "\n\n" +
 			strings.TrimSpace(message),
 	)
 }
@@ -109,7 +116,7 @@ func RenderNote(note string) string {
 		return ""
 	}
 	return noteBoxStyle.Render(
-		warningStyle.Render("💡 Note: ") + note,
+		warningStyle.Render("Note: ") + note,
 	)
 }
 
@@ -124,16 +131,24 @@ func RenderSeparator() string {
 }
 
 func RenderStep(step string) string {
-	return infoStyle.Render("🔄 " + step)
+	return infoStyle.Render(step)
 }
 
-func RenderProgress() {
-	dots := []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
-	spinner := lipgloss.NewStyle().Foreground(primaryColor)
-	for i := 0; i < 10; i++ {
-		fmt.Printf("\r%s Generating commit message... %s",
-			infoStyle.Render("🦕"),
-			spinner.Render(dots[i%len(dots)]))
+func WithSpinner(message string, fn func() error) error {
+	var actionErr error
+
+	err := spinner.New().
+		Title("🦕 " + message).
+		Style(lipgloss.NewStyle().Foreground(primaryColor)).
+		Type(spinner.Dots).
+		Action(func() {
+			actionErr = fn()
+		}).
+		Run()
+
+	if err != nil {
+		return err
 	}
-	fmt.Print("\r" + strings.Repeat(" ", 50) + "\r")
+
+	return actionErr
 }

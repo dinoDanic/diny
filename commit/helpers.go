@@ -14,8 +14,6 @@ func HandleCommitFlow(commitMessage, note, fullPrompt string, userConfig *config
 }
 
 func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userConfig *config.UserConfig, previousMessages []string) {
-	fmt.Println()
-
 	if note != "" {
 		fmt.Println(RenderNote(note))
 	}
@@ -23,7 +21,7 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 	fmt.Println(RenderCommitMessage(commitMessage))
 	fmt.Println()
 
-	choice := choicePrompt("Choose your next action:")
+	choice := choicePrompt("What would you like to do next?")
 
 	switch choice {
 	case "commit":
@@ -38,7 +36,6 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 		fmt.Println(RenderSuccess("Commit successfully added to history!"))
 	case "regenerate":
 		fmt.Println()
-		fmt.Println(RenderStep("Generating alternative commit message..."))
 
 		modifiedPrompt := fullPrompt
 		if len(previousMessages) > 0 {
@@ -51,7 +48,12 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 			modifiedPrompt += "\n\nPlease provide an alternative commit message with a different approach or focus."
 		}
 
-		newCommitMessage, newNote, err := CreateCommitMessage(modifiedPrompt, userConfig)
+		var newCommitMessage, newNote string
+		err := WithSpinner("Generating alternative commit message...", func() error {
+			var genErr error
+			newCommitMessage, newNote, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
+			return genErr
+		})
 		if err != nil {
 			fmt.Println(RenderError(fmt.Sprintf("Error: %v", err)))
 			os.Exit(1)
@@ -63,11 +65,15 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 		fmt.Println()
 		customInput := customInputPrompt("What changes would you like to see in the commit message?")
 		fmt.Println()
-		fmt.Println(RenderStep("Generating commit message with your feedback..."))
 
 		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent commit message:\n%s\n\nUser feedback: %s\n\nPlease generate a new commit message that addresses the user's feedback.", commitMessage, customInput)
 
-		newCommitMessage, newNote, err := CreateCommitMessage(modifiedPrompt, userConfig)
+		var newCommitMessage, newNote string
+		err := WithSpinner("Refining commit message with your feedback...", func() error {
+			var genErr error
+			newCommitMessage, newNote, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
+			return genErr
+		})
 		if err != nil {
 			fmt.Println(RenderError(fmt.Sprintf("Error: %v", err)))
 			os.Exit(1)
@@ -77,7 +83,7 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 		HandleCommitFlowWithHistory(newCommitMessage, newNote, fullPrompt, userConfig, updatedHistory)
 	case "exit":
 		fmt.Println()
-		fmt.Println(RenderInfo("Thanks for using Diny! 👋"))
+		fmt.Println(RenderInfo("Thanks for using Diny!"))
 		os.Exit(0)
 	}
 }
@@ -89,10 +95,10 @@ func choicePrompt(message string) string {
 		Title("🦕 "+message).
 		Description("Select an option using arrow keys and press Enter").
 		Options(
-			huh.NewOption("✅ Commit this message", "commit"),
-			huh.NewOption("🔄 Generate different message", "regenerate"),
-			huh.NewOption("✏️  Refine with feedback", "custom"),
-			huh.NewOption("❌ Exit", "exit"),
+			huh.NewOption("Commit this message", "commit"),
+			huh.NewOption("Generate different message", "regenerate"),
+			huh.NewOption("Refine with feedback", "custom"),
+			huh.NewOption("Exit", "exit"),
 		).
 		Value(&choice).
 		Height(6).
@@ -110,7 +116,7 @@ func customInputPrompt(message string) string {
 	var input string
 
 	err := huh.NewInput().
-		Title("✏️  " + message).
+		Title("🦕 " + message).
 		Description("Provide specific feedback to improve the commit message").
 		Placeholder("e.g., make it shorter, use conventional format, focus on the bug fix...").
 		CharLimit(200).
