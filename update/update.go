@@ -115,10 +115,14 @@ func (uc *UpdateChecker) printUpdateNotification(version string) {
 		Foreground(lipgloss.Color("46")).
 		Padding(1, 2)
 
+	mutedStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("28"))
+
 	title := fmt.Sprintf("New version %s available!", version)
 	command := "Run: diny update"
+	recommendation := mutedStyle.Render("Updating is recommended as diny is in early preview.")
 
-	content := fmt.Sprintf("%s\n\n%s", title, command)
+	content := fmt.Sprintf("%s\n\n%s\n\n%s", title, command, recommendation)
 
 	fmt.Println()
 	fmt.Println(style.Render(content))
