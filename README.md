@@ -8,6 +8,13 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 ---
 
+## Why I’m building diny
+
+I’ve never liked using AI for coding — it takes away the fun for me.  
+But one thing I really suck at is commit messages. I type fast, make typos, and end up with junk like “ui update.” Later, when I need to update my time tracker or explain my work, I have to dig through diffs to remember what I actually did.  
+
+That’s why I built **diny**. It writes clear commit messages for me and has a **timeline** feature that summarizes a day’s commits. Perfect for catching up, updating clients, or just saving my goldfish memory.
+
 ## Features
 
 - 🔍 Reads staged changes with `git diff`
@@ -79,6 +86,7 @@ Configure diny settings for your project:
     diny init
 
 ---
+
 
 ## TODO
 
