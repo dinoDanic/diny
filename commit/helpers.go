@@ -29,7 +29,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 			ui.RenderError(fmt.Sprintf("Commit failed: %v", err))
 			os.Exit(1)
 		}
-		ui.RenderTitle("Commit successfully added to history!")
+		ui.RenderTitle("Commit created! Ready to push now")
 	case "regenerate":
 		fmt.Println()
 
