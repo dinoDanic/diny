@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
+	"github.com/dinoDanic/diny/ui"
 )
 
 type GitHubRelease struct {
@@ -109,24 +109,9 @@ func (uc *UpdateChecker) CheckForUpdate() {
 }
 
 func (uc *UpdateChecker) printUpdateNotification(version string) {
-	style := lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("46")).
-		Foreground(lipgloss.Color("46")).
-		Padding(1, 2)
+	content := fmt.Sprintf("New version %s available!\n\nPlease update with: diny update\nOr visit: https://github.com/dinoDanic/diny\n\nUpdate is crucial due to early development stage.", version)
 
-	mutedStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("28"))
-
-	title := fmt.Sprintf("New version %s available!", version)
-	command := "Run: diny update"
-	recommendation := mutedStyle.Render("Updating is recommended as diny is in early preview.")
-
-	content := fmt.Sprintf("%s\n\n%s\n\n%s", title, command, recommendation)
-
-	fmt.Println()
-	fmt.Println(style.Render(content))
-	fmt.Println()
+	ui.RenderWarning(content)
 }
 
 func (uc *UpdateChecker) GetLatestVersion() (string, error) {
