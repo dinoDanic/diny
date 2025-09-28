@@ -1,19 +1,15 @@
 # 🦕 diny — git diff commit messages 
 
-<div align="center">
-  <img src="https://diny-cli.vercel.app/diny-200.svg" alt="diny logo" width="200">
-</div>
-
-
 diny is a tiny dinosaur that writes your git commit messages for you.  
 It looks at your staged changes and generates clear, conventional-friendly messages.
+
+---
 
 ✅ No API key required — powered by my self hosted Ollama server  
 🚀 Fast and reliable processing for all users
 
 ![diny demo](https://diny-cli.vercel.app/demo.gif)
 
----
 
 ## Features
 
@@ -26,7 +22,6 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 - ✍️ Custom feedback system for precise message refinement
 - 📊 Timeline analysis of commit history and message patterns
 
----
 
 ## Install
 
@@ -52,7 +47,6 @@ or create `C:\Users\<You>\bin`, add it to PATH via *System Properties → Enviro
 
 Download pre-built binaries from [GitHub Releases](https://github.com/dinoDanic/diny/releases)
 
----
 
 ## Usage
 
@@ -72,7 +66,6 @@ After setup, you can run:
 
     git auto           # uses diny to generate commit message
 
----
 
 ## Commands
 
@@ -84,7 +77,6 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
     diny init          # Initialize diny with an interactive setup wizard
     diny timeline      # Summarize and analyze your commit history
     diny update        # Update diny to the latest version
----
 
 ## Update
 
