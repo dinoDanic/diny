@@ -87,6 +87,27 @@ Configure diny settings for your project:
 
 ---
 
+## Update
+
+### macOS/Linux (Homebrew)
+
+    diny update
+
+or manually:
+
+    brew update && brew upgrade dinoDanic/tap/diny
+
+### Windows
+
+    diny update
+
+or manually use the same command from install (should work):
+
+```powershell
+$dest=Join-Path $env:LOCALAPPDATA 'diny\bin'; if(Test-Path $dest -PathType Leaf){throw "A FILE named '$dest' exists. Delete/rename it."}; New-Item -ItemType Directory -Path $dest -Force|Out-Null; $zip=Join-Path $env:TEMP 'diny.zip'; $tmp=Join-Path $env:TEMP ("diny_"+[guid]::NewGuid()); $arch=if($env:PROCESSOR_ARCHITECTURE -match 'ARM64'){'arm64|aarch64'}else{'amd64|x86_64|x64'}; $rel=Invoke-RestMethod "https://api.github.com/repos/dinoDanic/diny/releases/latest" -Headers @{ 'User-Agent'='PowerShell' }; $asset=$rel.assets|?{ $_.name -match "(?i)(windows|win).*($arch).*\.zip$"}|select -f 1; if(-not $asset){$asset=$rel.assets|?{ $_.name -match "(?i)(windows|win).*\.zip$"}|select -f 1}; if(-not $asset){throw "No Windows .zip asset found. Available:`n$($rel.assets.name -join "`n")"}; Invoke-WebRequest $asset.browser_download_url -OutFile $zip; Expand-Archive -Path $zip -DestinationPath $tmp -Force; Remove-Item $zip -Force; $exe=Get-ChildItem $tmp -Recurse -Filter "diny*.exe"|select -f 1; if(-not $exe){throw "Couldn't find diny.exe in the archive."}; $target=Join-Path $dest 'diny.exe'; if(Test-Path $target){Remove-Item $target -Force}; Move-Item $exe.FullName $target -Force; Get-ChildItem (Split-Path $exe.FullName) -Filter *.dll -ErrorAction SilentlyContinue | % { Copy-Item $_.FullName $dest -Force }; Remove-Item $tmp -Recurse -Force; if($env:PATH -notmatch [regex]::Escape($dest)){ $u=[Environment]::GetEnvironmentVariable('Path','User'); [Environment]::SetEnvironmentVariable('Path', ($u+";"+$dest).Trim(';'), 'User'); $env:PATH+=";$dest" }; & $target --help
+```
+
+---
 
 ## TODO
 

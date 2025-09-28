@@ -41,18 +41,14 @@ func Load() (*UserConfig, error) {
 
 	configPath := filepath.Join(gitRoot, ".git", "diny-config.json")
 
-	// Try to load existing config
 	config, err := tryLoadConfig(configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// File doesn't exist - let caller use defaults
 			return nil, nil
 		}
-		// File exists but corrupted - prompt user
 		return handleConfigError(configPath, err)
 	}
 
-	// Validate config structure and values
 	if !isValidConfig(config) {
 		return handleInvalidConfig(configPath, config)
 	}
@@ -75,13 +71,11 @@ func tryLoadConfig(configPath string) (*UserConfig, error) {
 }
 
 func isValidConfig(config *UserConfig) bool {
-	// Validate Tone enum
 	validTones := []Tone{Professional, Casual, Friendly}
 	if !contains(validTones, config.Tone) {
 		return false
 	}
 
-	// Validate Length enum
 	validLengths := []Length{Short, Normal, Long}
 	if !contains(validLengths, config.Length) {
 		return false
