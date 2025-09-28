@@ -71,7 +71,7 @@ func RenderTitle(text string) string {
 }
 
 func RenderSuccess(text string) string {
-	return successBoxStyle.Render(strings.TrimSpace(text))
+	return titleStyle.Render("🦕 " + text)
 }
 
 func RenderError(text string) string {
