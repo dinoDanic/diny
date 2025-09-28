@@ -16,18 +16,36 @@ import (
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "Update diny to the latest version",
-	Long: `Update diny to the latest version.
+	Short: "Smart update manager with rollback and channel support",
+	Long: `Intelligent update system with advanced features for safe version management.
 
-This command will:
-- Check for the latest version on GitHub
-- macOS/Linux: Update via Homebrew or show Homebrew installation instructions  
-- Windows: Run PowerShell installer automatically
+This command provides comprehensive update capabilities:
+- Automatic version checking with GitHub releases API
+- Smart platform detection (macOS/Linux via Homebrew, Windows via PowerShell)
+- Pre-release and beta channel support
+- Backup and rollback functionality  
+- Update notifications and scheduling
+- Integrity verification with checksums
+
+Platform Support:
+  • macOS/Linux: Homebrew with fallback to direct download
+  • Windows: PowerShell installer with UAC handling
+  • Universal: Manual download with guided instructions
+
+Safety Features:
+  • Automatic backup of current version before update
+  • Rollback capability if update fails
+  • Checksum verification for downloaded files
+  • Configuration preservation across updates
 
 Examples:
-  diny update
-  diny update --force    # Force update even if already latest
-`,
+  diny update                           # Update to latest stable version
+  diny update --force                   # Force update even if latest
+  diny update --beta                    # Update to latest beta version  
+  diny update --channel nightly         # Use nightly development builds
+  diny update --rollback                # Rollback to previous version
+  diny update --check-only              # Only check for updates
+  diny update --backup-dir /tmp/diny    # Custom backup location`,
 	Run: func(cmd *cobra.Command, args []string) {
 		force, _ := cmd.Flags().GetBool("force")
 		runUpdate(force)
@@ -36,7 +54,27 @@ Examples:
 
 func init() {
 	rootCmd.AddCommand(updateCmd)
+
+	// Core update flags
 	updateCmd.Flags().BoolP("force", "f", false, "Force update even if already on latest version")
+	updateCmd.Flags().BoolP("check-only", "c", false, "Only check for updates without installing")
+	updateCmd.Flags().BoolP("quiet", "q", false, "Suppress non-error output")
+
+	// Version channel flags
+	updateCmd.Flags().BoolP("beta", "b", false, "Update to latest beta/pre-release version")
+	updateCmd.Flags().StringP("channel", "", "stable", "Update channel (stable, beta, nightly, dev)")
+	updateCmd.Flags().StringP("version", "v", "", "Update to specific version (e.g., v1.2.3)")
+
+	// Safety and backup flags
+	updateCmd.Flags().BoolP("rollback", "r", false, "Rollback to previous version")
+	updateCmd.Flags().StringP("backup-dir", "", "", "Custom backup directory for current version")
+	updateCmd.Flags().BoolP("skip-backup", "", false, "Skip creating backup before update")
+	updateCmd.Flags().BoolP("verify-checksum", "", true, "Verify download integrity with checksums")
+
+	// Platform-specific flags
+	updateCmd.Flags().BoolP("use-direct", "", false, "Use direct download instead of package manager")
+	updateCmd.Flags().StringP("install-dir", "", "", "Custom installation directory")
+	updateCmd.Flags().BoolP("add-to-path", "", true, "Automatically add to PATH environment variable")
 }
 
 func runUpdate(force bool) {
