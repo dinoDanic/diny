@@ -1,5 +1,10 @@
 # 🦕 diny — git diff commit messages 
 
+<div align="center">
+  <img src="https://diny-cli.vercel.app/diny-200.svg" alt="diny logo" width="200">
+</div>
+
+
 diny is a tiny dinosaur that writes your git commit messages for you.  
 It looks at your staged changes and generates clear, conventional-friendly messages.
 
