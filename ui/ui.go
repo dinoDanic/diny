@@ -10,38 +10,52 @@ import (
 
 var (
 	// Color scheme
-	PrimaryColor = lipgloss.Color("#726FF2")
-	SuccessColor = lipgloss.Color("#00FF87")
-	ErrorColor   = lipgloss.Color("#FF5F87")
-	WarningColor = lipgloss.Color("#FFAF00")
-	MutedColor   = lipgloss.Color("#6C7086")
+	PrimaryForeground = lipgloss.Color("#726FF2")
+	PrimaryBackground = lipgloss.Color("#25253A")
+	SuccessForeground = lipgloss.Color("#00FF87")
+	SuccessBackground = lipgloss.Color("#1A3A20")
+	ErrorForeground   = lipgloss.Color("#FF5F87")
+	ErrorBackground   = lipgloss.Color("#3A2025")
+	WarningForeground = lipgloss.Color("#FFAF00")
+	WarningBackground = lipgloss.Color("#3A3320")
+	MutedForeground   = lipgloss.Color("#6C7086")
 
 	titleStyle = lipgloss.NewStyle().
-			Foreground(PrimaryColor).
+			Foreground(PrimaryForeground).
 			Bold(true)
 
 	primaryBoxStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#25253A")).
+			Background(PrimaryBackground).
+			BorderLeft(true).
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(PrimaryForeground).
 			Padding(1, 3).
 			MarginBottom(1)
 
 	errorBoxStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#3A2025")).
-			Foreground(ErrorColor).
+			Background(ErrorBackground).
+			Foreground(ErrorForeground).
 			Bold(true).
+			BorderLeft(true).
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(ErrorForeground).
 			Padding(1, 3).
 			MarginBottom(1)
 
 	warningBoxStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#3A3320")).
-			Foreground(WarningColor).
+			Background(WarningBackground).
+			Foreground(WarningForeground).
 			Bold(true).
+			BorderLeft(true).
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(WarningForeground).
 			Padding(1, 3).
 			MarginBottom(1)
 )
 
 func RenderTitle(text string) {
 	fmt.Println(titleStyle.Render("🦕 " + text))
+	fmt.Println()
 }
 
 func RenderError(text string) {
@@ -63,7 +77,7 @@ func WithSpinner(message string, fn func() error) error {
 
 	err := spinner.New().
 		Title("🦕 " + message).
-		Style(lipgloss.NewStyle().Foreground(PrimaryColor)).
+		Style(lipgloss.NewStyle().Foreground(PrimaryForeground)).
 		Type(spinner.Dots).
 		Action(func() {
 			actionErr = fn()
@@ -75,4 +89,14 @@ func WithSpinner(message string, fn func() error) error {
 	}
 
 	return actionErr
+}
+
+// DebugUI renders all UI elements for development testing
+func DebugUI() {
+	fmt.Println("=== DINY UI DEBUG ===")
+	RenderTitle("Sample Title")
+	RenderBox("Primary Box", "This is a primary box with some content to demonstrate the styling and border.")
+	RenderError("This is an error message to show how errors are displayed with red styling and border.")
+	RenderWarning("This is a warning message to show how warnings are displayed with orange styling and border.")
+	fmt.Println("=== END DEBUG ===")
 }
