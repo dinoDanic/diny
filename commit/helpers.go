@@ -79,7 +79,6 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
 	case "exit":
 		ui.RenderTitle("Thanks for using Diny!")
-		fmt.Println()
 		os.Exit(0)
 	}
 }

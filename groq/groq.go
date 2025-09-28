@@ -11,6 +11,7 @@ import (
 
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/server"
+	"github.com/dinoDanic/diny/version"
 )
 
 type commitData struct {
@@ -25,8 +26,8 @@ type commitResp struct {
 func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) (string, error) {
 	payload := map[string]interface{}{
 		"gitDiff": gitDiff,
-		"version": "1.0.0", // TODO: Get actual version
-		"name":    "diny",  // TODO: Get actual name
+		"version": version.Get(),
+		"name":    "diny",
 	}
 
 	if userConfig != nil {
