@@ -10,11 +10,11 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 ## Why I’m building diny
 
-I never really liked AI. I’m not a “vibe coder” — for me, coding with AI kills the fun of programming. And yet, everyone seems to be using it now, even judging others for not doing the same, while half of them couldn’t write a line of code without it.  
+I never liked using AI. I’m not a vibe coder, for me it kills the fun of programming. Still, everyone seems to use it and even judge others for not doing the same, while many couldn’t write a line of code without it.  
 
-What I actually struggle with are commit messages. I type fast, make typos, and usually leave junk like “ui update.” At the end of the day I want to log what I did for each client or project, but my commits are useless. I end up digging through git diffs just to remember what I worked on. With a memory like a goldfish, this is exhausting.  
+What I really struggle with are commit messages. I type fast, make typos, and usually leave junk like “ui update.” At the end of the day I want to log what I did for each client or project, but my commits are useless. I end up digging through git diffs just to remember what I worked on. With a memory like a goldfish, that’s exhausting.  
 
-That’s why I built **diny**. It helps me write proper commit messages and added a **timeline** feature that pulls all commits for a day into a short summary. Perfect for updating clients, filling in my time tracker, or catching up if I missed a few days. For this kind of job, AI actually makes sense — not coding for me, just fixing the boring parts I’d never do well myself.
+That’s why I built **diny**. It helps me write proper commit messages and has a **timeline** feature that pulls all commits for a day into a short summary. Perfect for updating clients, filling in my time tracker, or catching up if I missed a few days. For this kind of job AI actually makes sense — not to code for me, just to handle the boring parts I’d never do well myself.
 
 ## Features
 
