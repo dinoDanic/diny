@@ -10,10 +10,11 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 ## Why I’m building diny
 
-I’ve never liked using AI for coding — it takes away the fun for me.  
-But one thing I really suck at is commit messages. I type fast, make typos, and end up with junk like “ui update.” Later, when I need to update my time tracker or explain my work, I have to dig through diffs to remember what I actually did.  
+I never really liked AI. I’m not a “vibe coder” — for me, coding with AI kills the fun of programming. And yet, everyone seems to be using it now, even judging others for not doing the same, while half of them couldn’t write a line of code without it.  
 
-That’s why I built **diny**. It writes clear commit messages for me and has a **timeline** feature that summarizes a day’s commits. Perfect for catching up, updating clients, or just saving my goldfish memory.
+What I actually struggle with are commit messages. I type fast, make typos, and usually leave junk like “ui update.” At the end of the day I want to log what I did for each client or project, but my commits are useless. I end up digging through git diffs just to remember what I worked on. With a memory like a goldfish, this is exhausting.  
+
+That’s why I built **diny**. It helps me write proper commit messages and added a **timeline** feature that pulls all commits for a day into a short summary. Perfect for updating clients, filling in my time tracker, or catching up if I missed a few days. For this kind of job, AI actually makes sense — not coding for me, just fixing the boring parts I’d never do well myself.
 
 ## Features
 
