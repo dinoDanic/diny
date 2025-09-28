@@ -134,7 +134,7 @@ func promptConfigAction(configPath string) (*UserConfig, error) {
 		if err := os.Remove(configPath); err != nil {
 			ui.RenderWarning(fmt.Sprintf("Could not delete config file: %v", err))
 		} else {
-			ui.RenderTitle("Config file deleted. Using defaults.")
+			ui.RenderTitle("Using defaults..")
 		}
 		return nil, nil // Let caller use defaults
 	default:
@@ -147,7 +147,6 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 
 	config := &UserConfig{}
 
-	// Prompt for UseConventional
 	err := huh.NewConfirm().
 		Title("Use conventional commit format?").
 		Description("e.g., 'feat: add new feature' or 'fix: resolve bug'").
@@ -157,7 +156,6 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 		return nil, err
 	}
 
-	// Prompt for UseEmoji
 	err = huh.NewConfirm().
 		Title("Include emojis in commit messages?").
 		Description("e.g., '✨ Add new feature' or '🐛 Fix bug'").
@@ -167,7 +165,6 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 		return nil, err
 	}
 
-	// Prompt for Tone
 	var toneStr string
 	err = huh.NewSelect[string]().
 		Title("Choose commit message tone").
@@ -183,7 +180,6 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 	}
 	config.Tone = Tone(toneStr)
 
-	// Prompt for Length
 	var lengthStr string
 	err = huh.NewSelect[string]().
 		Title("Choose commit message length").
@@ -199,12 +195,10 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 	}
 	config.Length = Length(lengthStr)
 
-	// Save the new valid config
 	if err := Save(*config); err != nil {
 		return nil, fmt.Errorf("failed to save new config: %w", err)
 	}
 
-	ui.RenderTitle("New configuration saved successfully!")
 	PrintConfiguration(*config)
 
 	return config, nil
@@ -232,9 +226,10 @@ func Save(config UserConfig) error {
 }
 
 func PrintConfiguration(userConfig UserConfig) {
-	fmt.Println("⚙️  Configuration:")
-	fmt.Printf("   • Emoji: %t\n", userConfig.UseEmoji)
-	fmt.Printf("   • Conventional: %t\n", userConfig.UseConventional)
-	fmt.Printf("   • Tone: %s\n", userConfig.Tone)
-	fmt.Printf("   • Length: %s\n", userConfig.Length)
+	content := fmt.Sprintf("• Emoji: %t\n• Conventional: %t\n• Tone: %s\n• Length: %s",
+		userConfig.UseEmoji,
+		userConfig.UseConventional,
+		userConfig.Tone,
+		userConfig.Length)
+	ui.RenderBox("Configuration", content)
 }

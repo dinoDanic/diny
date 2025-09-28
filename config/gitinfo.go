@@ -17,7 +17,6 @@ type GitInfo struct {
 	RepoURL   string `json:"repoURL"`
 }
 
-// GetGitInfo extracts repository information from .git/config
 func GetGitInfo() (*GitInfo, error) {
 	gitRoot, err := git.FindGitRoot()
 	if err != nil {
@@ -38,19 +37,16 @@ func GetGitInfo() (*GitInfo, error) {
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 
-		// Check if we're entering the origin remote section
 		if line == `[remote "origin"]` {
 			inOriginSection = true
 			continue
 		}
 
-		// Check if we're leaving the origin section (new section starts)
 		if inOriginSection && strings.HasPrefix(line, "[") && line != `[remote "origin"]` {
 			inOriginSection = false
 			continue
 		}
 
-		// Extract URL from origin section
 		if inOriginSection && strings.HasPrefix(line, "url = ") {
 			originURL = strings.TrimPrefix(line, "url = ")
 			break
@@ -77,24 +73,19 @@ func GetGitInfo() (*GitInfo, error) {
 	}, nil
 }
 
-// parseGitURL parses different Git URL formats and extracts owner and repo name
 func parseGitURL(url string) (owner, repo string, err error) {
-	// Remove .git suffix if present
 	url = strings.TrimSuffix(url, ".git")
 
-	// HTTPS format: https://github.com/owner/repo
 	httpsRegex := regexp.MustCompile(`https?://[^/]+/([^/]+)/([^/]+)`)
 	if matches := httpsRegex.FindStringSubmatch(url); len(matches) == 3 {
 		return matches[1], matches[2], nil
 	}
 
-	// SSH format: git@github.com:owner/repo
 	sshRegex := regexp.MustCompile(`git@[^:]+:([^/]+)/([^/]+)`)
 	if matches := sshRegex.FindStringSubmatch(url); len(matches) == 3 {
 		return matches[1], matches[2], nil
 	}
 
-	// Git protocol: git://github.com/owner/repo
 	gitRegex := regexp.MustCompile(`git://[^/]+/([^/]+)/([^/]+)`)
 	if matches := gitRegex.FindStringSubmatch(url); len(matches) == 3 {
 		return matches[1], matches[2], nil

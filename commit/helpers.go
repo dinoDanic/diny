@@ -29,10 +29,8 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 			ui.RenderError(fmt.Sprintf("Commit failed: %v", err))
 			os.Exit(1)
 		}
-		ui.RenderTitle("Commit created! Ready to push now")
+		ui.RenderTitle("Commit created!")
 	case "regenerate":
-		fmt.Println()
-
 		modifiedPrompt := fullPrompt
 		if len(previousMessages) > 0 {
 			modifiedPrompt += "\n\nPrevious commit messages that were not satisfactory:\n"
@@ -58,9 +56,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		updatedHistory := append(previousMessages, commitMessage)
 		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
 	case "custom":
-		fmt.Println()
 		customInput := customInputPrompt("What changes would you like to see in the commit message?")
-		fmt.Println()
 
 		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent commit message:\n%s\n\nUser feedback: %s\n\nPlease generate a new commit message that addresses the user's feedback.", commitMessage, customInput)
 
