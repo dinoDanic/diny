@@ -84,7 +84,7 @@ func choicePrompt(message string) string {
 
 	err := huh.NewSelect[string]().
 		Title("🦕 "+message).
-		Description("Select an option using arrow keys and press Enter").
+		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Commit this message", "commit"),
 			huh.NewOption("Generate different message", "regenerate"),

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -58,42 +57,7 @@ func (uc *UpdateChecker) compareVersions(current, latest string) bool {
 		return false
 	}
 
-	current = uc.normalizeVersion(current)
-	latest = uc.normalizeVersion(latest)
-
-	currentParts := strings.Split(current, ".")
-	latestParts := strings.Split(latest, ".")
-
-	maxLen := len(currentParts)
-	if len(latestParts) > maxLen {
-		maxLen = len(latestParts)
-	}
-
-	for i := 0; i < maxLen; i++ {
-		var currentPart, latestPart int
-
-		if i < len(currentParts) {
-			currentPart, _ = strconv.Atoi(currentParts[i])
-		}
-		if i < len(latestParts) {
-			latestPart, _ = strconv.Atoi(latestParts[i])
-		}
-
-		if latestPart > currentPart {
-			return true
-		} else if latestPart < currentPart {
-			return false
-		}
-	}
-
-	return false
-}
-
-func (uc *UpdateChecker) normalizeVersion(version string) string {
-	if idx := strings.Index(version, "-"); idx != -1 {
-		return version[:idx]
-	}
-	return version
+	return current != latest
 }
 
 func (uc *UpdateChecker) CheckForUpdate() {

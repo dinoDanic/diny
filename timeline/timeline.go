@@ -85,7 +85,7 @@ func timelinePrompt(message string) string {
 
 	err := huh.NewSelect[string]().
 		Title("🦕 "+message).
-		Description("Select an option using arrow keys and press Enter").
+		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Today", "today"),
 			huh.NewOption("Pick specific date", "date"),
