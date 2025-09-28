@@ -11,30 +11,16 @@ import (
 // timelineCmd represents the timeline command
 var timelineCmd = &cobra.Command{
 	Use:   "timeline",
-	Short: "Visualize and analyze your git commit patterns with AI insights",
-	Long: `Advanced timeline analysis of your commit history with AI-powered insights.
+	Short: "Analyze your commit message patterns and history",
+	Long: `Analyze and display patterns from your commit history.
 
-Analyze commits from various time periods and get detailed statistics:
-- Today's commits with hourly breakdown
-- Weekly/monthly productivity patterns  
-- Specific date ranges with custom filters
-- Repository-wide historical analysis
-- Team collaboration patterns (when used with --team flag)
+You can analyze commits from:
+- Today's commits
+- A specific date
+- A date range
 
-Features:
-  • Smart pattern recognition for commit types
-  • Conventional commit compliance analysis  
-  • Code quality trends based on commit messages
-  • Productivity insights and recommendations
-  • Visual timeline with emoji indicators
-  • Export reports in multiple formats (JSON, CSV, HTML)
-
-Examples:
-  diny timeline                         # Analyze today's commits
-  diny timeline --week                  # Show this week's patterns
-  diny timeline --since "2024-01-01"   # Custom date range
-  diny timeline --author "john.doe"    # Filter by specific author
-  diny timeline --export json          # Export detailed report`,
+This will show you statistics about your commit message style,
+including conventional commit usage, average length, and common patterns.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		timeline.Main()
 	},
@@ -43,25 +29,13 @@ Examples:
 func init() {
 	rootCmd.AddCommand(timelineCmd)
 
-	// Time period flags
-	timelineCmd.Flags().BoolP("today", "t", false, "Show today's commits only")
-	timelineCmd.Flags().BoolP("week", "w", false, "Show this week's commit timeline")
-	timelineCmd.Flags().BoolP("month", "m", false, "Show this month's patterns")
-	timelineCmd.Flags().StringP("since", "s", "", "Show commits since date (YYYY-MM-DD)")
-	timelineCmd.Flags().StringP("until", "u", "", "Show commits until date (YYYY-MM-DD)")
+	// Here you will define your flags and configuration settings.
 
-	// Filtering flags
-	timelineCmd.Flags().StringP("author", "a", "", "Filter commits by author email or name")
-	timelineCmd.Flags().StringSliceP("type", "", []string{}, "Filter by commit types (feat, fix, docs, etc.)")
-	timelineCmd.Flags().BoolP("team", "", false, "Include team collaboration analysis")
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// timelineCmd.PersistentFlags().String("foo", "", "A help for foo")
 
-	// Output and display flags
-	timelineCmd.Flags().StringP("export", "e", "", "Export format (json, csv, html)")
-	timelineCmd.Flags().BoolP("detailed", "d", false, "Show detailed commit analysis")
-	timelineCmd.Flags().BoolP("visual", "v", true, "Show visual timeline with emojis")
-	timelineCmd.Flags().IntP("limit", "l", 50, "Maximum number of commits to analyze")
-
-	// Analysis flags
-	timelineCmd.Flags().BoolP("stats", "", true, "Include statistical analysis")
-	timelineCmd.Flags().BoolP("trends", "", false, "Show productivity trends and insights")
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	// timelineCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
