@@ -51,6 +51,16 @@ var (
 			BorderForeground(WarningForeground).
 			Padding(1, 3).
 			MarginBottom(1)
+
+	successBoxStyle = lipgloss.NewStyle().
+			Background(SuccessBackground).
+			Foreground(SuccessForeground).
+			Bold(true).
+			BorderLeft(true).
+			BorderStyle(lipgloss.NormalBorder()).
+			BorderForeground(SuccessForeground).
+			Padding(1, 3).
+			MarginBottom(1)
 )
 
 func RenderTitle(text string) {
@@ -64,6 +74,10 @@ func RenderError(text string) {
 
 func RenderWarning(text string) {
 	fmt.Println(warningBoxStyle.Render(strings.TrimSpace(text)))
+}
+
+func RenderSuccess(text string) {
+	fmt.Println(successBoxStyle.Render(strings.TrimSpace(text)))
 }
 
 func RenderBox(title, content string) {
@@ -98,5 +112,6 @@ func DebugUI() {
 	RenderBox("Primary Box", "This is a primary box with some content to demonstrate the styling and border.")
 	RenderError("This is an error message to show how errors are displayed with red styling and border.")
 	RenderWarning("This is a warning message to show how warnings are displayed with orange styling and border.")
+	RenderSuccess("This is a success message to show how success messages are displayed with green styling and border.")
 	fmt.Println("=== END DEBUG ===")
 }

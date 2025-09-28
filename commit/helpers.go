@@ -29,7 +29,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 			ui.RenderError(fmt.Sprintf("Commit failed: %v", err))
 			os.Exit(1)
 		}
-		ui.RenderWarning("Commit created!")
+		ui.RenderSuccess("Commit created!")
 	case "regenerate":
 		modifiedPrompt := fullPrompt
 		if len(previousMessages) > 0 {
