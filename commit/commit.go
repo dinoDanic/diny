@@ -42,7 +42,7 @@ func Main(cmd *cobra.Command, args []string) {
 	})
 
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("Error generating commit message: %v", err))
+		ui.RenderError(fmt.Sprintf("%v", err))
 		os.Exit(1)
 	}
 

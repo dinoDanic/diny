@@ -22,7 +22,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 
 	switch choice {
 	case "commit":
-		ui.RenderTitle("Creating commit...")
+		// ui.RenderTitle("Creating commit...")
 		commitCmd := exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
 		err := commitCmd.Run()
 		if err != nil {
@@ -30,7 +30,6 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 			os.Exit(1)
 		}
 		ui.RenderTitle("Commit successfully added to history!")
-		fmt.Println()
 	case "regenerate":
 		fmt.Println()
 
