@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"runtime"
 
+	"github.com/dinoDanic/diny/ui"
 	"github.com/dinoDanic/diny/update"
 	"github.com/spf13/cobra"
 )
@@ -39,21 +40,21 @@ func init() {
 }
 
 func runUpdate(force bool) {
-	fmt.Println("🦕 Checking for diny updates...")
+	ui.RenderTitle("Checking for diny updates...")
 
 	checker := update.NewUpdateChecker(Version)
 	latestVersion, err := checker.GetLatestVersion()
 	if err != nil {
-		fmt.Printf("❌ Failed to check for updates: %v\n", err)
+		ui.RenderError(fmt.Sprintf("Failed to check for updates: %v", err))
 		os.Exit(1)
 	}
 
 	if !force && !checker.CompareVersions(Version, latestVersion) {
-		fmt.Printf("✅ You're already on the latest version (%s)\n", Version)
+		ui.RenderSuccess(fmt.Sprintf("You're already on the latest version (%s)", Version))
 		return
 	}
 
-	fmt.Printf("📦 Updating from %s to %s...\n", Version, latestVersion)
+	ui.RenderBox("Update Available", fmt.Sprintf("Updating from %s to %s...", Version, latestVersion))
 
 	switch runtime.GOOS {
 	case "darwin", "linux":
@@ -61,31 +62,31 @@ func runUpdate(force bool) {
 	case "windows":
 		updateWindows(latestVersion)
 	default:
-		fmt.Printf("❌ Unsupported operating system: %s\n", runtime.GOOS)
+		ui.RenderError(fmt.Sprintf("Unsupported operating system: %s", runtime.GOOS))
 		showManualInstructions(latestVersion)
 	}
 }
 
 func updateUnixLike() {
 	if isHomebrewInstalled() {
-		fmt.Println("🍺 Updating via Homebrew...")
+		ui.RenderBox("Homebrew", "Updating via Homebrew...")
 		if updateViaHomebrew() {
 			return
 		}
-		fmt.Println("❌ Homebrew update failed")
+		ui.RenderError("Homebrew update failed")
 	} else {
 		showHomebrewInstallInstructions()
 	}
 }
 
 func updateWindows(version string) {
-	fmt.Println("💻 Installing/updating diny on Windows...")
+	ui.RenderBox("Windows Update", "Installing/updating diny on Windows...")
 
 	if runWindowsPowerShellInstaller() {
 		return
 	}
 
-	fmt.Println("❌ PowerShell installation failed, showing manual instructions:")
+	ui.RenderError("PowerShell installation failed, showing manual instructions:")
 	showWindowsManualInstructions(version)
 }
 
@@ -95,25 +96,25 @@ func isHomebrewInstalled() bool {
 }
 
 func updateViaHomebrew() bool {
-	fmt.Println("📦 Running brew update...")
+	ui.RenderBox("Homebrew Update", "Running brew update...")
 	cmd := exec.Command("brew", "update")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("❌ brew update failed: %v\n", err)
+		ui.RenderError(fmt.Sprintf("brew update failed: %v", err))
 		return false
 	}
 
-	fmt.Println("⬆️  Running brew upgrade...")
+	ui.RenderBox("Homebrew Upgrade", "Running brew upgrade...")
 	cmd = exec.Command("brew", "upgrade", "dinoDanic/tap/diny")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("❌ brew upgrade failed: %v\n", err)
+		ui.RenderError(fmt.Sprintf("brew upgrade failed: %v", err))
 		return false
 	}
 
-	fmt.Println("🦕 Successfully updated via Homebrew")
+	ui.RenderSuccess("Successfully updated via Homebrew")
 	return true
 }
 
@@ -190,7 +191,7 @@ try {
 
 	err := cmd.Run()
 	if err != nil {
-		fmt.Printf("❌ PowerShell execution failed: %v\n", err)
+		ui.RenderError(fmt.Sprintf("PowerShell execution failed: %v", err))
 		return false
 	}
 
@@ -198,31 +199,22 @@ try {
 }
 
 func showHomebrewInstallInstructions() {
-	fmt.Printf(`
-🍺 Homebrew is not installed. Please install it to easily update diny:
-`)
+	ui.RenderWarning("Homebrew is not installed. Please install it to easily update diny")
 }
 
 func showWindowsManualInstructions(version string) {
-	fmt.Print(`
-💻 Manual Windows Installation:
+	ui.RenderBox("Manual Windows Installation", fmt.Sprintf(`If automatic installation failed for version %s:
 
-📋 If automatic installation failed,
-  Visit: https://github.com/dinoDanic/diny
-
-`, version)
+Visit: https://github.com/dinoDanic/diny`, version))
 }
 
 func showManualInstructions(version string) {
-	fmt.Print(`
-📋 Manual Update Instructions:
+	ui.RenderBox("Manual Update Instructions", fmt.Sprintf(`For version %s:
 
 macOS/Linux with Homebrew:
   brew update
   brew upgrade dinoDanic/tap/diny
 
 Windows:
-  Visit: https://github.com/dinoDanic/diny
-
-`, version)
+  Visit: https://github.com/dinoDanic/diny`, version))
 }

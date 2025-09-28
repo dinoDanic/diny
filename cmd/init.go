@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
+	"github.com/dinoDanic/diny/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -106,7 +107,9 @@ The configuration will be saved to .git/diny-config.json in your git repository.
 			os.Exit(1)
 		}
 
+		fmt.Println()
 		config.PrintConfiguration(userConfig)
+		ui.RenderTitle("Configuration saved!")
 	},
 }
 
