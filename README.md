@@ -4,7 +4,9 @@ diny is a tiny dinosaur that writes your git commit messages for you.
 It looks at your staged changes and generates clear, conventional-friendly messages.
 
 ✅ No API key required — powered by my self hosted Ollama server  
-🚀 Fast and reliable processing for all users  
+🚀 Fast and reliable processing for all users
+
+![diny demo](https://diny-cli.vercel.app/demo.gif)
 
 ---
 
@@ -22,10 +24,7 @@ That’s why I built **diny**. It helps me write proper commit messages and has 
 - 🧹 Filters out noise (lockfiles, binaries, build artifacts)
 - ⚡ Generates commit messages via Ollama
 - 📝 Produces concise, consistent messages
-- 🔄 Interactive workflow with multiple options:
-  - **Commit** - Use the generated message
-  - **Generate different message** - Get a completely new approach
-  - **Refine message** - Provide custom feedback for targeted improvements
+- 🔄 Interactive workflow with multiple options
 - 🧠 Smart regeneration that learns from previous attempts
 - ✍️ Custom feedback system for precise message refinement
 - 📊 Timeline analysis of commit history and message patterns
