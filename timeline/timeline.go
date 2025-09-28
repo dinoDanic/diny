@@ -26,34 +26,33 @@ func Main() {
 
 	switch choice {
 	case "today":
-		fmt.Println(ui.RenderStep("Analyzing today's commits..."))
+		ui.RenderTitle("Analyzing today's commits...")
 		timelineCommits, err = git.GetCommitsToday()
 		dateRange = "today"
 	case "date":
 		selectedDate := dateInputPrompt("Enter date (DD MM YYYY):")
-		fmt.Println(ui.RenderStep(fmt.Sprintf("Analyzing commits from %s...", selectedDate)))
+		ui.RenderTitle(fmt.Sprintf("Analyzing commits from %s...", selectedDate))
 		timelineCommits, err = git.GetCommitsByDate(selectedDate)
 		dateRange = selectedDate
 	case "range":
 		startDate := dateInputPrompt("Enter start date (DD MM YYYY):")
 		endDate := dateInputPrompt("Enter end date (DD MM YYYY):")
-		fmt.Println(ui.RenderStep(fmt.Sprintf("Analyzing commits from %s to %s...", startDate, endDate)))
+		ui.RenderTitle(fmt.Sprintf("Analyzing commits from %s to %s...", startDate, endDate))
 		timelineCommits, err = git.GetCommitsByDateRange(startDate+" 00:00:00", endDate+" 23:59:59")
 		dateRange = fmt.Sprintf("%s to %s", startDate, endDate)
 	}
 
 	if err != nil {
-		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to get timeline commits: %v", err)))
+		ui.RenderError(fmt.Sprintf("Failed to get timeline commits: %v", err))
 		os.Exit(1)
 	}
 
 	if len(timelineCommits) == 0 {
-		fmt.Println(ui.RenderWarning(fmt.Sprintf("No commits found for the selected period (%s).", dateRange)))
+		ui.RenderWarning(fmt.Sprintf("No commits found for the selected period (%s).", dateRange))
 		return
 	}
 
-	fmt.Println()
-	fmt.Println(ui.RenderInfo(fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange)))
+	ui.RenderTitle(fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange))
 	fmt.Println()
 
 	// Display the commit messages in a box
@@ -61,7 +60,7 @@ func Main() {
 	for i, commit := range timelineCommits {
 		commitList += fmt.Sprintf("%d. %s\n", i+1, commit)
 	}
-	fmt.Println(ui.RenderBox("Commits Found", strings.TrimSpace(commitList)))
+	ui.RenderBox("Commits Found", strings.TrimSpace(commitList))
 
 	userConfig, err := config.Load()
 	prompt := fmt.Sprintf("Timeline: %s\nCommits:\n%s", dateRange, strings.Join(timelineCommits, "\n"))
@@ -74,12 +73,11 @@ func Main() {
 	})
 
 	if err != nil {
-		fmt.Println(ui.RenderError(fmt.Sprintf("Failed to generate analysis: %v", err)))
+		ui.RenderError(fmt.Sprintf("Failed to generate analysis: %v", err))
 		os.Exit(1)
 	}
 
-	fmt.Println()
-	fmt.Println(ui.RenderBox("Timeline Analysis", analysis))
+	ui.RenderBox("Timeline Analysis", analysis)
 }
 
 func timelinePrompt(message string) string {
@@ -98,7 +96,7 @@ func timelinePrompt(message string) string {
 		Run()
 
 	if err != nil {
-		fmt.Println(ui.RenderError(fmt.Sprintf("Error running prompt: %v", err)))
+		ui.RenderError(fmt.Sprintf("Error running prompt: %v", err))
 		os.Exit(1)
 	}
 
@@ -123,7 +121,7 @@ func dateInputPrompt(message string) string {
 		Run()
 
 	if err != nil {
-		fmt.Println(ui.RenderError(fmt.Sprintf("Error running prompt: %v", err)))
+		ui.RenderError(fmt.Sprintf("Error running prompt: %v", err))
 		os.Exit(1)
 	}
 

@@ -10,32 +10,27 @@ import (
 	"github.com/dinoDanic/diny/ui"
 )
 
-func HandleCommitFlow(commitMessage, note, fullPrompt string, userConfig *config.UserConfig) {
-	HandleCommitFlowWithHistory(commitMessage, note, fullPrompt, userConfig, []string{})
+func HandleCommitFlow(commitMessage, fullPrompt string, userConfig *config.UserConfig) {
+	HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, []string{})
 }
 
-func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userConfig *config.UserConfig, previousMessages []string) {
-	if note != "" {
-		fmt.Println(RenderNote(note))
-	}
+func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *config.UserConfig, previousMessages []string) {
 
-	ui.RenderTitle("Commit message:")
-	fmt.Println(RenderCommitMessage(commitMessage))
-	fmt.Println()
+	ui.RenderBox("Commit message", commitMessage)
 
 	choice := choicePrompt("What would you like to do next?")
 
 	switch choice {
 	case "commit":
-		fmt.Println(RenderStep("Creating commit..."))
+		ui.RenderTitle("Creating commit...")
 		commitCmd := exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
 		err := commitCmd.Run()
 		if err != nil {
-			fmt.Println(RenderError(fmt.Sprintf("Commit failed: %v", err)))
+			ui.RenderError(fmt.Sprintf("Commit failed: %v", err))
 			os.Exit(1)
 		}
 		fmt.Println()
-		fmt.Println(RenderSuccess("Commit successfully added to history!"))
+		ui.RenderTitle("Commit successfully added to history!")
 	case "regenerate":
 		fmt.Println()
 
@@ -51,18 +46,18 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 		}
 
 		var newCommitMessage string
-		err := WithSpinner("Generating alternative commit message...", func() error {
+		err := ui.WithSpinner("Generating alternative commit message...", func() error {
 			var genErr error
 			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
 			return genErr
 		})
 		if err != nil {
-			fmt.Println(RenderError(fmt.Sprintf("Error: %v", err)))
+			ui.RenderError(fmt.Sprintf("Error: %v", err))
 			os.Exit(1)
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, "", fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
 	case "custom":
 		fmt.Println()
 		customInput := customInputPrompt("What changes would you like to see in the commit message?")
@@ -71,21 +66,21 @@ func HandleCommitFlowWithHistory(commitMessage, note, fullPrompt string, userCon
 		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent commit message:\n%s\n\nUser feedback: %s\n\nPlease generate a new commit message that addresses the user's feedback.", commitMessage, customInput)
 
 		var newCommitMessage string
-		err := WithSpinner("Refining commit message with your feedback...", func() error {
+		err := ui.WithSpinner("Refining commit message with your feedback...", func() error {
 			var genErr error
 			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
 			return genErr
 		})
 		if err != nil {
-			fmt.Println(RenderError(fmt.Sprintf("Error: %v", err)))
+			ui.RenderError(fmt.Sprintf("Error: %v", err))
 			os.Exit(1)
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, "", fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
 	case "exit":
+		ui.RenderTitle("Thanks for using Diny!")
 		fmt.Println()
-		fmt.Println(RenderInfo("Thanks for using Diny!"))
 		os.Exit(0)
 	}
 }
@@ -107,7 +102,7 @@ func choicePrompt(message string) string {
 		Run()
 
 	if err != nil {
-		fmt.Println(RenderError(fmt.Sprintf("Error running prompt: %v", err)))
+		ui.RenderError(fmt.Sprintf("Error running prompt: %v", err))
 		os.Exit(1)
 	}
 
@@ -126,7 +121,7 @@ func customInputPrompt(message string) string {
 		Run()
 
 	if err != nil {
-		fmt.Println(RenderError(fmt.Sprintf("Error running prompt: %v", err)))
+		ui.RenderError(fmt.Sprintf("Error running prompt: %v", err))
 		os.Exit(1)
 	}
 

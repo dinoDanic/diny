@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/huh/spinner"
@@ -17,97 +18,44 @@ var (
 
 	titleStyle = lipgloss.NewStyle().
 			Foreground(PrimaryColor).
-			Bold(true).
-			Padding(0, 1).
-			MarginBottom(1)
+			Bold(true)
 
-	warningStyle = lipgloss.NewStyle().
-			Foreground(WarningColor).
-			Bold(true).
-			Padding(0, 1)
-
-	infoStyle = lipgloss.NewStyle().
-			Foreground(PrimaryColor).
-			Padding(0, 1)
-
-	// Box styles
 	primaryBoxStyle = lipgloss.NewStyle().
 			Background(lipgloss.Color("#25253A")).
-			Padding(1, 2)
-
-	noteBoxStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#3A3320")).
-			Padding(1, 2)
+			Padding(1, 3).
+			MarginBottom(1)
 
 	errorBoxStyle = lipgloss.NewStyle().
 			Background(lipgloss.Color("#3A2025")).
 			Foreground(ErrorColor).
 			Bold(true).
-			Padding(1, 2)
-
-	successBoxStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#1A3A20")).
-			Foreground(SuccessColor).
-			Padding(1, 2)
+			Padding(1, 3).
+			MarginBottom(1)
 
 	warningBoxStyle = lipgloss.NewStyle().
 			Background(lipgloss.Color("#3A3320")).
 			Foreground(WarningColor).
 			Bold(true).
-			Padding(1, 2)
-
-	// Text styles
-	mutedStyle = lipgloss.NewStyle().
-			Foreground(MutedColor).
-			Italic(true)
-
-	boldStyle = lipgloss.NewStyle().
-			Bold(true)
+			Padding(1, 3).
+			MarginBottom(1)
 )
 
-// UI component functions
-func RenderTitle(text string) string {
-	return titleStyle.Render("🦕 " + text)
+func RenderTitle(text string) {
+	fmt.Println(titleStyle.Render("🦕 " + text))
 }
 
-func RenderSuccess(text string) string {
-	return titleStyle.Render("🦕 " + text)
+func RenderError(text string) {
+	fmt.Println(errorBoxStyle.Render(strings.TrimSpace(text)))
 }
 
-func RenderError(text string) string {
-	return errorBoxStyle.Render(strings.TrimSpace(text))
+func RenderWarning(text string) {
+	fmt.Println(warningBoxStyle.Render(strings.TrimSpace(text)))
 }
 
-func RenderWarning(text string) string {
-	return warningBoxStyle.Render(strings.TrimSpace(text))
-}
-
-func RenderInfo(text string) string {
-	return infoStyle.Render(text)
-}
-
-func RenderBox(title, content string) string {
-	return primaryBoxStyle.Render(
-		boldStyle.Render(title+":") + "\n\n" +
-			strings.TrimSpace(content),
-	)
-}
-
-func RenderNote(note string) string {
-	if note == "" {
-		return ""
-	}
-	return noteBoxStyle.Render(
-		warningStyle.Render("Note: ") + note,
-	)
-}
-
-func RenderSeparator() string {
-	return mutedStyle.Render(strings.Repeat("─", 50))
-}
-
-func RenderStep(step string) string {
-	return infoStyle.Render(step)
+func RenderBox(title, content string) {
+	fmt.Println(primaryBoxStyle.Render(
+		titleStyle.Render(title) + "\n\n" + content,
+	))
 }
 
 func WithSpinner(message string, fn func() error) error {

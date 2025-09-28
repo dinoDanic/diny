@@ -6,12 +6,12 @@ import (
 	"os/exec"
 
 	"github.com/dinoDanic/diny/config"
+	"github.com/dinoDanic/diny/ui"
 	"github.com/spf13/cobra"
 )
 
 func Main(cmd *cobra.Command, args []string) {
 	fmt.Println()
-	fmt.Println(RenderTitle("diny commit"))
 
 	gitDiffCmd := exec.Command("git", "diff", "--cached",
 		"-U0", "--no-color", "--ignore-all-space", "--ignore-blank-lines",
@@ -21,12 +21,12 @@ func Main(cmd *cobra.Command, args []string) {
 	gitDiff, err := gitDiffCmd.Output()
 
 	if err != nil {
-		fmt.Println(RenderError(fmt.Sprintf("Failed to get git diff: %v", err)))
+		ui.RenderError(fmt.Sprintf("Failed to get git diff: %v", err))
 		os.Exit(1)
 	}
 
 	if len(gitDiff) == 0 {
-		fmt.Println(RenderWarning("No staged changes found. Stage files first with `git add`."))
+		ui.RenderWarning("No staged changes found. Stage files first with `git add`.")
 		os.Exit(0)
 	}
 
@@ -35,16 +35,16 @@ func Main(cmd *cobra.Command, args []string) {
 	userConfig, err := config.Load()
 
 	var commitMessage string
-	err = WithSpinner("Generating your commit message...", func() error {
+	err = ui.WithSpinner("Generating your commit message...", func() error {
 		var genErr error
 		commitMessage, genErr = CreateCommitMessage(diff, userConfig)
 		return genErr
 	})
 
 	if err != nil {
-		fmt.Println(RenderError(fmt.Sprintf("Error generating commit message: %v", err)))
+		ui.RenderError(fmt.Sprintf("Error generating commit message: %v", err))
 		os.Exit(1)
 	}
 
-	HandleCommitFlow(commitMessage, "", diff, userConfig)
+	HandleCommitFlow(commitMessage, diff, userConfig)
 }
