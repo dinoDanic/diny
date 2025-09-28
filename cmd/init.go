@@ -100,22 +100,13 @@ The configuration will be saved to .git/diny-config.json in your git repository.
 	Run: func(cmd *cobra.Command, args []string) {
 		userConfig := RunConfigurationSetup()
 
-		// Save the configuration
 		err := config.Save(userConfig)
 		if err != nil {
 			fmt.Printf("Error saving configuration: %v\n", err)
 			os.Exit(1)
 		}
 
-		// Print the configuration for testing
-		fmt.Println()
-		fmt.Println("🎉 Configuration Complete!")
-		fmt.Println("===========================")
-		fmt.Printf("Use Emoji: %t\n", userConfig.UseEmoji)
-		fmt.Printf("Use Conventional: %t\n", userConfig.UseConventional)
-		fmt.Printf("Tone: %s\n", userConfig.Tone)
-		fmt.Printf("Length: %s\n", userConfig.Length)
-		fmt.Printf("\nConfiguration saved to .git/diny-config.json\n")
+		config.PrintConfiguration(userConfig)
 	},
 }
 
