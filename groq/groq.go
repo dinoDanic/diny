@@ -24,10 +24,17 @@ type commitResp struct {
 }
 
 func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) (string, error) {
+	gitInfo, err := config.GetGitInfo()
+	if err != nil {
+		return "", fmt.Errorf("failed to get git info: %w", err)
+	}
+
 	payload := map[string]interface{}{
-		"gitDiff": gitDiff,
-		"version": version.Get(),
-		"name":    "diny",
+		"gitDiff":   gitDiff,
+		"version":   version.Get(),
+		"repoName":  gitInfo.RepoName,
+		"repoOwner": gitInfo.RepoOwner,
+		"repoURL":   gitInfo.RepoURL,
 	}
 
 	if userConfig != nil {
@@ -70,7 +77,7 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) 
 	}
 
 	if out.Error != nil {
-		return "", fmt.Errorf("commit generation failed: %s", *out.Error)
+		return "", fmt.Errorf("%s", *out.Error)
 	}
 
 	if out.Data == nil {
