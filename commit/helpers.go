@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
+	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/ui"
 )
 
@@ -30,6 +32,18 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 			os.Exit(1)
 		}
 		ui.RenderTitle("Commited!")
+	case "edit":
+		editedMessage, err := openInEditor(commitMessage)
+		if err != nil {
+			ui.RenderError(fmt.Sprintf("Failed to open editor: %v", err))
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+			return
+		}
+		if editedMessage != commitMessage && editedMessage != "" {
+			HandleCommitFlowWithHistory(editedMessage, fullPrompt, userConfig, previousMessages)
+		} else {
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+		}
 	case "regenerate":
 		modifiedPrompt := fullPrompt
 		if len(previousMessages) > 0 {
@@ -87,12 +101,13 @@ func choicePrompt(message string) string {
 		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Commit this message", "commit"),
+			huh.NewOption("Edit in $EDITOR", "edit"),
 			huh.NewOption("Generate different message", "regenerate"),
 			huh.NewOption("Refine with feedback", "custom"),
 			huh.NewOption("Exit", "exit"),
 		).
 		Value(&choice).
-		Height(6).
+		Height(7).
 		Run()
 
 	if err != nil {
@@ -120,4 +135,40 @@ func customInputPrompt(message string) string {
 	}
 
 	return input
+}
+
+func openInEditor(message string) (string, error) {
+	editor := git.GetGitEditor()
+
+	tmpFile, err := os.CreateTemp("", "diny-commit-*.txt")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
+	if _, err := tmpFile.WriteString(message); err != nil {
+		return "", fmt.Errorf("failed to write to temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	editorArgs := strings.Fields(editor)
+	editorCmd := editorArgs[0]
+	args := append(editorArgs[1:], tmpFile.Name())
+
+	cmd := exec.Command(editorCmd, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("editor exited with error: %v", err)
+	}
+
+	editedContent, err := os.ReadFile(tmpFile.Name())
+	if err != nil {
+		return "", fmt.Errorf("failed to read edited file: %v", err)
+	}
+
+	return strings.TrimSpace(string(editedContent)), nil
 }
