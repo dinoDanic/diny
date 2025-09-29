@@ -19,6 +19,7 @@ type CommitRequest struct {
 	GitDiff    string             `json:"gitDiff"`
 	Version    string             `json:"version"`
 	Name       string             `json:"name"`
+	RepoName   string             `json:"repoName"`
 	UserConfig *config.UserConfig `json:"userConfig"`
 }
 
@@ -32,17 +33,15 @@ type commitResp struct {
 }
 
 func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) (string, error) {
-	gitName, err := git.GetGitName()
-
-	if err != nil {
-		return "", fmt.Errorf("failed to get committer name: %w", err)
-	}
+	gitName := git.GetGitName()
+	repoName := git.GetRepoName()
 
 	payload := CommitRequest{
-		GitDiff:    gitDiff,
-		Version:    version.Get(),
-		Name:       gitName,
 		UserConfig: userConfig,
+		Version:    version.Get(),
+		GitDiff:    gitDiff,
+		Name:       gitName,
+		RepoName:   repoName,
 	}
 
 	buf, err := json.Marshal(payload)

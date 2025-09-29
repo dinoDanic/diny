@@ -9,7 +9,6 @@ import (
 )
 
 var (
-	// Color scheme
 	PrimaryForeground = lipgloss.Color("#726FF2")
 	PrimaryBackground = lipgloss.Color("#25253A")
 	SuccessForeground = lipgloss.Color("#00FF87")
@@ -105,7 +104,6 @@ func WithSpinner(message string, fn func() error) error {
 	return actionErr
 }
 
-// DebugUI renders all UI elements for development testing
 func DebugUI() {
 	fmt.Println("=== DINY UI DEBUG ===")
 	RenderTitle("Sample Title")
