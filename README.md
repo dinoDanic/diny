@@ -1,4 +1,4 @@
-# 🦕 diny — git diff commit messages 
+# 🦕 diny — git diff commit messages
 
 diny is a tiny dinosaur that writes your git commit messages for you.  
 It looks at your staged changes and generates clear, conventional-friendly messages.
@@ -10,6 +10,7 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 ![diny demo](https://diny-cli.vercel.app/demo.gif)
 
+---
 
 ## Features
 
@@ -20,6 +21,9 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 - 🔄 Interactive workflow with multiple options
 - 🧠 Smart regeneration that learns from previous attempts
 - ✍️ Custom feedback system for precise message refinement
+- 🧷 Save to file (stash the generated message for later)
+- 📝 Draft mode (prepare a commit message without committing)
+- ✏️ Edit in your editor before committing
 - 📊 Timeline analysis of commit history and message patterns
 
 
@@ -71,12 +75,16 @@ After setup, you can run:
 
 diny comes with a handful of simple commands. Each one is designed to fit naturally into your git workflow:
 
-    diny auto          # Set up a git alias so you can run `git auto`
-    diny commit        # Generate a commit message from your staged changes
-    diny config        # Show your current diny configuration
-    diny init          # Initialize diny with an interactive setup wizard
-    diny timeline      # Summarize and analyze your commit history
-    diny update        # Update diny to the latest version
+    diny auto                                 # Set up a git alias so you can run `git auto`
+
+    diny commit                               # Generate a commit message from your staged changes
+    diny commit  --print                      # Print generated message to stdout only
+    diny commit  --print | git commit -F -    # Print generated message to stdout only
+
+    diny config                               # Show your current diny configuration
+    diny init                                 # Initialize diny with an interactive setup wizard
+    diny timeline                             # Summarize and analyze your commit history
+    diny update                               # Update diny to the latest version
 
 ## Update
 
