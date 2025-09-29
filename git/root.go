@@ -6,6 +6,7 @@ package git
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -27,4 +28,20 @@ func FindGitRoot() (string, error) {
 		}
 		dir = parent
 	}
+}
+
+func GetGitDiff() (string, error) {
+	gitDiffCmd := exec.Command("git", "diff", "--cached",
+		"-U3", "--no-color", "--ignore-all-space", "--ignore-blank-lines",
+		":(exclude)*.lock", ":(exclude)*package-lock.json", ":(exclude)*yarn.lock",
+		":(exclude)node_modules/", ":(exclude)dist/", ":(exclude)build/")
+
+	gitDiff, err := gitDiffCmd.Output()
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(gitDiff), nil
+
 }
