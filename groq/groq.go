@@ -10,9 +10,17 @@ import (
 	"time"
 
 	"github.com/dinoDanic/diny/config"
+	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/server"
 	"github.com/dinoDanic/diny/version"
 )
+
+type CommitRequest struct {
+	GitDiff    string             `json:"gitDiff"`
+	Version    string             `json:"version"`
+	Name       string             `json:"name"`
+	UserConfig *config.UserConfig `json:"userConfig"`
+}
 
 type commitData struct {
 	CommitMessage string `json:"commitMessage"`
@@ -24,23 +32,17 @@ type commitResp struct {
 }
 
 func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) (string, error) {
-	gitInfo, err := config.GetGitInfo()
+	gitName, err := git.GetGitName()
+
 	if err != nil {
-		return "", fmt.Errorf("failed to get git info: %w", err)
+		return "", fmt.Errorf("failed to get committer name: %w", err)
 	}
 
-	payload := map[string]interface{}{
-		"gitDiff":   gitDiff,
-		"version":   version.Get(),
-		"repoName":  gitInfo.RepoName,
-		"repoOwner": gitInfo.RepoOwner,
-		"repoURL":   gitInfo.RepoURL,
-	}
-
-	if userConfig != nil {
-		payload["userConfig"] = *userConfig
-	} else {
-		payload["userConfig"] = nil
+	payload := CommitRequest{
+		GitDiff:    gitDiff,
+		Version:    version.Get(),
+		Name:       gitName,
+		UserConfig: userConfig,
 	}
 
 	buf, err := json.Marshal(payload)
