@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/huh"
@@ -24,7 +25,6 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 
 	switch choice {
 	case "commit":
-		// ui.RenderTitle("Creating commit...")
 		commitCmd := exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
 		err := commitCmd.Run()
 		if err != nil {
@@ -44,6 +44,14 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		} else {
 			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
 		}
+	case "save":
+		if err := saveDraft(commitMessage); err != nil {
+			ui.RenderError(fmt.Sprintf("Failed to save draft: %v", err))
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+			return
+		}
+
+		ui.RenderSuccess("Draft saved! Works best with lazygit")
 	case "regenerate":
 		modifiedPrompt := fullPrompt
 		if len(previousMessages) > 0 {
@@ -102,12 +110,13 @@ func choicePrompt(message string) string {
 		Options(
 			huh.NewOption("Commit this message", "commit"),
 			huh.NewOption("Edit in $EDITOR", "edit"),
+			huh.NewOption("Save as draft", "save"),
 			huh.NewOption("Generate different message", "regenerate"),
 			huh.NewOption("Refine with feedback", "custom"),
 			huh.NewOption("Exit", "exit"),
 		).
 		Value(&choice).
-		Height(7).
+		Height(8).
 		Run()
 
 	if err != nil {
@@ -171,4 +180,39 @@ func openInEditor(message string) (string, error) {
 	}
 
 	return strings.TrimSpace(string(editedContent)), nil
+}
+
+func saveDraft(message string) error {
+	repoRoot, err := git.FindGitRoot()
+	if err != nil {
+		return fmt.Errorf("failed to find git repository: %v", err)
+	}
+
+	draftFiles := []string{
+		"COMMIT_EDITMSG",         // Standard git, tig, magit
+		"PREPARE_COMMIT_MSG",     // Git hooks & some GUIs
+		"LAZYGIT_PENDING_COMMIT", // lazygit
+	}
+
+	var errors []string
+	successCount := 0
+
+	for _, file := range draftFiles {
+		filePath := filepath.Join(repoRoot, ".git", file)
+		if err := os.WriteFile(filePath, []byte(message), 0644); err != nil {
+			errors = append(errors, fmt.Sprintf("%s: %v", file, err))
+		} else {
+			successCount++
+		}
+	}
+
+	if successCount == 0 {
+		return fmt.Errorf("failed to write to any draft files: %s", strings.Join(errors, ", "))
+	}
+
+	if len(errors) > 0 {
+		return fmt.Errorf("partial success - some files failed: %s", strings.Join(errors, ", "))
+	}
+
+	return nil
 }
