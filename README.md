@@ -9,7 +9,7 @@
 diny is a tiny dinosaur that writes your git commit messages for you.  
 It looks at your staged changes and generates clear, conventional-friendly messages.
 
-**No API key required** • Fast and reliable • Open source
+🔓 **No API key required** • 🔌 Plug and play • ⚡ Fast and reliable • 🌟 Open source
 
 </div>
 
