@@ -25,8 +25,6 @@ func Main(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	fmt.Println()
-
 	var commitMessage string
 	err := ui.WithSpinner("Generating your commit message...", func() error {
 		var genErr error
