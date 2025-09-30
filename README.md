@@ -1,7 +1,11 @@
-# 🦕 diny — git diff commit messages
+<div align="center">
+
+# 🦕 diny — from git diff to clean commits
 
 diny is a tiny dinosaur that writes your git commit messages for you.  
 It looks at your staged changes and generates clear, conventional-friendly messages.
+
+</div>
 
 ---
 
