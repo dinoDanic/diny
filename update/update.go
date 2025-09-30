@@ -61,15 +61,17 @@ func (uc *UpdateChecker) compareVersions(current, latest string) bool {
 }
 
 func (uc *UpdateChecker) CheckForUpdate() {
-	latestVersion, err := uc.getLatestVersion()
+	go func() {
+		latestVersion, err := uc.getLatestVersion()
 
-	if err != nil {
-		return
-	}
+		if err != nil {
+			return
+		}
 
-	if uc.compareVersions(uc.currentVersion, latestVersion) {
-		uc.printUpdateNotification(latestVersion)
-	}
+		if uc.compareVersions(uc.currentVersion, latestVersion) {
+			uc.printUpdateNotification(latestVersion)
+		}
+	}()
 }
 
 func (uc *UpdateChecker) printUpdateNotification(version string) {

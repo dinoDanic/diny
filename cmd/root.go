@@ -6,7 +6,7 @@ package cmd
 import (
 	"os"
 
-	// "github.com/dinoDanic/diny/update"
+	"github.com/dinoDanic/diny/update"
 	"github.com/spf13/cobra"
 )
 
@@ -24,8 +24,8 @@ It helps you maintain clean, consistent commit history without
 spending time manually writing messages.
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// checker := update.NewUpdateChecker(Version)
-		// checker.CheckForUpdate()
+		checker := update.NewUpdateChecker(Version)
+		checker.CheckForUpdate()
 	},
 }
 
