@@ -60,7 +60,7 @@ Download pre-built binaries from [GitHub Releases](https://github.com/dinoDanic/
 
 Stage your changes, then run:
 
-    git add -A
+    git add             # Stage files
     diny commit
 
 ### Auto Command (Git Alias)
@@ -83,7 +83,7 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
 
     diny commit                               # Generate a commit message from your staged changes
     diny commit  --print                      # Print generated message to stdout only
-    diny commit  --print | git commit -F -    # Print generated message to stdout only
+    diny commit  --print | git commit -F -    # Generated message and commit
 
     diny config                               # Show your current diny configuration
     diny init                                 # Initialize diny with an interactive setup wizard
@@ -119,3 +119,5 @@ What I really struggle with are commit messages. I type fast, make typos, and us
 That’s why I built **diny**. It helps me write proper commit messages and has a **timeline** feature that pulls all commits for a day into a short summary. Perfect for updating clients, filling in my time tracker, or catching up if I missed a few days. For this kind of job AI actually makes sense — not to code for me, just to handle the boring parts I’d never do well myself.
 
 
+## TODO
+[ ] - Add lazygit integratio
