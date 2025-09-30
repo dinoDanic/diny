@@ -7,6 +7,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -75,7 +79,21 @@ func (uc *UpdateChecker) CheckForUpdate() {
 }
 
 func (uc *UpdateChecker) printUpdateNotification(version string) {
-	content := fmt.Sprintf("New version %s available!\n\nPlease update with: diny update\nOr visit: https://github.com/dinoDanic/diny\n\nUpdate is crucial due to early development stage.", version)
+	method := uc.DetectInstallMethod()
+
+	var updateCmd string
+	switch method {
+	case "brew":
+		updateCmd = "brew upgrade dinoDanic/tap/diny"
+	case "scoop":
+		updateCmd = "scoop update diny"
+	case "winget":
+		updateCmd = "winget upgrade dinoDanic.diny"
+	default:
+		updateCmd = "download from https://github.com/dinoDanic/diny/releases"
+	}
+
+	content := fmt.Sprintf("New version %s available!\n\nUpdate with: diny update\nOr manually: %s\n\nUpdate is crucial due to early development stage.", version, updateCmd)
 
 	ui.RenderWarning(content)
 }
@@ -86,4 +104,83 @@ func (uc *UpdateChecker) GetLatestVersion() (string, error) {
 
 func (uc *UpdateChecker) CompareVersions(current, latest string) bool {
 	return uc.compareVersions(current, latest)
+}
+
+func (uc *UpdateChecker) DetectInstallMethod() string {
+	execPath, err := os.Executable()
+	if err != nil {
+		return "manual"
+	}
+
+	execPath, err = filepath.EvalSymlinks(execPath)
+	if err != nil {
+		execPath, _ = os.Executable()
+	}
+
+	switch runtime.GOOS {
+	case "darwin", "linux":
+		if strings.Contains(execPath, "/Cellar/") || strings.Contains(execPath, "/homebrew/") || strings.Contains(execPath, "/linuxbrew/") {
+			return "brew"
+		}
+
+		cmd := exec.Command("brew", "list", "diny")
+		if cmd.Run() == nil {
+			return "brew"
+		}
+
+	case "windows":
+		if strings.Contains(execPath, "\\scoop\\apps\\") {
+			return "scoop"
+		}
+
+		cmd := exec.Command("winget", "list", "--id", "dinoDanic.diny")
+		cmd.Stdout = nil
+		cmd.Stderr = nil
+		if cmd.Run() == nil {
+			return "winget"
+		}
+	}
+
+	return "manual"
+}
+
+func (uc *UpdateChecker) PerformUpdate() error {
+	method := uc.DetectInstallMethod()
+
+	ui.RenderTitle(fmt.Sprintf("Updating diny using %s...", method))
+
+	switch method {
+	case "brew":
+		cmd := exec.Command("brew", "upgrade", "dinoDanic/tap/diny")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("brew upgrade failed: %w", err)
+		}
+		ui.RenderSuccess("Successfully updated diny via Homebrew!")
+		return nil
+
+	case "scoop":
+		cmd := exec.Command("scoop", "update", "diny")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("scoop update failed: %w", err)
+		}
+		ui.RenderSuccess("Successfully updated diny via Scoop!")
+		return nil
+
+	case "winget":
+		cmd := exec.Command("winget", "upgrade", "dinoDanic.diny")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("winget upgrade failed: %w", err)
+		}
+		ui.RenderSuccess("Successfully updated diny via Winget!")
+		return nil
+
+	default:
+		return fmt.Errorf("manual installation detected\n\nPlease download the latest version from:\nhttps://github.com/dinoDanic/diny/releases")
+	}
 }

@@ -69,3 +69,35 @@ brews:
       bin.install "diny"
     test: |
       system "#{bin}/diny --version"
+
+winget:
+  - name: diny
+    publisher: dinoDanic
+    short_description: "Generate meaningful commit messages from git diff"
+    license: "MIT"
+    homepage: "https://github.com/dinoDanic/diny"
+    repository:
+      owner: dinoDanic
+      name: winget-pkgs
+      branch: "diny-{{.Version}}"
+      pull_request:
+        enabled: true
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
+    commit_author:
+      name: "Dino Danic"
+      email: "dino.danic@gmail.com"
+
+scoops:
+  - name: diny
+    description: "🦕 Generate meaningful commit messages from git diff"
+    homepage: "https://github.com/dinoDanic/diny"
+    license: "MIT"
+    repository:
+      owner: dinoDanic
+      name: scoop-bucket
+    commit_author:
+      name: "Dino Danic"
+      email: "dino.danic@gmail.com"
