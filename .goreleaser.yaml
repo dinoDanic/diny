@@ -54,7 +54,7 @@ release:
 
     Released by [GoReleaser](https://github.com/goreleaser/goreleaser).
 
-brews:
+homebrew:
   - name: diny
     description: "🦕 Generate meaningful commit messages from git diff"
     homepage: "https://github.com/dinoDanic/diny"
