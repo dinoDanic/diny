@@ -21,45 +21,37 @@ var (
 
 	titleStyle = lipgloss.NewStyle().
 			Foreground(PrimaryForeground).
-			Bold(true)
+			Bold(true).
+			MarginTop(1).
+			MarginBottom(1).
+	   	MarginLeft(2)
 
-	primaryBoxStyle = lipgloss.NewStyle().
-			Background(PrimaryBackground).
+	baseBoxStyle = lipgloss.NewStyle().
 			BorderLeft(true).
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(PrimaryForeground).
-			Padding(1, 3).
-			MarginBottom(1)
+			BorderStyle(lipgloss.ThickBorder()).
+			Padding(1, 2).
+			MarginTop(1).
+			MarginBottom(1).
+	   	MarginLeft(2)
 
-	errorBoxStyle = lipgloss.NewStyle().
+	primaryBoxStyle = baseBoxStyle.
+			Background(PrimaryBackground).
+			BorderForeground(PrimaryForeground)
+
+	errorBoxStyle = baseBoxStyle.
 			Background(ErrorBackground).
 			Foreground(ErrorForeground).
-			Bold(true).
-			BorderLeft(true).
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(ErrorForeground).
-			Padding(1, 3).
-			MarginBottom(1)
+			BorderForeground(ErrorForeground)
 
-	warningBoxStyle = lipgloss.NewStyle().
+	warningBoxStyle = baseBoxStyle.
 			Background(WarningBackground).
 			Foreground(WarningForeground).
-			Bold(true).
-			BorderLeft(true).
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(WarningForeground).
-			Padding(1, 3).
-			MarginBottom(1)
+			BorderForeground(WarningForeground)
 
-	successBoxStyle = lipgloss.NewStyle().
+	successBoxStyle = baseBoxStyle.
 			Background(SuccessBackground).
 			Foreground(SuccessForeground).
-			Bold(true).
-			BorderLeft(true).
-			BorderStyle(lipgloss.NormalBorder()).
-			BorderForeground(SuccessForeground).
-			Padding(1, 3).
-			MarginBottom(1)
+			BorderForeground(SuccessForeground)
 )
 
 func RenderTitle(text string) {
@@ -80,8 +72,9 @@ func RenderSuccess(text string) {
 }
 
 func RenderBox(title, content string) {
+	innerTitleStyle := titleStyle.UnsetMarginTop().UnsetMarginBottom()
 	fmt.Println(primaryBoxStyle.Render(
-		titleStyle.Render(title) + "\n\n" + content,
+		innerTitleStyle.Render(title) + "\n\n" + content,
 	))
 }
 

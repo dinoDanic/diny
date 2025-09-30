@@ -11,6 +11,7 @@ require (
 require (
 	github.com/charmbracelet/huh/spinner v0.0.0-20250922180342-f197546b2ab1
 	github.com/charmbracelet/lipgloss v1.1.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
