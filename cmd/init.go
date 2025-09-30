@@ -15,7 +15,6 @@ import (
 
 // RunConfigurationSetup runs the interactive configuration setup and returns the config
 func RunConfigurationSetup() config.UserConfig {
-	// Start with default configuration values
 	userConfig := config.UserConfig{
 		UseEmoji:        false,
 		UseConventional: false,
@@ -23,7 +22,8 @@ func RunConfigurationSetup() config.UserConfig {
 		Length:          config.Short,
 	}
 
-	// Emoji confirmation
+	fmt.Println()
+
 	err := huh.NewConfirm().
 		Title("Use emoji prefixes in commit messages?").
 		Description("Add emojis like ✨ feat: or 🐛 fix: to commit messages").
@@ -37,7 +37,6 @@ func RunConfigurationSetup() config.UserConfig {
 		os.Exit(1)
 	}
 
-	// Conventional commits confirmation
 	err = huh.NewConfirm().
 		Title("Use Conventional Commits format?").
 		Description("Format: type(scope): description").
@@ -51,7 +50,6 @@ func RunConfigurationSetup() config.UserConfig {
 		os.Exit(1)
 	}
 
-	// Tone selection
 	err = huh.NewSelect[config.Tone]().
 		Title("Choose your commit message tone").
 		Options(
@@ -67,7 +65,6 @@ func RunConfigurationSetup() config.UserConfig {
 		os.Exit(1)
 	}
 
-	// Length selection
 	err = huh.NewSelect[config.Length]().
 		Title("Choose your commit message length").
 		Options(

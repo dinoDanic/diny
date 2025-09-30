@@ -193,7 +193,6 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 		return nil, fmt.Errorf("failed to save new config: %w", err)
 	}
 
-	PrintConfiguration(*config)
 
 	return config, nil
 }

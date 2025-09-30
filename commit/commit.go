@@ -45,6 +45,8 @@ func Main(cmd *cobra.Command, args []string) {
 func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 	gitDiff, err := git.GetGitDiff()
 
+	fmt.Println()
+
 	if err != nil {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "Failed to get git diff: %v\n", err)

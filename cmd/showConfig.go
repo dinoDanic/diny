@@ -11,6 +11,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
+	"github.com/dinoDanic/diny/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -42,15 +43,11 @@ func showUserConfig() {
 		os.Exit(1)
 	}
 
-	// Check if config file exists
 	configExists := configFileExists(gitRoot)
 
 	if !configExists {
-		fmt.Println("🔧 No configuration found!")
-		fmt.Println("Diny needs to be configured before use.")
 		fmt.Println()
 
-		// Ask user if they want to create config
 		var createConfig bool
 		err := huh.NewConfirm().
 			Title("Would you like to create a configuration now?").
@@ -66,8 +63,7 @@ func showUserConfig() {
 		}
 
 		if !createConfig {
-			fmt.Println("👋 Configuration setup cancelled.")
-			fmt.Println("Run 'diny init' when you're ready to configure.")
+			ui.RenderTitle("Configuration setup cancelled.")
 			return
 		}
 
@@ -77,11 +73,12 @@ func showUserConfig() {
 
 	userConfig, err := config.Load()
 	if err != nil {
-		fmt.Printf("❌ Error loading configuration: %v\n", err)
+		ui.RenderError("Error loading configuration")
 		os.Exit(1)
 	}
 	if userConfig != nil {
-		displayConfig(*userConfig)
+		fmt.Println()
+		config.PrintConfiguration(*userConfig)
 	}
 }
 
@@ -92,8 +89,7 @@ func configFileExists(gitRoot string) bool {
 }
 
 func runInitSetup() {
-	fmt.Println("🚀 Starting Diny configuration setup...")
-	fmt.Println()
+	ui.RenderTitle("Starting Diny configuration setup...")
 
 	userConfig := RunConfigurationSetup()
 
@@ -103,23 +99,7 @@ func runInitSetup() {
 		os.Exit(1)
 	}
 
-	fmt.Println()
-	fmt.Println("🎉 Configuration saved successfully!")
-	displayConfig(userConfig)
-}
-
-func displayConfig(userConfig config.UserConfig) {
-	fmt.Println()
-	fmt.Println("⚙️  Diny Configuration")
-	fmt.Println("=======================")
-	fmt.Printf("📁 Location: .git/diny-config.json\n")
-	fmt.Println()
-	fmt.Printf("🎨 Use Emoji: %t\n", userConfig.UseEmoji)
-	fmt.Printf("📋 Conventional: %t\n", userConfig.UseConventional)
-	fmt.Printf("💬 Tone: %s\n", userConfig.Tone)
-	fmt.Printf("📏 Length: %s\n", userConfig.Length)
-	fmt.Println()
-	fmt.Println("💡 To modify configuration, run: diny init")
+	config.PrintConfiguration(userConfig)
 }
 
 func init() {
