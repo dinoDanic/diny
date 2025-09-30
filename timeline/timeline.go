@@ -14,11 +14,7 @@ import (
 )
 
 func Main() {
-	fmt.Println()
-
-	// Show date selection menu
 	choice := timelinePrompt("Choose timeline for commit analysis:")
-	fmt.Println()
 
 	var timelineCommits []string
 	var dateRange string
@@ -53,7 +49,6 @@ func Main() {
 	}
 
 	ui.RenderTitle(fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange))
-	fmt.Println()
 
 	// Display the commit messages in a box
 	commitList := ""

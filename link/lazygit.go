@@ -25,6 +25,7 @@ type CustomCommand struct {
 func LinkLazyGit() error {
 	var keyBinding string
 
+	fmt.Println()
 	form := huh.NewForm(
 		huh.NewGroup(
 			huh.NewInput().

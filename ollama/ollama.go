@@ -73,8 +73,6 @@ func MainStream(prompt string) (string, error) {
 		}
 	}
 
-	fmt.Println() // New line after streaming is done
-
 	if err := scanner.Err(); err != nil {
 		return "", fmt.Errorf("error reading stream: %v", err)
 	}

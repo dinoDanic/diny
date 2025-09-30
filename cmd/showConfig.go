@@ -77,7 +77,6 @@ func showUserConfig() {
 		os.Exit(1)
 	}
 	if userConfig != nil {
-		fmt.Println()
 		config.PrintConfiguration(*userConfig)
 	}
 }

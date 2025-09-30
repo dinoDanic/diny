@@ -21,7 +21,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 
 	ui.RenderBox("Commit message", commitMessage)
 
-	choice := choicePrompt("What would you like to do next?")
+	choice := choicePrompt()
 
 	switch choice {
 	case "commit":
@@ -101,11 +101,11 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 	}
 }
 
-func choicePrompt(message string) string {
+func choicePrompt() string {
 	var choice string
 
 	err := huh.NewSelect[string]().
-		Title("🦕 "+message).
+		Title("🦕 "+"What would you like to do next?").
 		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Commit this message", "commit"),

@@ -22,8 +22,6 @@ func RunConfigurationSetup() config.UserConfig {
 		Length:          config.Short,
 	}
 
-	fmt.Println()
-
 	err := huh.NewConfirm().
 		Title("Use emoji prefixes in commit messages?").
 		Description("Add emojis like ✨ feat: or 🐛 fix: to commit messages").
@@ -104,7 +102,6 @@ The configuration will be saved to .git/diny-config.json in your git repository.
 			os.Exit(1)
 		}
 
-		fmt.Println()
 		config.PrintConfiguration(userConfig)
 		ui.RenderTitle("Configuration saved!")
 	},

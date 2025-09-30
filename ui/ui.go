@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	PrimaryForeground = lipgloss.Color("#726FF2")
-	PrimaryBackground = lipgloss.Color("#25253A")
-	SuccessForeground = lipgloss.Color("#00FF87")
-	SuccessBackground = lipgloss.Color("#1A3A20")
-	ErrorForeground   = lipgloss.Color("#FF5F87")
-	ErrorBackground   = lipgloss.Color("#3A2025")
-	WarningForeground = lipgloss.Color("#FFAF00")
-	WarningBackground = lipgloss.Color("#3A3320")
+	PrimaryForeground = lipgloss.Color("#A78BFA")
+	PrimaryBackground = lipgloss.Color("#1E1B2E")
+	SuccessForeground = lipgloss.Color("#5FD787")
+	SuccessBackground = lipgloss.Color("#1A2820")
+	ErrorForeground   = lipgloss.Color("#F87171")
+	ErrorBackground   = lipgloss.Color("#2E1E1E")
+	WarningForeground = lipgloss.Color("#FACC15")
+	WarningBackground = lipgloss.Color("#2E2A1E")
 	MutedForeground   = lipgloss.Color("#6C7086")
 
 	titleStyle = lipgloss.NewStyle().
@@ -24,7 +24,7 @@ var (
 			Bold(true).
 			MarginTop(1).
 			MarginBottom(1).
-	   	MarginLeft(2)
+			MarginLeft(1)
 
 	baseBoxStyle = lipgloss.NewStyle().
 			BorderLeft(true).
@@ -32,7 +32,7 @@ var (
 			Padding(1, 2).
 			MarginTop(1).
 			MarginBottom(1).
-	   	MarginLeft(2)
+			MarginLeft(1)
 
 	primaryBoxStyle = baseBoxStyle.
 			Background(PrimaryBackground).
@@ -56,7 +56,6 @@ var (
 
 func RenderTitle(text string) {
 	fmt.Println(titleStyle.Render("🦕 " + text))
-	fmt.Println()
 }
 
 func RenderError(text string) {
@@ -72,7 +71,7 @@ func RenderSuccess(text string) {
 }
 
 func RenderBox(title, content string) {
-	innerTitleStyle := titleStyle.UnsetMarginTop().UnsetMarginBottom()
+	innerTitleStyle := titleStyle.UnsetMarginTop().UnsetMarginBottom().UnsetMarginLeft()
 	fmt.Println(primaryBoxStyle.Render(
 		innerTitleStyle.Render(title) + "\n\n" + content,
 	))
@@ -81,9 +80,14 @@ func RenderBox(title, content string) {
 func WithSpinner(message string, fn func() error) error {
 	var actionErr error
 
+	spinnerStyle := lipgloss.NewStyle().
+		Foreground(PrimaryForeground).
+		MarginTop(1).
+		MarginLeft(2)
+
 	err := spinner.New().
 		Title("🦕 " + message).
-		Style(lipgloss.NewStyle().Foreground(PrimaryForeground)).
+		Style(spinnerStyle).
 		Type(spinner.Dots).
 		Action(func() {
 			actionErr = fn()
