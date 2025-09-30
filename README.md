@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://diny-cli.vercel.app/diny-circle-200-3.png" alt="diny logo" width="200"/>
+<img src="https://diny-cli.vercel.app/diny-circle-200-5.png" alt="diny logo" width="200"/>
 
 # diny
 
