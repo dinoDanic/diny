@@ -3,9 +3,11 @@ package timeline
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
@@ -70,13 +72,15 @@ func Main() {
 	}
 
 	ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: analysis})
+
+	HandleTimelineFlow(analysis, prompt, userConfig, dateRange, []string{})
 }
 
 func timelinePrompt(message string) string {
 	var choice string
 
 	err := huh.NewSelect[string]().
-		Title("🦕 "+message).
+		Title(message).
 		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Today", "today"),
@@ -120,4 +124,151 @@ func dateInputPrompt(message string) string {
 	}
 
 	return input
+}
+
+func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.UserConfig, dateRange string, previousAnalyses []string) {
+	choice := timelineChoicePrompt()
+
+	switch choice {
+	case "copy":
+		if err := clipboard.WriteAll(analysis); err != nil {
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to copy to clipboard: %v", err), Variant: ui.Error})
+			HandleTimelineFlow(analysis, fullPrompt, userConfig, dateRange, previousAnalyses)
+			return
+		}
+		ui.Box(ui.BoxOptions{Message: "Analysis copied to clipboard!", Variant: ui.Success})
+		fmt.Println()
+	case "save":
+		filePath, err := saveTimelineAnalysis(analysis, dateRange)
+		if err != nil {
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to save analysis: %v", err), Variant: ui.Error})
+			HandleTimelineFlow(analysis, fullPrompt, userConfig, dateRange, previousAnalyses)
+			return
+		}
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Analysis saved!\n\n%s", filePath), Variant: ui.Success})
+		fmt.Println()
+	case "regenerate":
+		modifiedPrompt := fullPrompt
+		if len(previousAnalyses) > 0 {
+			modifiedPrompt += "\n\nPrevious analyses that were not satisfactory:\n"
+			for i, msg := range previousAnalyses {
+				modifiedPrompt += fmt.Sprintf("%d. %s\n", i+1, msg)
+			}
+			modifiedPrompt += "\nPlease generate a different analysis with a different perspective or focus."
+		} else {
+			modifiedPrompt += "\n\nPlease provide an alternative analysis with a different approach or focus."
+		}
+
+		var newAnalysis string
+		err := ui.WithSpinner("Generating alternative analysis...", func() error {
+			var genErr error
+			newAnalysis, genErr = groq.CreateTimelineWithGroq(modifiedPrompt, userConfig)
+			return genErr
+		})
+		if err != nil {
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
+			os.Exit(1)
+		}
+
+		ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: newAnalysis})
+		updatedHistory := append(previousAnalyses, analysis)
+		HandleTimelineFlow(newAnalysis, fullPrompt, userConfig, dateRange, updatedHistory)
+	case "custom":
+		customInput := customTimelineInputPrompt("What changes would you like to see in the analysis?")
+
+		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent analysis:\n%s\n\nUser feedback: %s\n\nPlease generate a new analysis that addresses the user's feedback.", analysis, customInput)
+
+		var newAnalysis string
+		err := ui.WithSpinner("Refining analysis with your feedback...", func() error {
+			var genErr error
+			newAnalysis, genErr = groq.CreateTimelineWithGroq(modifiedPrompt, userConfig)
+			return genErr
+		})
+		if err != nil {
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
+			os.Exit(1)
+		}
+
+		ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: newAnalysis})
+		updatedHistory := append(previousAnalyses, analysis)
+		HandleTimelineFlow(newAnalysis, fullPrompt, userConfig, dateRange, updatedHistory)
+	case "new":
+		Main()
+	case "exit":
+		ui.RenderTitle("Bye!")
+		os.Exit(0)
+	}
+}
+
+func timelineChoicePrompt() string {
+	var choice string
+
+	err := huh.NewSelect[string]().
+		Title("What would you like to do next?").
+		Description("Select an option using arrow keys or j,k and press Enter").
+		Options(
+			huh.NewOption("Copy to clipboard", "copy"),
+			huh.NewOption("Save analysis to file", "save"),
+			huh.NewOption("Generate different analysis", "regenerate"),
+			huh.NewOption("Refine with feedback", "custom"),
+			huh.NewOption("Analyze different period", "new"),
+			huh.NewOption("Exit", "exit"),
+		).
+		Value(&choice).
+		Height(8).
+		WithTheme(ui.GetHuhPrimaryTheme()).
+		Run()
+
+	if err != nil {
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
+		os.Exit(1)
+	}
+
+	return choice
+}
+
+func customTimelineInputPrompt(message string) string {
+	var input string
+
+	err := huh.NewInput().
+		Title(message).
+		Description("Provide specific feedback to improve the analysis").
+		Placeholder("e.g., focus more on patterns, include statistics, be more detailed...").
+		CharLimit(200).
+		Value(&input).
+		WithTheme(ui.GetHuhPrimaryTheme()).
+		Run()
+
+	if err != nil {
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
+		os.Exit(1)
+	}
+
+	return input
+}
+
+func saveTimelineAnalysis(analysis, dateRange string) (string, error) {
+	repoRoot, err := git.FindGitRoot()
+	if err != nil {
+		return "", fmt.Errorf("failed to find git repository: %v", err)
+	}
+
+	timelineDir := filepath.Join(repoRoot, ".git", "diny", "timeline")
+	if err := os.MkdirAll(timelineDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create timeline directory: %v", err)
+	}
+
+	timestamp := time.Now().Format("2006-01-02-150405")
+	sanitizedRange := strings.ReplaceAll(dateRange, " ", "-")
+	sanitizedRange = strings.ReplaceAll(sanitizedRange, ":", "-")
+	fileName := fmt.Sprintf("diny-timeline-%s-%s.md", sanitizedRange, timestamp)
+	filePath := filepath.Join(timelineDir, fileName)
+
+	content := fmt.Sprintf("# Timeline Analysis: %s\n\nGenerated: %s\n\n%s\n", dateRange, time.Now().Format("2006-01-02 15:04:05"), analysis)
+
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
+		return "", fmt.Errorf("failed to write analysis file: %v", err)
+	}
+
+	return filePath, nil
 }
