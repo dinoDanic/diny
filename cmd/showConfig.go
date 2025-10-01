@@ -73,7 +73,7 @@ func showUserConfig() {
 
 	userConfig, err := config.Load()
 	if err != nil {
-		ui.RenderError("Error loading configuration")
+		ui.Box(ui.BoxOptions{Message: "Error loading configuration", Variant: ui.Error})
 		os.Exit(1)
 	}
 	if userConfig != nil {
