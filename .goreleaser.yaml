@@ -90,7 +90,7 @@ winget:
       name: "Dino Danic"
       email: "dino.danic@gmail.com"
 
-scoop:
+scoops:
   - name: diny
     description: "🦕 Generate meaningful commit messages from git diff"
     homepage: "https://github.com/dinoDanic/diny"
