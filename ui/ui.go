@@ -161,10 +161,20 @@ func WithSpinner(message string, fn func() error) error {
 
 func GetHuhPrimaryTheme() *huh.Theme {
 	theme := huh.ThemeBase()
-	theme.Focused.Base = theme.Focused.Base.BorderForeground(PrimaryForeground)
+	theme.Focused.Base = theme.Focused.Base.
+		BorderForeground(PrimaryForeground).
+		Background(PrimaryBackground)
 	theme.Focused.Title = theme.Focused.Title.Foreground(PrimaryForeground)
-	theme.Focused.SelectedOption = theme.Focused.SelectedOption.Foreground(PrimaryForeground)
+	theme.Focused.Description = theme.Focused.Description.Foreground(MutedForeground)
+	theme.Focused.SelectedOption = theme.Focused.SelectedOption.
+		Foreground(PrimaryForeground).
+		Background(PrimaryBackground)
 	theme.Focused.TextInput.Cursor = theme.Focused.TextInput.Cursor.Foreground(PrimaryForeground)
+	theme.Focused.TextInput.Prompt = theme.Focused.TextInput.Prompt.
+		Foreground(PrimaryForeground).
+		Background(PrimaryBackground)
+	theme.Focused.TextInput.Placeholder = theme.Focused.TextInput.Placeholder.Foreground(MutedForeground)
+	theme.Focused.TextInput.Text = theme.Focused.TextInput.Text.Background(PrimaryBackground)
 	return theme
 }
 
