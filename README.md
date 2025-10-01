@@ -54,12 +54,6 @@ scoop bucket add dinodanic https://github.com/dinoDanic/scoop-bucket
 scoop install diny
 ```
 
-#### Winget
-
-```powershell
-winget install dinoDanic.diny
-```
-
 ### Manual Installation
 
 Download pre-built binaries from [GitHub Releases](https://github.com/dinoDanic/diny/releases)
@@ -128,11 +122,6 @@ brew update && brew upgrade dinoDanic/tap/diny
 **Windows (Scoop):**
 ```powershell
 scoop update diny
-```
-
-**Windows (Winget):**
-```powershell
-winget upgrade dinoDanic.diny
 ```
 
 ## Why I’m building diny

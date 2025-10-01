@@ -25,13 +25,7 @@ func main() {
 		{"Gruvbox Light", "gruvbox-light"},
 	}
 
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#A78BFA")).
-		MarginTop(1).
-		MarginBottom(1)
-
-	fmt.Println(titleStyle.Render("🎨 Diny Available Themes"))
+	ui.RenderTitle("Available Themes")
 
 	for _, t := range themes {
 		ui.SetTheme(t.themeKey)

@@ -23,7 +23,7 @@ and generates commit messages.
 It helps you maintain clean, consistent commit history without 
 spending time manually writing messages.
 `,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		checker := update.NewUpdateChecker(Version)
 		checker.CheckForUpdate()
 	},
