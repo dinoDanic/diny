@@ -164,7 +164,7 @@ func GetHuhPrimaryTheme() *huh.Theme {
 	theme.Focused.Base = theme.Focused.Base.
 		BorderForeground(PrimaryForeground).
 		Background(PrimaryBackground)
-	theme.Focused.Title = theme.Focused.Title.Foreground(PrimaryForeground)
+	theme.Focused.Title = theme.Focused.Title.Foreground(PrimaryForeground).Bold(true)
 	theme.Focused.Description = theme.Focused.Description.Foreground(MutedForeground)
 	theme.Focused.SelectedOption = theme.Focused.SelectedOption.
 		Foreground(PrimaryForeground).

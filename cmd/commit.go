@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/dinoDanic/diny/commit"
 
 	"github.com/spf13/cobra"
@@ -22,6 +24,7 @@ Examples:
   diny commit --print | xclip -sel clip # Copy to clipboard (Linux)
   diny commit --print | clip            # Copy to clipboard (Windows)`,
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println()
 		commit.Main(cmd, args)
 	},
 }
