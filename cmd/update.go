@@ -43,20 +43,20 @@ func runUpdate(force bool) {
 	checker := update.NewUpdateChecker(Version)
 	latestVersion, err := checker.GetLatestVersion()
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("Failed to check for updates: %v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to check for updates: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 
 	if !force && !checker.CompareVersions(Version, latestVersion) {
-		ui.RenderSuccess(fmt.Sprintf("You're already on the latest version (%s)", Version))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("You're already on the latest version (%s)", Version), Variant: ui.Success})
 		return
 	}
 
 	method := checker.DetectInstallMethod()
-	ui.RenderBox("Update Available", fmt.Sprintf("Updating from %s to %s...\nInstalled via: %s", Version, latestVersion, method))
+	ui.Box(ui.BoxOptions{Title: "Update Available", Message: fmt.Sprintf("Updating from %s to %s...\nInstalled via: %s", Version, latestVersion, method)})
 
 	if err := checker.PerformUpdate(); err != nil {
-		ui.RenderError(fmt.Sprintf("Update failed: %v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Update failed: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 }

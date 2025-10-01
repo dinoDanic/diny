@@ -33,7 +33,7 @@ func Main(cmd *cobra.Command, args []string) {
 	})
 
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("%v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("%v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 
@@ -47,7 +47,7 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "Failed to get git diff: %v\n", err)
 		} else {
-			ui.RenderError(fmt.Sprintf("Failed to get git diff: %v", err))
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get git diff: %v", err), Variant: ui.Error})
 		}
 		os.Exit(1)
 	}
@@ -56,7 +56,7 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "No staged changes found. Stage files first with `git add`.\n")
 		} else {
-			ui.RenderWarning("No staged changes found. Stage files first with `git add`.")
+			ui.Box(ui.BoxOptions{Message: "No staged changes found. Stage files first with `git add`.", Variant: ui.Warning})
 		}
 		os.Exit(0)
 	}
@@ -67,7 +67,7 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
 		} else {
-			ui.RenderError(fmt.Sprintf("Failed to load config: %v", err))
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to load config: %v", err), Variant: ui.Error})
 		}
 		os.Exit(1)
 	}

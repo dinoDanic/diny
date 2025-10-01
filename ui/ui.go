@@ -133,16 +133,14 @@ func getTitleStyleByVariant(variant BoxVariant) lipgloss.Style {
 }
 
 func RenderTitle(text string) {
-	Box(BoxOptions{Title: text})
-	// fmt.Println(getTitleStyle().Render("🦕 " + text))
+	Box(BoxOptions{Title: "🦕 " + text})
 }
 
 func WithSpinner(message string, fn func() error) error {
 	var actionErr error
 
 	spinnerStyle := lipgloss.NewStyle().
-		Foreground(PrimaryForeground).
-		MarginTop(1)
+		Foreground(PrimaryForeground)
 
 	err := spinner.New().
 		Title("🦕 " + message).

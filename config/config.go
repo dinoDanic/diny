@@ -94,12 +94,12 @@ func contains[T comparable](slice []T, item T) bool {
 }
 
 func handleConfigError(configPath string, err error) (*UserConfig, error) {
-	ui.RenderError(fmt.Sprintf("Configuration file is corrupted: %v", err))
+	ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Configuration file is corrupted: %v", err), Variant: ui.Error})
 	return promptConfigAction(configPath)
 }
 
 func handleInvalidConfig(configPath string, config *UserConfig) (*UserConfig, error) {
-	ui.RenderWarning("Invalid configuration values detected!")
+	ui.Box(ui.BoxOptions{Message: "Invalid configuration values detected!", Variant: ui.Warning})
 	return promptConfigAction(configPath)
 }
 
@@ -126,11 +126,11 @@ func promptConfigAction(configPath string) (*UserConfig, error) {
 		return promptUserForValidConfig(configPath)
 	case "defaults":
 		if err := os.Remove(configPath); err != nil {
-			ui.RenderWarning(fmt.Sprintf("Could not delete config file: %v", err))
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Could not delete config file: %v", err), Variant: ui.Warning})
 		} else {
 			ui.RenderTitle("Using defaults..")
 		}
-		return nil, nil // Let caller use defaults
+		return nil, nil
 	default:
 		return nil, fmt.Errorf("invalid choice")
 	}
@@ -193,7 +193,6 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 		return nil, fmt.Errorf("failed to save new config: %w", err)
 	}
 
-
 	return config, nil
 }
 
@@ -224,5 +223,5 @@ func PrintConfiguration(userConfig UserConfig) {
 		userConfig.UseConventional,
 		userConfig.Tone,
 		userConfig.Length)
-	ui.RenderBox("Configuration", content)
+	ui.Box(ui.BoxOptions{Title: "Configuration", Message: content})
 }

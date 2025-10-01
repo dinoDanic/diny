@@ -95,7 +95,7 @@ func (uc *UpdateChecker) printUpdateNotification(version string) {
 
 	content := fmt.Sprintf("New version %s available!\n\nUpdate with: diny update\nOr manually: %s\n\nUpdate is crucial due to early development stage.", version, updateCmd)
 
-	ui.RenderWarning(content)
+	ui.Box(ui.BoxOptions{Message: content, Variant: ui.Warning})
 }
 
 func (uc *UpdateChecker) GetLatestVersion() (string, error) {
@@ -157,7 +157,7 @@ func (uc *UpdateChecker) PerformUpdate() error {
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("brew upgrade failed: %w", err)
 		}
-		ui.RenderSuccess("Successfully updated diny via Homebrew!")
+		ui.Box(ui.BoxOptions{Message: "Successfully updated diny via Homebrew!", Variant: ui.Success})
 		return nil
 
 	case "scoop":
@@ -167,7 +167,7 @@ func (uc *UpdateChecker) PerformUpdate() error {
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("scoop update failed: %w", err)
 		}
-		ui.RenderSuccess("Successfully updated diny via Scoop!")
+		ui.Box(ui.BoxOptions{Message: "Successfully updated diny via Scoop!", Variant: ui.Success})
 		return nil
 
 	case "winget":
@@ -177,7 +177,7 @@ func (uc *UpdateChecker) PerformUpdate() error {
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("winget upgrade failed: %w", err)
 		}
-		ui.RenderSuccess("Successfully updated diny via Winget!")
+		ui.Box(ui.BoxOptions{Message: "Successfully updated diny via Winget!", Variant: ui.Success})
 		return nil
 
 	default:

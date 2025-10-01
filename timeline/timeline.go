@@ -39,26 +39,23 @@ func Main() {
 	}
 
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("Failed to get timeline commits: %v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get timeline commits: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 
 	if len(timelineCommits) == 0 {
-		ui.RenderWarning(fmt.Sprintf("No commits found for the selected period (%s).", dateRange))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("No commits found for the selected period (%s).", dateRange), Variant: ui.Warning})
 		return
 	}
 
-	ui.RenderTitle(fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange))
-
-	// Display the commit messages in a box
 	commitList := ""
 	for i, commit := range timelineCommits {
 		commitList += fmt.Sprintf("%d. %s\n", i+1, commit)
 	}
-	ui.RenderBox("Commits Found", strings.TrimSpace(commitList))
+	ui.Box(ui.BoxOptions{Title: fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange), Message: strings.TrimSpace(commitList)})
 
 	userConfig, err := config.Load()
-	prompt := fmt.Sprintf("Timeline: %s\nCommits:\n%s", dateRange, strings.Join(timelineCommits, "\n"))
+	prompt := fmt.Sprintf("Timeline: %s\nCommits:\n%s", dateRange, strings.Join(timelineCommits, "n"))
 
 	var analysis string
 	err = ui.WithSpinner("Generating timeline analysis...", func() error {
@@ -68,11 +65,11 @@ func Main() {
 	})
 
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("Failed to generate analysis: %v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to generate analysis: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 
-	ui.RenderBox("Timeline Analysis", analysis)
+	ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: analysis})
 }
 
 func timelinePrompt(message string) string {
@@ -91,7 +88,7 @@ func timelinePrompt(message string) string {
 		Run()
 
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("Error running prompt: %v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 
@@ -116,7 +113,7 @@ func dateInputPrompt(message string) string {
 		Run()
 
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("Error running prompt: %v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 

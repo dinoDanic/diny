@@ -19,7 +19,7 @@ func HandleCommitFlow(commitMessage, fullPrompt string, userConfig *config.UserC
 
 func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *config.UserConfig, previousMessages []string) {
 
-	ui.RenderBox("Commit message", commitMessage)
+	ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
 
 	choice := choicePrompt()
 
@@ -28,14 +28,14 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		commitCmd := exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
 		err := commitCmd.Run()
 		if err != nil {
-			ui.RenderError(fmt.Sprintf("Commit failed: %v", err))
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", err), Variant: ui.Error})
 			os.Exit(1)
 		}
 		ui.RenderTitle("Commited!")
 	case "edit":
 		editedMessage, err := openInEditor(commitMessage)
 		if err != nil {
-			ui.RenderError(fmt.Sprintf("Failed to open editor: %v", err))
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to open editor: %v", err), Variant: ui.Error})
 			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
 			return
 		}
@@ -46,12 +46,12 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		}
 	case "save":
 		if err := saveDraft(commitMessage); err != nil {
-			ui.RenderError(fmt.Sprintf("Failed to save draft: %v", err))
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to save draft: %v", err), Variant: ui.Error})
 			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
 			return
 		}
 
-		ui.RenderSuccess("Draft saved! Works best with lazygit")
+		ui.Box(ui.BoxOptions{Message: "Draft saved!", Variant: ui.Success})
 	case "regenerate":
 		modifiedPrompt := fullPrompt
 		if len(previousMessages) > 0 {
@@ -71,7 +71,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 			return genErr
 		})
 		if err != nil {
-			ui.RenderError(fmt.Sprintf("Error: %v", err))
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
 			os.Exit(1)
 		}
 
@@ -89,7 +89,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 			return genErr
 		})
 		if err != nil {
-			ui.RenderError(fmt.Sprintf("Error: %v", err))
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
 			os.Exit(1)
 		}
 
@@ -120,7 +120,7 @@ func choicePrompt() string {
 		Run()
 
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("Error running prompt: %v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 
@@ -139,7 +139,7 @@ func customInputPrompt(message string) string {
 		Run()
 
 	if err != nil {
-		ui.RenderError(fmt.Sprintf("Error running prompt: %v", err))
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 
