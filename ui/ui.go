@@ -46,22 +46,12 @@ func getTerminalWidth() int {
 	return width
 }
 
-func getTitleStyle() lipgloss.Style {
-	return lipgloss.NewStyle().
-		Foreground(PrimaryForeground).
-		Bold(true).
-		MarginTop(1).
-		MarginBottom(1)
-}
-
 func getBaseBoxStyle() lipgloss.Style {
 	width := getTerminalWidth() - 1
 	return lipgloss.NewStyle().
 		BorderLeft(true).
 		BorderStyle(lipgloss.ThickBorder()).
 		Padding(1, 2).
-		// MarginTop(1).
-		// MarginBottom(1).
 		Width(width)
 }
 
@@ -162,19 +152,11 @@ func WithSpinner(message string, fn func() error) error {
 func GetHuhPrimaryTheme() *huh.Theme {
 	theme := huh.ThemeBase()
 	theme.Focused.Base = theme.Focused.Base.
-		BorderForeground(PrimaryForeground).
-		Background(PrimaryBackground)
-	theme.Focused.Title = theme.Focused.Title.Foreground(PrimaryForeground).Bold(true)
+		BorderForeground(PrimaryForeground).PaddingTop(1).PaddingBottom(1).Bold(true)
+	theme.Focused.Title = theme.Focused.Title.Foreground(PrimaryForeground)
 	theme.Focused.Description = theme.Focused.Description.Foreground(MutedForeground)
 	theme.Focused.SelectedOption = theme.Focused.SelectedOption.
-		Foreground(PrimaryForeground).
-		Background(PrimaryBackground)
-	theme.Focused.TextInput.Cursor = theme.Focused.TextInput.Cursor.Foreground(PrimaryForeground)
-	theme.Focused.TextInput.Prompt = theme.Focused.TextInput.Prompt.
-		Foreground(PrimaryForeground).
-		Background(PrimaryBackground)
-	theme.Focused.TextInput.Placeholder = theme.Focused.TextInput.Placeholder.Foreground(MutedForeground)
-	theme.Focused.TextInput.Text = theme.Focused.TextInput.Text.Background(PrimaryBackground)
+		Foreground(PrimaryForeground).Bold(true)
 	return theme
 }
 

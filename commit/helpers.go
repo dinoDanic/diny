@@ -31,7 +31,8 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", err), Variant: ui.Error})
 			os.Exit(1)
 		}
-		ui.RenderTitle("Commited!")
+		ui.Box(ui.BoxOptions{Message: "Commited!", Variant: ui.Success})
+		fmt.Println()
 	case "edit":
 		editedMessage, err := openInEditor(commitMessage)
 		if err != nil {
@@ -105,7 +106,7 @@ func choicePrompt() string {
 	var choice string
 
 	err := huh.NewSelect[string]().
-		Title("🦕 "+"What would you like to do next?").
+		Title("What would you like to do next?").
 		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Commit this message", "commit"),
