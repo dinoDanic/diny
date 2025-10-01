@@ -10,6 +10,21 @@ import (
 	"golang.org/x/term"
 )
 
+type BoxVariant string
+
+const (
+	Primary BoxVariant = "primary"
+	Success BoxVariant = "success"
+	Error   BoxVariant = "error"
+	Warning BoxVariant = "warning"
+)
+
+type BoxOptions struct {
+	Title   string
+	Message string
+	Variant BoxVariant
+}
+
 var (
 	PrimaryForeground = lipgloss.Color("#A78BFA")
 	PrimaryBackground = lipgloss.Color("#1E1B2E")
@@ -39,64 +54,87 @@ func getTitleStyle() lipgloss.Style {
 }
 
 func getBaseBoxStyle() lipgloss.Style {
-	width := getTerminalWidth() - 2
+	width := getTerminalWidth() - 1
 	return lipgloss.NewStyle().
 		BorderLeft(true).
 		BorderStyle(lipgloss.ThickBorder()).
 		Padding(1, 2).
-		MarginTop(1).
-		MarginBottom(1).
+		// MarginTop(1).
+		// MarginBottom(1).
 		Width(width)
 }
 
-func getPrimaryBoxStyle() lipgloss.Style {
-	return getBaseBoxStyle().
-		Background(PrimaryBackground).
-		BorderForeground(PrimaryForeground)
+func getBoxStyleByVariant(variant BoxVariant) lipgloss.Style {
+	base := getBaseBoxStyle()
+
+	switch variant {
+	case Success:
+		return base.
+			Background(SuccessBackground).
+			Foreground(SuccessForeground).
+			BorderForeground(SuccessForeground)
+	case Error:
+		return base.
+			Background(ErrorBackground).
+			Foreground(ErrorForeground).
+			BorderForeground(ErrorForeground)
+	case Warning:
+		return base.
+			Background(WarningBackground).
+			Foreground(WarningForeground).
+			BorderForeground(WarningForeground)
+	case Primary:
+		fallthrough
+	default:
+		return base.
+			Background(PrimaryBackground).
+			BorderForeground(PrimaryForeground)
+	}
 }
 
-func getErrorBoxStyle() lipgloss.Style {
-	return getBaseBoxStyle().
-		Background(ErrorBackground).
-		Foreground(ErrorForeground).
-		BorderForeground(ErrorForeground)
+func Box(opts BoxOptions) {
+	if opts.Variant == "" {
+		opts.Variant = Primary
+	}
+
+	style := getBoxStyleByVariant(opts.Variant)
+
+	var content string
+	if opts.Title != "" && opts.Message != "" {
+		titleStyle := getTitleStyleByVariant(opts.Variant)
+		content = titleStyle.Render(opts.Title) + "\n\n" + strings.TrimSpace(opts.Message)
+	} else if opts.Title != "" {
+		titleStyle := getTitleStyleByVariant(opts.Variant)
+		content = titleStyle.Render(opts.Title)
+	} else if opts.Message != "" {
+		content = strings.TrimSpace(opts.Message)
+	}
+
+	if content != "" {
+		fmt.Println(style.Render(content))
+	}
 }
 
-func getWarningBoxStyle() lipgloss.Style {
-	return getBaseBoxStyle().
-		Background(WarningBackground).
-		Foreground(WarningForeground).
-		BorderForeground(WarningForeground)
-}
+func getTitleStyleByVariant(variant BoxVariant) lipgloss.Style {
+	base := lipgloss.NewStyle().Bold(true)
 
-func getSuccessBoxStyle() lipgloss.Style {
-	return getBaseBoxStyle().
-		Background(SuccessBackground).
-		Foreground(SuccessForeground).
-		BorderForeground(SuccessForeground)
+	switch variant {
+	case Success:
+		return base.Foreground(SuccessForeground)
+	case Error:
+		return base.Foreground(ErrorForeground)
+	case Warning:
+		return base.Foreground(WarningForeground)
+	case Primary:
+		fallthrough
+	default:
+		return base.Foreground(PrimaryForeground)
+	}
 }
 
 func RenderTitle(text string) {
-	fmt.Println(getTitleStyle().Render("🦕 " + text))
-}
-
-func RenderError(text string) {
-	fmt.Println(getErrorBoxStyle().Render(strings.TrimSpace(text)))
-}
-
-func RenderWarning(text string) {
-	fmt.Println(getWarningBoxStyle().Render(strings.TrimSpace(text)))
-}
-
-func RenderSuccess(text string) {
-	fmt.Println(getSuccessBoxStyle().Render(strings.TrimSpace(text)))
-}
-
-func RenderBox(title, content string) {
-	innerTitleStyle := getTitleStyle()
-	fmt.Println(getPrimaryBoxStyle().Render(
-		innerTitleStyle.Render(title) + "\n\n" + content,
-	))
+	Box(BoxOptions{Title: text})
+	// fmt.Println(getTitleStyle().Render("🦕 " + text))
 }
 
 func WithSpinner(message string, fn func() error) error {
@@ -125,9 +163,9 @@ func WithSpinner(message string, fn func() error) error {
 func DebugUI() {
 	fmt.Println("=== DINY UI DEBUG ===")
 	RenderTitle("Sample Title")
-	RenderBox("Primary Box", "This is a primary box with some content to demonstrate the styling and border.")
-	RenderError("This is an error message to show how errors are displayed with red styling and border.")
-	RenderWarning("This is a warning message to show how warnings are displayed with orange styling and border.")
-	RenderSuccess("This is a success message to show how success messages are displayed with green styling and border.")
+	Box(BoxOptions{Title: "Primary Box", Message: "This is a primary box with some content to demonstrate the styling and border.", Variant: Primary})
+	Box(BoxOptions{Title: "Error Box", Message: "This is an error message to show how errors are displayed with red styling and border.", Variant: Error})
+	Box(BoxOptions{Title: "Warning Box", Message: "This is a warning message to show how warnings are displayed with orange styling and border.", Variant: Warning})
+	Box(BoxOptions{Title: "Success Box", Message: "This is a success message to show how success messages are displayed with green styling and border.", Variant: Success})
 	fmt.Println("=== END DEBUG ===")
 }
