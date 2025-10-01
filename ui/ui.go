@@ -26,18 +26,6 @@ type BoxOptions struct {
 	Variant BoxVariant
 }
 
-var (
-	PrimaryForeground = lipgloss.Color("#A78BFA")
-	PrimaryBackground = lipgloss.Color("#1E1B2E")
-	SuccessForeground = lipgloss.Color("#5FD787")
-	SuccessBackground = lipgloss.Color("#1A2820")
-	ErrorForeground   = lipgloss.Color("#F87171")
-	ErrorBackground   = lipgloss.Color("#2E1E1E")
-	WarningForeground = lipgloss.Color("#FACC15")
-	WarningBackground = lipgloss.Color("#2E2A1E")
-	MutedForeground   = lipgloss.Color("#6C7086")
-)
-
 func getTerminalWidth() int {
 	width, _, err := term.GetSize(int(os.Stdout.Fd()))
 	if err != nil || width == 0 {
@@ -57,29 +45,30 @@ func getBaseBoxStyle() lipgloss.Style {
 
 func getBoxStyleByVariant(variant BoxVariant) lipgloss.Style {
 	base := getBaseBoxStyle()
+	theme := GetCurrentTheme()
 
 	switch variant {
 	case Success:
 		return base.
-			Background(SuccessBackground).
-			Foreground(SuccessForeground).
-			BorderForeground(SuccessForeground)
+			Background(theme.SuccessBackground).
+			Foreground(theme.SuccessForeground).
+			BorderForeground(theme.SuccessForeground)
 	case Error:
 		return base.
-			Background(ErrorBackground).
-			Foreground(ErrorForeground).
-			BorderForeground(ErrorForeground)
+			Background(theme.ErrorBackground).
+			Foreground(theme.ErrorForeground).
+			BorderForeground(theme.ErrorForeground)
 	case Warning:
 		return base.
-			Background(WarningBackground).
-			Foreground(WarningForeground).
-			BorderForeground(WarningForeground)
+			Background(theme.WarningBackground).
+			Foreground(theme.WarningForeground).
+			BorderForeground(theme.WarningForeground)
 	case Primary:
 		fallthrough
 	default:
 		return base.
-			Background(PrimaryBackground).
-			BorderForeground(PrimaryForeground)
+			Background(theme.PrimaryBackground).
+			BorderForeground(theme.PrimaryForeground)
 	}
 }
 
@@ -108,18 +97,19 @@ func Box(opts BoxOptions) {
 
 func getTitleStyleByVariant(variant BoxVariant) lipgloss.Style {
 	base := lipgloss.NewStyle().Bold(true)
+	theme := GetCurrentTheme()
 
 	switch variant {
 	case Success:
-		return base.Foreground(SuccessForeground)
+		return base.Foreground(theme.SuccessForeground)
 	case Error:
-		return base.Foreground(ErrorForeground)
+		return base.Foreground(theme.ErrorForeground)
 	case Warning:
-		return base.Foreground(WarningForeground)
+		return base.Foreground(theme.WarningForeground)
 	case Primary:
 		fallthrough
 	default:
-		return base.Foreground(PrimaryForeground)
+		return base.Foreground(theme.PrimaryForeground)
 	}
 }
 
@@ -129,9 +119,10 @@ func RenderTitle(text string) {
 
 func WithSpinner(message string, fn func() error) error {
 	var actionErr error
+	theme := GetCurrentTheme()
 
 	spinnerStyle := lipgloss.NewStyle().
-		Foreground(PrimaryForeground)
+		Foreground(theme.PrimaryForeground)
 
 	err := spinner.New().
 		Title("🦕 " + message).
@@ -150,13 +141,14 @@ func WithSpinner(message string, fn func() error) error {
 }
 
 func GetHuhPrimaryTheme() *huh.Theme {
+	t := GetCurrentTheme()
 	theme := huh.ThemeBase()
 	theme.Focused.Base = theme.Focused.Base.
-		BorderForeground(PrimaryForeground).PaddingTop(1).PaddingBottom(1).Bold(true)
-	theme.Focused.Title = theme.Focused.Title.Foreground(PrimaryForeground)
-	theme.Focused.Description = theme.Focused.Description.Foreground(MutedForeground)
+		BorderForeground(t.PrimaryForeground).PaddingTop(1).PaddingBottom(1).Bold(true)
+	theme.Focused.Title = theme.Focused.Title.Foreground(t.PrimaryForeground)
+	theme.Focused.Description = theme.Focused.Description.Foreground(t.MutedForeground)
 	theme.Focused.SelectedOption = theme.Focused.SelectedOption.
-		Foreground(PrimaryForeground).Bold(true)
+		Foreground(t.PrimaryForeground).Bold(true)
 	return theme
 }
 
