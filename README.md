@@ -34,6 +34,7 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 - 📝 Draft mode (prepare a commit message without committing)
 - ✏️ Edit in your editor before committing
 - 📊 Timeline analysis of commit history and message patterns
+- 🎨 Customizable UI themes (10+ dark and light themes)
 
 
 ## Install
@@ -104,6 +105,7 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
     diny config                               # Show your current diny configuration
     diny init                                 # Initialize diny with an interactive setup wizard
     diny link lazygit                         # Integrate diny with LazyGit
+    diny theme                                # Select from 10+ dark and light UI themes
     diny timeline                             # Summarize and analyze your commit history
     diny update                               # Update diny to the latest version
 
