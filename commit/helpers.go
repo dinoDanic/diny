@@ -117,6 +117,7 @@ func choicePrompt() string {
 		).
 		Value(&choice).
 		Height(8).
+		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 
 	if err != nil {
@@ -136,6 +137,7 @@ func customInputPrompt(message string) string {
 		Placeholder("e.g., make it shorter, use conventional format, focus on the bug fix...").
 		CharLimit(200).
 		Value(&input).
+		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 
 	if err != nil {

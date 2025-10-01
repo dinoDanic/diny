@@ -85,6 +85,7 @@ func timelinePrompt(message string) string {
 		).
 		Value(&choice).
 		Height(5).
+		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 
 	if err != nil {
@@ -110,6 +111,7 @@ func dateInputPrompt(message string) string {
 			return nil
 		}).
 		Value(&input).
+		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 
 	if err != nil {

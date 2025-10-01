@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
@@ -156,6 +157,15 @@ func WithSpinner(message string, fn func() error) error {
 	}
 
 	return actionErr
+}
+
+func GetHuhPrimaryTheme() *huh.Theme {
+	theme := huh.ThemeBase()
+	theme.Focused.Base = theme.Focused.Base.BorderForeground(PrimaryForeground)
+	theme.Focused.Title = theme.Focused.Title.Foreground(PrimaryForeground)
+	theme.Focused.SelectedOption = theme.Focused.SelectedOption.Foreground(PrimaryForeground)
+	theme.Focused.TextInput.Cursor = theme.Focused.TextInput.Cursor.Foreground(PrimaryForeground)
+	return theme
 }
 
 func DebugUI() {
