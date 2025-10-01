@@ -75,6 +75,16 @@ var themeCmd = &cobra.Command{
 	},
 }
 
+var themeListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all available themes",
+	Long:  `Display all available color themes with previews.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		ui.PrintThemeList()
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(themeCmd)
+	themeCmd.AddCommand(themeListCmd)
 }

@@ -52,8 +52,7 @@ func runUpdate(force bool) {
 		return
 	}
 
-	method := checker.DetectInstallMethod()
-	ui.Box(ui.BoxOptions{Title: "Update Available", Message: fmt.Sprintf("Updating from %s to %s...\nInstalled via: %s", Version, latestVersion, method)})
+	ui.Box(ui.BoxOptions{Message: fmt.Sprintf("New version available: %s\nUpdate with: diny update", latestVersion), Variant: ui.Warning})
 
 	if err := checker.PerformUpdate(); err != nil {
 		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Update failed: %v", err), Variant: ui.Error})

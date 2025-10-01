@@ -106,6 +106,7 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
     diny init                                 # Initialize diny with an interactive setup wizard
     diny link lazygit                         # Integrate diny with LazyGit
     diny theme                                # Select from 10+ dark and light UI themes
+    diny theme list                           # List all available themes with previews
     diny timeline                             # Summarize and analyze your commit history
     diny update                               # Update diny to the latest version
 
