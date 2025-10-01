@@ -2,10 +2,12 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/huh/spinner"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 )
 
 var (
@@ -18,61 +20,81 @@ var (
 	WarningForeground = lipgloss.Color("#FACC15")
 	WarningBackground = lipgloss.Color("#2E2A1E")
 	MutedForeground   = lipgloss.Color("#6C7086")
-
-	titleStyle = lipgloss.NewStyle().
-			Foreground(PrimaryForeground).
-			Bold(true).
-			MarginTop(1).
-			MarginBottom(1).
-			MarginLeft(1)
-
-	baseBoxStyle = lipgloss.NewStyle().
-			BorderLeft(true).
-			BorderStyle(lipgloss.ThickBorder()).
-			Padding(1, 2).
-			MarginTop(1).
-			MarginBottom(1).
-			MarginLeft(1)
-
-	primaryBoxStyle = baseBoxStyle.
-			Background(PrimaryBackground).
-			BorderForeground(PrimaryForeground)
-
-	errorBoxStyle = baseBoxStyle.
-			Background(ErrorBackground).
-			Foreground(ErrorForeground).
-			BorderForeground(ErrorForeground)
-
-	warningBoxStyle = baseBoxStyle.
-			Background(WarningBackground).
-			Foreground(WarningForeground).
-			BorderForeground(WarningForeground)
-
-	successBoxStyle = baseBoxStyle.
-			Background(SuccessBackground).
-			Foreground(SuccessForeground).
-			BorderForeground(SuccessForeground)
 )
 
+func getTerminalWidth() int {
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || width == 0 {
+		return 80
+	}
+	return width
+}
+
+func getTitleStyle() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(PrimaryForeground).
+		Bold(true).
+		MarginTop(1).
+		MarginBottom(1)
+}
+
+func getBaseBoxStyle() lipgloss.Style {
+	width := getTerminalWidth() - 2
+	return lipgloss.NewStyle().
+		BorderLeft(true).
+		BorderStyle(lipgloss.ThickBorder()).
+		Padding(1, 2).
+		MarginTop(1).
+		MarginBottom(1).
+		Width(width)
+}
+
+func getPrimaryBoxStyle() lipgloss.Style {
+	return getBaseBoxStyle().
+		Background(PrimaryBackground).
+		BorderForeground(PrimaryForeground)
+}
+
+func getErrorBoxStyle() lipgloss.Style {
+	return getBaseBoxStyle().
+		Background(ErrorBackground).
+		Foreground(ErrorForeground).
+		BorderForeground(ErrorForeground)
+}
+
+func getWarningBoxStyle() lipgloss.Style {
+	return getBaseBoxStyle().
+		Background(WarningBackground).
+		Foreground(WarningForeground).
+		BorderForeground(WarningForeground)
+}
+
+func getSuccessBoxStyle() lipgloss.Style {
+	return getBaseBoxStyle().
+		Background(SuccessBackground).
+		Foreground(SuccessForeground).
+		BorderForeground(SuccessForeground)
+}
+
 func RenderTitle(text string) {
-	fmt.Println(titleStyle.Render("🦕 " + text))
+	fmt.Println(getTitleStyle().Render("🦕 " + text))
 }
 
 func RenderError(text string) {
-	fmt.Println(errorBoxStyle.Render(strings.TrimSpace(text)))
+	fmt.Println(getErrorBoxStyle().Render(strings.TrimSpace(text)))
 }
 
 func RenderWarning(text string) {
-	fmt.Println(warningBoxStyle.Render(strings.TrimSpace(text)))
+	fmt.Println(getWarningBoxStyle().Render(strings.TrimSpace(text)))
 }
 
 func RenderSuccess(text string) {
-	fmt.Println(successBoxStyle.Render(strings.TrimSpace(text)))
+	fmt.Println(getSuccessBoxStyle().Render(strings.TrimSpace(text)))
 }
 
 func RenderBox(title, content string) {
-	innerTitleStyle := titleStyle.UnsetMarginTop().UnsetMarginBottom().UnsetMarginLeft()
-	fmt.Println(primaryBoxStyle.Render(
+	innerTitleStyle := getTitleStyle()
+	fmt.Println(getPrimaryBoxStyle().Render(
 		innerTitleStyle.Render(title) + "\n\n" + content,
 	))
 }
@@ -82,8 +104,7 @@ func WithSpinner(message string, fn func() error) error {
 
 	spinnerStyle := lipgloss.NewStyle().
 		Foreground(PrimaryForeground).
-		MarginTop(1).
-		MarginLeft(2)
+		MarginTop(1)
 
 	err := spinner.New().
 		Title("🦕 " + message).
