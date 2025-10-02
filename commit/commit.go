@@ -49,6 +49,7 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		} else {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get git diff: %v", err), Variant: ui.Error})
 		}
+		fmt.Println()
 		os.Exit(1)
 	}
 
@@ -58,6 +59,7 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		} else {
 			ui.Box(ui.BoxOptions{Message: "No staged changes found. Stage files first with `git add`.", Variant: ui.Warning})
 		}
+		fmt.Println()
 		os.Exit(0)
 	}
 
@@ -69,6 +71,7 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		} else {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to load config: %v", err), Variant: ui.Error})
 		}
+		fmt.Println()
 		os.Exit(1)
 	}
 

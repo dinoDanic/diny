@@ -91,7 +91,7 @@ func (uc *UpdateChecker) printUpdateNotification(version string) {
 		updateCmd = "download from https://github.com/dinoDanic/diny/releases"
 	}
 
-	content := fmt.Sprintf("New version %s available!\n\nUpdate with: diny update\nOr manually: %s\n\nUpdate is crucial due to early development stage.", version, updateCmd)
+	content := fmt.Sprintf("New version %s available!\n\nUpdate with: diny update\nOr manually: %s\n", version, updateCmd)
 
 	ui.Box(ui.BoxOptions{Message: content, Variant: ui.Warning})
 }
