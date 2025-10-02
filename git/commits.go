@@ -22,9 +22,15 @@ func GetCommitsByDate(date string) ([]string, error) {
 }
 
 func GetCommitsByDateRange(startDate, endDate string) ([]string, error) {
+	authorName := GetGitName()
+	if authorName == "" {
+		return nil, fmt.Errorf("failed to get git user name")
+	}
+
 	cmd := exec.Command("git", "log",
 		"--since="+startDate,
 		"--until="+endDate,
+		"--author="+authorName,
 		"--pretty=format:%s",
 		"--no-merges")
 
