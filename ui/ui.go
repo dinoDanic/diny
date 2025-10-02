@@ -68,6 +68,7 @@ func getBoxStyleByVariant(variant BoxVariant) lipgloss.Style {
 	default:
 		return base.
 			Background(theme.PrimaryBackground).
+			Foreground(theme.PrimaryForeground).
 			BorderForeground(theme.PrimaryForeground)
 	}
 }
@@ -121,12 +122,12 @@ func WithSpinner(message string, fn func() error) error {
 	var actionErr error
 	theme := GetCurrentTheme()
 
-	spinnerStyle := lipgloss.NewStyle().
-		Foreground(theme.PrimaryForeground)
+	titleStyle := lipgloss.NewStyle().
+		Foreground(theme.PrimaryForeground).
+		Bold(true)
 
 	err := spinner.New().
-		Title("🦕 " + message).
-		Style(spinnerStyle).
+		Title(titleStyle.Render(message)).
 		Type(spinner.Dots).
 		Action(func() {
 			actionErr = fn()
@@ -180,53 +181,19 @@ func PrintThemeList() {
 		{"Gruvbox Light", "gruvbox-light"},
 	}
 
-	titleStyle := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("#A78BFA")).
-		MarginTop(1).
-		MarginBottom(1)
-
-	fmt.Println(titleStyle.Render("🎨 Diny Available Themes"))
+	originalTheme := LoadTheme()
 
 	for _, t := range themes {
 		SetTheme(t.themeKey)
-		theme := GetCurrentTheme()
 
-		nameStyle := lipgloss.NewStyle().
-			Foreground(theme.PrimaryForeground).
-			Bold(true)
-
-		keyStyle := lipgloss.NewStyle().
-			Foreground(theme.MutedForeground)
-
-		primaryBox := lipgloss.NewStyle().
-			Background(theme.PrimaryBackground).
-			Foreground(theme.PrimaryForeground).
-			Padding(0, 2)
-
-		successBox := lipgloss.NewStyle().
-			Background(theme.SuccessBackground).
-			Foreground(theme.SuccessForeground).
-			Padding(0, 2)
-
-		errorBox := lipgloss.NewStyle().
-			Background(theme.ErrorBackground).
-			Foreground(theme.ErrorForeground).
-			Padding(0, 2)
-
-		warningBox := lipgloss.NewStyle().
-			Background(theme.WarningBackground).
-			Foreground(theme.WarningForeground).
-			Padding(0, 2)
-
-		fmt.Printf("\n%s %s\n", nameStyle.Render(theme.Name), keyStyle.Render("("+t.themeKey+")"))
-		fmt.Printf("  %s %s %s %s\n",
-			primaryBox.Render("Primary"),
-			successBox.Render("Success"),
-			errorBox.Render("Error"),
-			warningBox.Render("Warning"),
-		)
+		Box(BoxOptions{Title: "Primary", Message: "This is how primary messages look", Variant: Primary})
+		Box(BoxOptions{Title: "Success", Message: "This is how success messages look", Variant: Success})
+		Box(BoxOptions{Title: "Error", Message: "This is how error messages look", Variant: Error})
+		Box(BoxOptions{Title: "Warning", Message: "This is how warning messages look", Variant: Warning})
+		fmt.Println()
 	}
 
-	fmt.Println()
+	if originalTheme != "" {
+		SetTheme(originalTheme)
+	}
 }

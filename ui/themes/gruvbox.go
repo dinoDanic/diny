@@ -11,11 +11,11 @@ func GruvboxDark() *Theme {
 		PrimaryForeground: lipgloss.Color("#D3869B"),
 		PrimaryBackground: lipgloss.Color("#282828"),
 		SuccessForeground: lipgloss.Color("#B8BB26"),
-		SuccessBackground: lipgloss.Color("#1A2820"),
+		SuccessBackground: lipgloss.Color("#2E3226"),
 		ErrorForeground:   lipgloss.Color("#FB4934"),
-		ErrorBackground:   lipgloss.Color("#2E1E1E"),
+		ErrorBackground:   lipgloss.Color("#342726"),
 		WarningForeground: lipgloss.Color("#FABD2F"),
-		WarningBackground: lipgloss.Color("#2E2A1E"),
+		WarningBackground: lipgloss.Color("#332D21"),
 		MutedForeground:   lipgloss.Color("#928374"),
 	}
 }

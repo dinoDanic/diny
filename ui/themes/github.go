@@ -11,7 +11,7 @@ func GithubLight() *Theme {
 		PrimaryForeground: lipgloss.Color("#0969DA"),
 		PrimaryBackground: lipgloss.Color("#FFFFFF"),
 		SuccessForeground: lipgloss.Color("#1A7F37"),
-		SuccessBackground: lipgloss.Color("#DDF4FF"),
+		SuccessBackground: lipgloss.Color("#DFF6DD"),
 		ErrorForeground:   lipgloss.Color("#CF222E"),
 		ErrorBackground:   lipgloss.Color("#FFEBE9"),
 		WarningForeground: lipgloss.Color("#9A6700"),
