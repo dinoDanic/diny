@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/ui/themes"
 )
 
@@ -98,12 +97,12 @@ func GetLightThemes() []string {
 }
 
 func SaveTheme(themeName string) error {
-	gitRoot, err := git.FindGitRoot()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
 
-	dinyDir := filepath.Join(gitRoot, ".git", "diny")
+	dinyDir := filepath.Join(homeDir, ".config", "diny")
 	if err := os.MkdirAll(dinyDir, 0755); err != nil {
 		return err
 	}
@@ -113,12 +112,12 @@ func SaveTheme(themeName string) error {
 }
 
 func LoadTheme() string {
-	gitRoot, err := git.FindGitRoot()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return ""
 	}
 
-	themePath := filepath.Join(gitRoot, ".git", "diny", "theme")
+	themePath := filepath.Join(homeDir, ".config", "diny", "theme")
 	data, err := os.ReadFile(themePath)
 	if err != nil {
 		return ""
