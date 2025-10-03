@@ -98,6 +98,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
 	case "exit":
 		ui.RenderTitle("Bye!")
+		fmt.Println()
 		os.Exit(0)
 	}
 }

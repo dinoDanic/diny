@@ -33,6 +33,7 @@ var themeCmd = &cobra.Command{
 			huh.NewOption("One Dark (dark)", "onedark"),
 			huh.NewOption("Monokai (dark)", "monokai"),
 			huh.NewOption("Solarized Dark (dark)", "solarized-dark"),
+			huh.NewOption("Everforest Dark (dark)", "everforest-dark"),
 		}
 
 		lightThemes := []huh.Option[string]{

@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE dino.danic@gmail.com
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/dinoDanic/diny/update"
@@ -23,9 +24,13 @@ and generates commit messages.
 It helps you maintain clean, consistent commit history without 
 spending time manually writing messages.
 `,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		fmt.Println()
+	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		checker := update.NewUpdateChecker(Version)
 		checker.CheckForUpdate()
+		fmt.Println()
 	},
 }
 

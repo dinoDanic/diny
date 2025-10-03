@@ -101,29 +101,78 @@ func timelinePrompt(message string) string {
 }
 
 func dateInputPrompt(message string) string {
-	var input string
+	now := time.Now()
+	day := now.Day()
+	month := int(now.Month())
+	year := now.Year()
 
-	err := huh.NewInput().
+	err := huh.NewSelect[int]().
 		Title("🦕 " + message).
-		Description("Use format: DD MM YYYY (e.g., 15 01 2025)").
-		Placeholder("15 01 2025").
-		Validate(func(s string) error {
-			_, err := time.Parse("02 01 2006", s)
-			if err != nil {
-				return fmt.Errorf("invalid date format, use DD MM YYYY")
-			}
-			return nil
-		}).
-		Value(&input).
+		Description("Day").
+		Options(generateDayOptions()...).
+		Value(&day).
+		Height(7).
 		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
-
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error selecting day: %v", err), Variant: ui.Error})
 		os.Exit(1)
 	}
 
-	return input
+	err = huh.NewSelect[int]().
+		Title("🦕 " + message).
+		Description("Month").
+		Options(generateMonthOptions()...).
+		Value(&month).
+		Height(7).
+		WithTheme(ui.GetHuhPrimaryTheme()).
+		Run()
+	if err != nil {
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error selecting month: %v", err), Variant: ui.Error})
+		os.Exit(1)
+	}
+
+	err = huh.NewSelect[int]().
+		Title("🦕 " + message).
+		Description("Year").
+		Options(generateYearOptions()...).
+		Value(&year).
+		Height(7).
+		WithTheme(ui.GetHuhPrimaryTheme()).
+		Run()
+	if err != nil {
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error selecting year: %v", err), Variant: ui.Error})
+		os.Exit(1)
+	}
+
+	return fmt.Sprintf("%02d %02d %d", day, month, year)
+}
+
+func generateDayOptions() []huh.Option[int] {
+	options := make([]huh.Option[int], 31)
+	for i := 1; i <= 31; i++ {
+		options[i-1] = huh.NewOption(fmt.Sprintf("%02d", i), i)
+	}
+	return options
+}
+
+func generateMonthOptions() []huh.Option[int] {
+	months := []string{"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"}
+	options := make([]huh.Option[int], 12)
+	for i := 1; i <= 12; i++ {
+		options[i-1] = huh.NewOption(fmt.Sprintf("%02d - %s", i, months[i-1]), i)
+	}
+	return options
+}
+
+func generateYearOptions() []huh.Option[int] {
+	currentYear := time.Now().Year()
+	options := make([]huh.Option[int], 10)
+	for i := 0; i < 10; i++ {
+		year := currentYear - i
+		options[i] = huh.NewOption(fmt.Sprintf("%d", year), year)
+	}
+	return options
 }
 
 func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.UserConfig, dateRange string, previousAnalyses []string) {

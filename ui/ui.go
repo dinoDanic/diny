@@ -168,17 +168,18 @@ func PrintThemeList() {
 		name     string
 		themeKey string
 	}{
-		{"Catppuccin Mocha", "catppuccin"},
-		{"Tokyo Night", "tokyo"},
-		{"Nord", "nord"},
-		{"Dracula", "dracula"},
-		{"Gruvbox Dark", "gruvbox-dark"},
-		{"One Dark", "onedark"},
-		{"Monokai", "monokai"},
-		{"Solarized Dark", "solarized-dark"},
-		{"Solarized Light", "solarized-light"},
-		{"GitHub Light", "github-light"},
 		{"Gruvbox Light", "gruvbox-light"},
+		{"GitHub Light", "github-light"},
+		{"Solarized Light", "solarized-light"},
+		{"Everforest Dark", "everforest-dark"},
+		{"Solarized Dark", "solarized-dark"},
+		{"Monokai", "monokai"},
+		{"One Dark", "onedark"},
+		{"Gruvbox Dark", "gruvbox-dark"},
+		{"Dracula", "dracula"},
+		{"Nord", "nord"},
+		{"Tokyo Night", "tokyo"},
+		{"Catppuccin Mocha", "catppuccin"},
 	}
 
 	originalTheme := LoadTheme()
@@ -186,6 +187,17 @@ func PrintThemeList() {
 	for _, t := range themes {
 		SetTheme(t.themeKey)
 
+		themeTitle := t.name
+		if t.themeKey == originalTheme {
+			themeTitle = t.name + " (current)"
+		}
+
+		titleStyle := lipgloss.NewStyle().
+			Foreground(GetCurrentTheme().PrimaryForeground).
+			Background(GetCurrentTheme().PrimaryBackground).
+			Padding(0, 1).MarginLeft(2)
+
+		fmt.Printf("\n%s\n", titleStyle.Render(themeTitle))
 		Box(BoxOptions{Title: "Primary", Message: "This is how primary messages look", Variant: Primary})
 		Box(BoxOptions{Title: "Success", Message: "This is how success messages look", Variant: Success})
 		Box(BoxOptions{Title: "Error", Message: "This is how error messages look", Variant: Error})

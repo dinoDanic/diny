@@ -45,6 +45,8 @@ func SetTheme(name string) bool {
 		theme = themes.GithubLight()
 	case "gruvbox-light":
 		theme = themes.GruvboxLight()
+	case "everforest-dark":
+		theme = &themes.EverforestDark
 	default:
 		return false
 	}
@@ -66,6 +68,7 @@ func GetAvailableThemes() []string {
 		"onedark",
 		"monokai",
 		"solarized-dark",
+		"everforest-dark",
 		"solarized-light",
 		"github-light",
 		"gruvbox-light",
@@ -82,6 +85,7 @@ func GetDarkThemes() []string {
 		"onedark",
 		"monokai",
 		"solarized-dark",
+		"everforest-dark",
 	}
 }
 
