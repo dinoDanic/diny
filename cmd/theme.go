@@ -45,7 +45,7 @@ var themeCmd = &cobra.Command{
 		allThemes := append(darkThemes, lightThemes...)
 
 		err := huh.NewSelect[string]().
-			Title("🦕 Select Theme").
+			Title("Select Theme").
 			Description(fmt.Sprintf("Current: %s", ui.GetCurrentTheme().Name)).
 			Options(allThemes...).
 			Value(&selectedTheme).
