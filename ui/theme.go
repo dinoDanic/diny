@@ -46,6 +46,10 @@ func SetTheme(name string) bool {
 		theme = themes.GruvboxLight()
 	case "everforest-dark":
 		theme = &themes.EverforestDark
+	case "flexoki-dark":
+		theme = themes.FlexokiDark()
+	case "flexoki-light":
+		theme = themes.FlexokiLight()
 	default:
 		return false
 	}
@@ -68,9 +72,11 @@ func GetAvailableThemes() []string {
 		"monokai",
 		"solarized-dark",
 		"everforest-dark",
+		"flexoki-dark",
 		"solarized-light",
 		"github-light",
 		"gruvbox-light",
+		"flexoki-light",
 	}
 }
 
@@ -85,6 +91,7 @@ func GetDarkThemes() []string {
 		"monokai",
 		"solarized-dark",
 		"everforest-dark",
+		"flexoki-dark",
 	}
 }
 
@@ -93,6 +100,7 @@ func GetLightThemes() []string {
 		"solarized-light",
 		"github-light",
 		"gruvbox-light",
+		"flexoki-light",
 	}
 }
 

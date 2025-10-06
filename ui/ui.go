@@ -171,6 +171,7 @@ func PrintThemeList() {
 		{"Gruvbox Light", "gruvbox-light"},
 		{"GitHub Light", "github-light"},
 		{"Solarized Light", "solarized-light"},
+		{"Flexoki Light", "flexoki-light"},
 		{"Everforest Dark", "everforest-dark"},
 		{"Solarized Dark", "solarized-dark"},
 		{"Monokai", "monokai"},
@@ -180,6 +181,7 @@ func PrintThemeList() {
 		{"Nord", "nord"},
 		{"Tokyo Night", "tokyo"},
 		{"Catppuccin Mocha", "catppuccin"},
+		{"Flexoki Dark", "flexoki-dark"},
 	}
 
 	originalTheme := LoadTheme()
