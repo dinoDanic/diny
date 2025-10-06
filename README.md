@@ -128,13 +128,13 @@ brew update && brew upgrade dinoDanic/tap/diny
 scoop update diny
 ```
 
-## Why I’m building diny
+## Why diny exists
 
-I never liked using AI. I’m not a vibe coder, for me it kills the fun of programming. Still, everyone seems to use it and even judge others for not doing the same, while many couldn’t write a line of code without it.  
+I'm terrible at commit messages. I type fast, make mistakes, and my history ends up full of gems like "fix stuff" and "ui thing." Not great when you need to remember what you actually did.
 
-What I really struggle with are commit messages. I type fast, make typos, and usually leave junk like “ui update.” At the end of the day I want to log what I did for each client or project, but my commits are useless. I end up digging through git diffs just to remember what I worked on. With a memory like a goldfish, that’s exhausting.  
+I built **diny** because I wanted my commits to be useful without thinking about them. It reads your changes, writes a decent message, and has a timeline feature that summarizes your day. Super handy for client updates or just remembering what you worked on when your brain already moved on.
 
-That’s why I built **diny**. It helps me write proper commit messages and has a **timeline** feature that pulls all commits for a day into a short summary. Perfect for updating clients, filling in my time tracker, or catching up if I missed a few days. For this kind of job AI actually makes sense — not to code for me, just to handle the boring parts I’d never do well myself.
+It's AI doing what it's actually good at—handling the repetitive stuff I'd rather not think about.
 
 
 ## TODO
