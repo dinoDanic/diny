@@ -15,7 +15,11 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 <div align="center">
 
-![diny demo](https://diny-cli.vercel.app/demo_4.gif)
+<img src="https://diny-cli.vercel.app/showcase/2.png" alt="diny showcase" width="700"/>
+<img src="https://diny-cli.vercel.app/showcase/3.png" alt="diny showcase" width="700"/>
+<img src="https://diny-cli.vercel.app/showcase/4.png" alt="diny showcase" width="700"/>
+<img src="https://diny-cli.vercel.app/showcase/5.png" alt="diny showcase" width="700"/>
+<img src="https://diny-cli.vercel.app/showcase/6.png" alt="diny showcase" width="700"/>
 
 </div>
 
