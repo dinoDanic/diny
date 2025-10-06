@@ -34,12 +34,14 @@ var themeCmd = &cobra.Command{
 			huh.NewOption("Monokai (dark)", "monokai"),
 			huh.NewOption("Solarized Dark (dark)", "solarized-dark"),
 			huh.NewOption("Everforest Dark (dark)", "everforest-dark"),
+			huh.NewOption("Flexoki Dark (dark)", "flexoki-dark"),
 		}
 
 		lightThemes := []huh.Option[string]{
 			huh.NewOption("Solarized Light (light)", "solarized-light"),
 			huh.NewOption("GitHub Light (light)", "github-light"),
 			huh.NewOption("Gruvbox Light (light)", "gruvbox-light"),
+			huh.NewOption("Flexoki Light (light)", "flexoki-light"),
 		}
 
 		allThemes := append(darkThemes, lightThemes...)
