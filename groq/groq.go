@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/dinoDanic/diny/config"
@@ -21,6 +22,7 @@ type CommitRequest struct {
 	Name       string             `json:"name"`
 	RepoName   string             `json:"repoName"`
 	UserConfig *config.UserConfig `json:"userConfig"`
+	System         string             `json:"system,omitempty"`
 }
 
 type commitData struct {
@@ -42,6 +44,7 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) 
 		GitDiff:    gitDiff,
 		Name:       gitName,
 		RepoName:   repoName,
+		System:         getOS(),
 	}
 
 	buf, err := json.Marshal(payload)
@@ -90,4 +93,8 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) 
 	}
 
 	return out.Data.CommitMessage, nil
+}
+
+func getOS() string {
+	return runtime.GOOS
 }

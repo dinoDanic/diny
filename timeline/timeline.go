@@ -24,7 +24,6 @@ func Main() {
 
 	switch choice {
 	case "today":
-		ui.RenderTitle("Analyzing today's commits...")
 		timelineCommits, err = git.GetCommitsToday()
 		dateRange = "today"
 	case "date":
