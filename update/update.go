@@ -85,8 +85,6 @@ func (uc *UpdateChecker) printUpdateNotification(version string) {
 		updateCmd = "brew upgrade dinoDanic/tap/diny"
 	case "scoop":
 		updateCmd = "scoop update diny"
-	case "winget":
-		updateCmd = "winget upgrade dinoDanic.diny"
 	default:
 		updateCmd = "download from https://github.com/dinoDanic/diny/releases"
 	}
