@@ -186,6 +186,7 @@ func PrintThemeList() {
 
 	for _, t := range themes {
 		SetTheme(t.themeKey)
+		theme := GetCurrentTheme()
 
 		themeTitle := t.name
 		if t.themeKey == originalTheme {
@@ -193,15 +194,57 @@ func PrintThemeList() {
 		}
 
 		titleStyle := lipgloss.NewStyle().
-			Foreground(GetCurrentTheme().PrimaryForeground).
-			Background(GetCurrentTheme().PrimaryBackground).
-			Padding(0, 1).MarginLeft(2)
+			Foreground(theme.PrimaryForeground).
+			Bold(true)
 
-		fmt.Printf("\n%s\n", titleStyle.Render(themeTitle))
-		Box(BoxOptions{Title: "Primary", Message: "This is how primary messages look", Variant: Primary})
-		Box(BoxOptions{Title: "Success", Message: "This is how success messages look", Variant: Success})
-		Box(BoxOptions{Title: "Error", Message: "This is how error messages look", Variant: Error})
-		Box(BoxOptions{Title: "Warning", Message: "This is how warning messages look", Variant: Warning})
+		primaryBox := lipgloss.NewStyle().
+			Foreground(theme.PrimaryForeground).
+			Background(theme.PrimaryBackground).
+			BorderLeft(true).
+			BorderStyle(lipgloss.ThickBorder()).
+			BorderForeground(theme.PrimaryForeground).
+			Padding(0, 2)
+
+		successBox := lipgloss.NewStyle().
+			Foreground(theme.SuccessForeground).
+			Background(theme.SuccessBackground).
+			BorderLeft(true).
+			BorderStyle(lipgloss.ThickBorder()).
+			BorderForeground(theme.SuccessForeground).
+			Padding(0, 2)
+
+		errorBox := lipgloss.NewStyle().
+			Foreground(theme.ErrorForeground).
+			Background(theme.ErrorBackground).
+			BorderLeft(true).
+			BorderStyle(lipgloss.ThickBorder()).
+			BorderForeground(theme.ErrorForeground).
+			Padding(0, 2)
+
+		warningBox := lipgloss.NewStyle().
+			Foreground(theme.WarningForeground).
+			Background(theme.WarningBackground).
+			BorderLeft(true).
+			BorderStyle(lipgloss.ThickBorder()).
+			BorderForeground(theme.WarningForeground).
+			Padding(0, 2)
+
+		fmt.Println(titleStyle.Render(themeTitle))
+
+		boxes := lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			primaryBox.Render("Primary")+"  ",
+			successBox.Render("Success")+"  ",
+			errorBox.Render("Error")+"  ",
+			warningBox.Render("Warning"),
+		)
+
+		fmt.Println(boxes)
+
+		separator := lipgloss.NewStyle().
+			Foreground(theme.MutedForeground).
+			Render(strings.Repeat("─", 60))
+		fmt.Println(separator)
 		fmt.Println()
 	}
 
