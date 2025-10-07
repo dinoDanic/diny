@@ -129,6 +129,7 @@ func WithSpinner(message string, fn func() error) error {
 	err := spinner.New().
 		Title(titleStyle.Render(message)).
 		Type(spinner.Dots).
+		Style(lipgloss.NewStyle().Foreground(theme.PrimaryForeground)).
 		Action(func() {
 			actionErr = fn()
 		}).
