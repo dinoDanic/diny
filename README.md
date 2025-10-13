@@ -15,9 +15,9 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 </div>
 
 <div align="center">
-#
+    <br />
 <a href="https://peerlist.io/dinodanic/project/diny"><img src="https://diny-cli.vercel.app/peerlist-project-of-the-day.png" alt="diny showcase" width="200"></a>
-#
+    <br />
 <img src="https://diny-cli.vercel.app/showcase/2.png" alt="diny showcase" width="700"/>
 <img src="https://diny-cli.vercel.app/showcase/3.png" alt="diny showcase" width="700"/>
 <img src="https://diny-cli.vercel.app/showcase/4.png" alt="diny showcase" width="700"/>
