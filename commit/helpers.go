@@ -25,7 +25,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 
 	switch choice {
 	case "commit":
-		commitCmd := exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
+		commitCmd := exec.Command("git", "commit", "-m", commitMessage)
 		err := commitCmd.Run()
 		if err != nil {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", err), Variant: ui.Error})
