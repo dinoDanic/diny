@@ -25,14 +25,9 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 
 	switch choice {
 	case "commit":
-		commitCmd := exec.Command("git", "commit", "-m", commitMessage)
-		err := commitCmd.Run()
-		if err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", err), Variant: ui.Error})
-			os.Exit(1)
-		}
-		ui.Box(ui.BoxOptions{Message: "Commited!", Variant: ui.Success})
-		fmt.Println()
+		executeCommit(commitMessage, false)
+	case "commit-push":
+		executeCommit(commitMessage, true)
 	case "edit":
 		editedMessage, err := openInEditor(commitMessage)
 		if err != nil {
@@ -111,6 +106,7 @@ func choicePrompt() string {
 		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Commit this message", "commit"),
+			huh.NewOption("Commit and push", "commit-push"),
 			huh.NewOption("Edit in $EDITOR", "edit"),
 			huh.NewOption("Save as draft", "save"),
 			huh.NewOption("Generate different message", "regenerate"),
@@ -118,7 +114,7 @@ func choicePrompt() string {
 			huh.NewOption("Exit", "exit"),
 		).
 		Value(&choice).
-		Height(8).
+		Height(9).
 		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 
@@ -219,4 +215,26 @@ func saveDraft(message string) error {
 	}
 
 	return nil
+}
+
+func executeCommit(commitMessage string, push bool) {
+	commitCmd := exec.Command("git", "commit", "-m", commitMessage)
+	err := commitCmd.Run()
+	if err != nil {
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", err), Variant: ui.Error})
+		os.Exit(1)
+	}
+	ui.Box(ui.BoxOptions{Message: "Commited!", Variant: ui.Success})
+
+	if push {
+		pushCmd := exec.Command("git", "push")
+		err = pushCmd.Run()
+		if err != nil {
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Push failed: %v", err), Variant: ui.Error})
+			os.Exit(1)
+		}
+		ui.Box(ui.BoxOptions{Message: "Pushed!", Variant: ui.Success})
+	}
+
+	fmt.Println()
 }
