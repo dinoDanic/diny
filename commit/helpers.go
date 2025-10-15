@@ -218,19 +218,34 @@ func saveDraft(message string) error {
 }
 
 func executeCommit(commitMessage string, push bool) {
+	ui.Box(ui.BoxOptions{Title: "Running git commit", Message: "Executing pre-commit hooks...", Variant: ui.Primary})
+	fmt.Println()
+
 	commitCmd := exec.Command("git", "commit", "-m", commitMessage)
+	commitCmd.Stdout = os.Stdout
+	commitCmd.Stderr = os.Stderr
 	err := commitCmd.Run()
+
+	fmt.Println()
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", err), Variant: ui.Error})
+		ui.Box(ui.BoxOptions{Title: "Commit failed", Message: "Pre-commit hooks failed or git commit encountered an error.\nPlease review the output above for details.", Variant: ui.Error})
 		os.Exit(1)
 	}
 	ui.Box(ui.BoxOptions{Message: "Commited!", Variant: ui.Success})
 
 	if push {
+		fmt.Println()
+		ui.Box(ui.BoxOptions{Title: "Running git push", Message: "Pushing to remote...", Variant: ui.Primary})
+		fmt.Println()
+
 		pushCmd := exec.Command("git", "push")
+		pushCmd.Stdout = os.Stdout
+		pushCmd.Stderr = os.Stderr
 		err = pushCmd.Run()
+
+		fmt.Println()
 		if err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Push failed: %v", err), Variant: ui.Error})
+			ui.Box(ui.BoxOptions{Title: "Push failed", Message: "Git push encountered an error.\nPlease review the output above for details.", Variant: ui.Error})
 			os.Exit(1)
 		}
 		ui.Box(ui.BoxOptions{Message: "Pushed!", Variant: ui.Success})
