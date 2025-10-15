@@ -218,25 +218,39 @@ func saveDraft(message string) error {
 }
 
 func executeCommit(commitMessage string, push bool) {
-	commitCmd := exec.Command("git", "commit", "-m", commitMessage)
-	output, err := commitCmd.CombinedOutput()
-	if err != nil {
+	var output []byte
+	var err error
+
+	spinnerErr := ui.WithSpinner("Committing...", func() error {
+		commitCmd := exec.Command("git", "commit", "-m", commitMessage)
+		output, err = commitCmd.CombinedOutput()
+		return err
+	})
+
+	if spinnerErr != nil {
 		if len(output) > 0 {
 			fmt.Fprint(os.Stderr, string(output))
 		}
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", err), Variant: ui.Error})
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", spinnerErr), Variant: ui.Error})
 		os.Exit(1)
 	}
 	ui.Box(ui.BoxOptions{Message: "Commited!", Variant: ui.Success})
 
 	if push {
-		pushCmd := exec.Command("git", "push")
-		pushOutput, pushErr := pushCmd.CombinedOutput()
-		if pushErr != nil {
+		var pushOutput []byte
+		var pushErr error
+
+		pushSpinnerErr := ui.WithSpinner("Pushing...", func() error {
+			pushCmd := exec.Command("git", "push")
+			pushOutput, pushErr = pushCmd.CombinedOutput()
+			return pushErr
+		})
+
+		if pushSpinnerErr != nil {
 			if len(pushOutput) > 0 {
 				fmt.Fprint(os.Stderr, string(pushOutput))
 			}
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Push failed: %v", pushErr), Variant: ui.Error})
+			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Push failed: %v", pushSpinnerErr), Variant: ui.Error})
 			os.Exit(1)
 		}
 		ui.Box(ui.BoxOptions{Message: "Pushed!", Variant: ui.Success})
