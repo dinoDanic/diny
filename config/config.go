@@ -50,7 +50,7 @@ func Load() (*UserConfig, error) {
 	}
 
 	if !isValidConfig(config) {
-		return handleInvalidConfig(configPath, config)
+		return handleInvalidConfig(configPath)
 	}
 
 	return config, nil
@@ -98,7 +98,7 @@ func handleConfigError(configPath string, err error) (*UserConfig, error) {
 	return promptConfigAction(configPath)
 }
 
-func handleInvalidConfig(configPath string, config *UserConfig) (*UserConfig, error) {
+func handleInvalidConfig(configPath string) (*UserConfig, error) {
 	ui.Box(ui.BoxOptions{Message: "Invalid configuration values detected!", Variant: ui.Warning})
 	return promptConfigAction(configPath)
 }
