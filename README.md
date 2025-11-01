@@ -141,4 +141,4 @@ It's AI doing what it's actually good at—handling the repetitive stuff I'd rat
 
 
 ## TODO
-[X] - Add lazygit integratio
+[X] - Add lazygit integration
