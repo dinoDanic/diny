@@ -21,9 +21,10 @@ const (
 )
 
 type BoxOptions struct {
-	Title   string
-	Message string
-	Variant BoxVariant
+	Title      string
+	Message    string
+	Variant    BoxVariant
+	NoPadding  bool
 }
 
 func getTerminalWidth() int {
@@ -44,9 +45,29 @@ func getBaseBoxStyle() lipgloss.Style {
 		Width(width)
 }
 
-func getBoxStyleByVariant(variant BoxVariant) lipgloss.Style {
-	base := getBaseBoxStyle()
+func getBoxStyleByVariant(variant BoxVariant, noPadding bool) lipgloss.Style {
+	width := getTerminalWidth() - 1
 	theme := GetCurrentTheme()
+
+	// Success and Error variants have no vertical padding by default
+	var base lipgloss.Style
+	if variant == Success || variant == Error {
+		base = lipgloss.NewStyle().
+			BorderLeft(true).
+			BorderStyle(lipgloss.ThickBorder()).
+			Padding(0, 2).
+			Margin(0).
+			Width(width)
+	} else if noPadding {
+		base = lipgloss.NewStyle().
+			BorderLeft(true).
+			BorderStyle(lipgloss.ThickBorder()).
+			Padding(0, 2).
+			Margin(0).
+			Width(width)
+	} else {
+		base = getBaseBoxStyle()
+	}
 
 	switch variant {
 	case Success:
@@ -79,7 +100,7 @@ func Box(opts BoxOptions) {
 		opts.Variant = Primary
 	}
 
-	style := getBoxStyleByVariant(opts.Variant)
+	style := getBoxStyleByVariant(opts.Variant, opts.NoPadding)
 
 	var content string
 	if opts.Title != "" && opts.Message != "" {
