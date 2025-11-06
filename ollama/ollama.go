@@ -56,10 +56,9 @@ func MainStream(prompt string) (string, error) {
 
 		var streamResp GenerateResponse
 		if err := json.Unmarshal([]byte(line), &streamResp); err != nil {
-			continue // Skip invalid JSON lines
+			continue
 		}
 
-		// Print each chunk as it comes
 		fmt.Print(streamResp.Response)
 		fullResponse.WriteString(streamResp.Response)
 
@@ -90,7 +89,10 @@ func Main(prompt string) (string, error) {
 		return "", fmt.Errorf("error marshaling JSON: %v", err)
 	}
 
-	fmt.Println("My tiny server is thinking hard, thanks for your patience!")
+	// Only show this message when using Diny cloud backend
+	if apiConfig.Provider == config.CloudBackend {
+		fmt.Println("My tiny server is thinking hard, thanks for your patience!")
+	}
 
 	resp, err := http.Post(apiConfig.BaseURL+"/api/generate", "application/json", bytes.NewBuffer(jsonData))
 
@@ -204,19 +206,21 @@ func CreateCommitMessage(gitDiff string, userConfig *config.UserConfig) (string,
 func buildCommitPrompt(gitDiff string, userConfig *config.UserConfig) string {
 	prompt := "You are a commit message generator. Generate a clear, concise commit message based on the following git diff.\n\n"
 
+	prompt += "IMPORTANT: Output ONLY the commit message text. Do not include any explanations, descriptions, or meta-commentary about the commit message.\n\n"
+
 	if userConfig.UseConventional {
-		prompt += "Use Conventional Commits format (type(scope): description).\n"
+		prompt += "Format: Use Conventional Commits format (type(scope): description)\n"
 	}
 
 	if userConfig.UseEmoji {
-		prompt += "Include appropriate emoji prefixes.\n"
+		prompt += "Style: Include appropriate emoji prefixes\n"
 	}
 
 	prompt += fmt.Sprintf("Tone: %s\n", userConfig.Tone)
 	prompt += fmt.Sprintf("Length: %s\n", userConfig.Length)
 
 	prompt += "\nGit diff:\n" + gitDiff + "\n\n"
-	prompt += "Generate only the commit message, no explanations:"
+	prompt += "Output the commit message now (no other text):"
 
 	return prompt
 }

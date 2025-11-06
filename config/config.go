@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/charmbracelet/huh"
-	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/ui"
 )
 
@@ -31,29 +29,96 @@ type UserConfig struct {
 	UseEmoji        bool   `json:"useEmoji"`
 	Tone            Tone   `json:"tone"`
 	Length          Length `json:"length"`
+	UseLocalAPI     bool   `json:"useLocalAPI"`
+	OllamaURL       string `json:"ollamaURL,omitempty"`
+	OllamaModel     string `json:"ollamaModel,omitempty"`
+	BackendURL      string `json:"backendURL,omitempty"`
 }
 
 func Load() (*UserConfig, error) {
-	gitRoot, err := git.FindGitRoot()
+	return LoadMerged()
+}
+
+// LoadMerged loads config with precedence: local > global > defaults
+func LoadMerged() (*UserConfig, error) {
+	config := getDefaultUserConfig()
+
+	globalPath, err := GetGlobalConfigPath()
+	if err == nil {
+		globalConfig, err := tryLoadConfig(globalPath)
+		if err == nil && globalConfig != nil {
+			config = mergeConfig(config, globalConfig)
+		}
+	}
+
+	localPath, err := GetLocalConfigPath()
+	if err == nil {
+		localConfig, err := tryLoadConfig(localPath)
+		if err == nil && localConfig != nil {
+			config = mergeConfig(config, localConfig)
+		}
+	}
+
+	if !isValidConfig(config) {
+		return config, nil // Return with defaults if invalid
+	}
+
+	return config, nil
+}
+
+// LoadGlobal loads only the global config
+func LoadGlobal() (*UserConfig, error) {
+	globalPath, err := GetGlobalConfigPath()
 	if err != nil {
 		return nil, err
 	}
 
-	configPath := filepath.Join(gitRoot, ".git", "diny-config.json")
-
-	config, err := tryLoadConfig(configPath)
+	config, err := tryLoadConfig(globalPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return handleConfigError(configPath, err)
-	}
-
-	if !isValidConfig(config) {
-		return handleInvalidConfig(configPath)
+		return handleConfigError(globalPath, err)
 	}
 
 	return config, nil
+}
+
+// LoadLocal loads only the local config
+func LoadLocal() (*UserConfig, error) {
+	localPath, err := GetLocalConfigPath()
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := tryLoadConfig(localPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return handleConfigError(localPath, err)
+	}
+
+	return config, nil
+}
+
+// mergeConfig merges src into dst (src values override dst)
+func mergeConfig(dst, src *UserConfig) *UserConfig {
+	result := *dst
+
+	result.UseConventional = src.UseConventional
+	result.UseEmoji = src.UseEmoji
+	result.UseLocalAPI = src.UseLocalAPI
+
+	if src.Tone != "" {
+		result.Tone = src.Tone
+	}
+
+	if src.Length != "" {
+		result.Length = src.Length
+	}
+
+	return &result
 }
 
 func tryLoadConfig(configPath string) (*UserConfig, error) {
@@ -159,6 +224,15 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 		return nil, err
 	}
 
+	err = huh.NewConfirm().
+		Title("Use local Ollama API?").
+		Description("Connect to local Ollama instance at http://localhost:11434 (requires Ollama installed)").
+		Value(&config.UseLocalAPI).
+		Run()
+	if err != nil {
+		return nil, err
+	}
+
 	var toneStr string
 	err = huh.NewSelect[string]().
 		Title("Choose commit message tone").
@@ -197,13 +271,31 @@ func promptUserForValidConfig(configPath string) (*UserConfig, error) {
 }
 
 func Save(config UserConfig) error {
-	gitRoot, err := git.FindGitRoot()
+	return SaveLocal(config)
+}
+
+// SaveGlobal saves config to global location
+func SaveGlobal(config UserConfig) error {
+	configPath, err := GetGlobalConfigPath()
+	if err != nil {
+		return fmt.Errorf("failed to get global config path: %w", err)
+	}
+
+	return saveConfigToPath(config, configPath)
+}
+
+// SaveLocal saves config to local (repository) location
+func SaveLocal(config UserConfig) error {
+	configPath, err := GetLocalConfigPath()
 	if err != nil {
 		return fmt.Errorf("not in a git repository: %w", err)
 	}
 
-	configPath := filepath.Join(gitRoot, ".git", "diny-config.json")
+	return saveConfigToPath(config, configPath)
+}
 
+// saveConfigToPath saves config to a specific path
+func saveConfigToPath(config UserConfig, configPath string) error {
 	data, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
@@ -218,10 +310,97 @@ func Save(config UserConfig) error {
 }
 
 func PrintConfiguration(userConfig UserConfig) {
-	content := fmt.Sprintf("• Emoji: %t\n• Conventional: %t\n• Tone: %s\n• Length: %s",
+	content := fmt.Sprintf("• Emoji: %t\n• Conventional: %t\n• Tone: %s\n• Length: %s\n• Local API: %t",
+		userConfig.UseEmoji,
+		userConfig.UseConventional,
+		userConfig.Tone,
+		userConfig.Length,
+		userConfig.UseLocalAPI)
+
+	if userConfig.UseLocalAPI {
+		if userConfig.OllamaURL != "" {
+			content += fmt.Sprintf("\n• Ollama URL: %s", userConfig.OllamaURL)
+		}
+		if userConfig.OllamaModel != "" {
+			content += fmt.Sprintf("\n• Ollama Model: %s", userConfig.OllamaModel)
+		}
+	} else {
+		if userConfig.BackendURL != "" {
+			content += fmt.Sprintf("\n• Backend URL: %s", userConfig.BackendURL)
+		}
+	}
+
+	ui.Box(ui.BoxOptions{Title: "Configuration", Message: content})
+}
+
+// GetConfigSummary returns a single-line summary of the configuration
+func GetConfigSummary(userConfig UserConfig) string {
+	summary := fmt.Sprintf("emoji:%t conv:%t tone:%s len:%s",
 		userConfig.UseEmoji,
 		userConfig.UseConventional,
 		userConfig.Tone,
 		userConfig.Length)
-	ui.Box(ui.BoxOptions{Title: "Configuration", Message: content})
+
+	configService := GetService()
+	apiConfig := configService.GetAPIConfig()
+
+	if apiConfig.Provider == LocalOllama {
+		summary += fmt.Sprintf(" api:ollama(%s)", apiConfig.Model)
+	} else {
+		summary += " api:cloud"
+	}
+
+	return summary
+}
+
+func PrintEffectiveConfiguration(userConfig UserConfig) {
+	configService := GetService()
+	apiConfig := configService.GetAPIConfig()
+
+	content := "Active Settings\n\n"
+	content += fmt.Sprintf("• Emoji: %t\n", userConfig.UseEmoji)
+	content += fmt.Sprintf("• Conventional: %t\n", userConfig.UseConventional)
+	content += fmt.Sprintf("• Tone: %s\n", userConfig.Tone)
+	content += fmt.Sprintf("• Length: %s\n", userConfig.Length)
+	content += fmt.Sprintf("• Local API: %t\n\n", userConfig.UseLocalAPI)
+
+	content += "Effective API Configuration\n\n"
+	content += fmt.Sprintf("• Provider: %s\n", apiConfig.Provider)
+	content += fmt.Sprintf("• URL: %s\n", apiConfig.BaseURL)
+
+	ollamaURLSource := getConfigSource("DINY_OLLAMA_URL", userConfig.OllamaURL, "http://127.0.0.1:11434")
+	content += fmt.Sprintf("  └─ Source: %s\n", ollamaURLSource)
+
+	if apiConfig.Provider == LocalOllama && apiConfig.Model != "" {
+		content += fmt.Sprintf("• Model: %s\n", apiConfig.Model)
+		modelSource := getConfigSource("DINY_OLLAMA_MODEL", userConfig.OllamaModel, "llama3.2")
+		content += fmt.Sprintf("  └─ Source: %s\n", modelSource)
+	}
+
+	if apiConfig.Provider == CloudBackend {
+		backendSource := getConfigSource("DINY_BACKEND_URL", userConfig.BackendURL, "https://diny-cli.vercel.app")
+		content += fmt.Sprintf("  └─ Source: %s\n", backendSource)
+	}
+
+	content += "\nConfiguration Keys\n\n"
+	content += "JSON:       ollamaURL, ollamaModel, backendURL\n"
+	content += "Env Vars:   DINY_OLLAMA_URL, DINY_OLLAMA_MODEL, DINY_BACKEND_URL\n"
+	content += "Precedence: env vars > local JSON > global JSON > defaults"
+
+	ui.Box(ui.BoxOptions{Title: "Effective Configuration", Message: content})
+}
+
+// GetConfigSource returns a string describing where a config value comes from
+func GetConfigSource(envVar string, jsonValue string, defaultValue string) string {
+	if envValue := os.Getenv(envVar); envValue != "" {
+		return fmt.Sprintf("env var %s", envVar)
+	}
+	if jsonValue != "" {
+		return "config file"
+	}
+	return "default"
+}
+
+func getConfigSource(envVar string, jsonValue string, defaultValue string) string {
+	return GetConfigSource(envVar, jsonValue, defaultValue)
 }
