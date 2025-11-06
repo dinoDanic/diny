@@ -61,7 +61,17 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		}
 
 		var newCommitMessage string
-		err := ui.WithSpinner("Generating alternative commit message...", func() error {
+		configService := config.GetService()
+		apiConfig := configService.GetAPIConfig()
+
+		var spinnerMessage string
+		if apiConfig.Provider == config.LocalOllama {
+			spinnerMessage = "Regenerating locally..."
+		} else {
+			spinnerMessage = "Regenerating via Diny cloud..."
+		}
+
+		err := ui.WithSpinner(spinnerMessage, func() error {
 			var genErr error
 			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
 			return genErr
@@ -79,7 +89,17 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent commit message:\n%s\n\nUser feedback: %s\n\nPlease generate a new commit message that addresses the user's feedback.", commitMessage, customInput)
 
 		var newCommitMessage string
-		err := ui.WithSpinner("Refining commit message with your feedback...", func() error {
+		configService := config.GetService()
+		apiConfig := configService.GetAPIConfig()
+
+		var spinnerMessage string
+		if apiConfig.Provider == config.LocalOllama {
+			spinnerMessage = "Refining locally with your feedback..."
+		} else {
+			spinnerMessage = "Refining via Diny cloud with your feedback..."
+		}
+
+		err := ui.WithSpinner(spinnerMessage, func() error {
 			var genErr error
 			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
 			return genErr
