@@ -40,6 +40,7 @@ func getBaseBoxStyle() lipgloss.Style {
 		BorderLeft(true).
 		BorderStyle(lipgloss.ThickBorder()).
 		Padding(1, 2).
+		Margin(0).
 		Width(width)
 }
 
