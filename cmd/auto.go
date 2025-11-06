@@ -1,6 +1,3 @@
-/*
-Copyright © 2025 NAME HERE dino.danic@gmail.com
-*/
 package cmd
 
 import (
@@ -11,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/dinoDanic/diny/git"
+	"github.com/dinoDanic/diny/ui"
 	"github.com/spf13/cobra"
 )
 
-// autoCmd represents the auto command
 var autoCmd = &cobra.Command{
 	Use:   "auto",
 	Short: "Set up git auto alias for diny commit messages",
@@ -38,7 +35,10 @@ Examples:
 func setupGitAlias() {
 	dinyPath, err := getDinyPath()
 	if err != nil {
-		fmt.Printf("❌ Error finding diny executable: %v\n", err)
+		ui.Box(ui.BoxOptions{
+			Message: fmt.Sprintf("Error finding diny executable: %v", err),
+			Variant: ui.Error,
+		})
 		os.Exit(1)
 	}
 
@@ -47,12 +47,18 @@ func setupGitAlias() {
 	cmd := exec.Command("git", "config", "--global", "alias.auto", aliasScript)
 	err = cmd.Run()
 	if err != nil {
-		fmt.Printf("❌ Failed to set git alias: %v\n", err)
+		ui.Box(ui.BoxOptions{
+			Message: fmt.Sprintf("Failed to set git alias: %v", err),
+			Variant: ui.Error,
+		})
 		os.Exit(1)
 	}
 
-	fmt.Println("✅ Git auto alias set up successfully!")
-	fmt.Println("Now you can use: git auto")
+	ui.Box(ui.BoxOptions{
+		Title:   "Git auto alias set up successfully!",
+		Message: "Now you can use: git auto",
+		Variant: ui.Success,
+	})
 }
 
 func removeGitAlias() {
@@ -60,14 +66,23 @@ func removeGitAlias() {
 	err := cmd.Run()
 	if err != nil {
 		if strings.Contains(err.Error(), "exit status 5") {
-			fmt.Println("ℹ️  No git auto alias found to remove")
+			ui.Box(ui.BoxOptions{
+				Message: "No git auto alias found to remove",
+				Variant: ui.Warning,
+			})
 			return
 		}
-		fmt.Printf("❌ Failed to remove git alias: %v\n", err)
+		ui.Box(ui.BoxOptions{
+			Message: fmt.Sprintf("Failed to remove git alias: %v", err),
+			Variant: ui.Error,
+		})
 		os.Exit(1)
 	}
 
-	fmt.Println("✅ Git alias removed successfully!")
+	ui.Box(ui.BoxOptions{
+		Message: "Git alias removed successfully!",
+		Variant: ui.Success,
+	})
 }
 
 func getDinyPath() (string, error) {
