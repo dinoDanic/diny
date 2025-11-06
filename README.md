@@ -93,17 +93,65 @@ Integrate diny directly into [LazyGit](https://github.com/jesseduffield/lazygit)
 This adds a custom command to LazyGit's configuration, allowing you to generate commit messages with diny without leaving LazyGit.
 
 
+## Configuration
+
+diny supports both global and local (per-repository) configuration with a clear precedence chain:
+
+**Configuration Precedence:**
+```
+Environment Variables > Local Config > Global Config > Defaults
+```
+
+### Configuration Locations
+
+**Global Config:**
+- **Linux/Unix:** `~/.config/diny/config.json` (or `$XDG_CONFIG_HOME/diny/config.json`)
+- **macOS:** `~/Library/Application Support/diny/config.json`
+- **Windows:** `%APPDATA%\diny\config.json`
+
+**Local Config:**
+- `.git/diny-config.json` (in the git repository root)
+
+### Environment Variables
+
+You can override configuration with environment variables:
+
+**Config Location:**
+- `DINY_CONFIG_PATH` - Custom path for global config file (overrides platform defaults)
+
+**Config Values:**
+- `DINY_OLLAMA_URL` - Custom Ollama server URL (default: `http://127.0.0.1:11434`)
+- `DINY_OLLAMA_MODEL` - Ollama model to use (default: `llama3.2`)
+- `DINY_BACKEND_URL` - Cloud backend URL (default: `https://diny-cli.vercel.app`)
+
+### Configuration Setup
+
+Run the interactive configuration wizard:
+
+```bash
+diny init              # Choose between global or local configuration
+```
+
+View your current configuration:
+
+```bash
+diny config            # Show basic configuration
+diny config --verbose  # Show effective configuration with sources
+```
+
 ## Commands
 
 diny comes with a handful of simple commands. Each one is designed to fit naturally into your git workflow:
 
     diny auto                                 # Set up a git alias so you can run `git auto`
 
+    diny check-health                         # Check Ollama connection and model availability
     diny commit                               # Generate a commit message from your staged changes
     diny commit  --print                      # Print generated message to stdout only
     diny commit  --print | git commit -F -    # Generated message and commit
 
     diny config                               # Show your current diny configuration
+    diny config --verbose                     # Show effective configuration with sources
     diny init                                 # Initialize diny with an interactive setup wizard
     diny link lazygit                         # Integrate diny with LazyGit
     diny theme                                # Select from 10+ dark and light UI themes

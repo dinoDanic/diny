@@ -118,6 +118,18 @@ func mergeConfig(dst, src *UserConfig) *UserConfig {
 		result.Length = src.Length
 	}
 
+	if src.OllamaURL != "" {
+		result.OllamaURL = src.OllamaURL
+	}
+
+	if src.OllamaModel != "" {
+		result.OllamaModel = src.OllamaModel
+	}
+
+	if src.BackendURL != "" {
+		result.BackendURL = src.BackendURL
+	}
+
 	return &result
 }
 

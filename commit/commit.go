@@ -22,7 +22,7 @@ func Main(cmd *cobra.Command, args []string) {
 			fmt.Fprintf(os.Stderr, "Error generating commit message: %v\n", err)
 			os.Exit(1)
 		}
-		fmt.Print(commitMessage)
+		fmt.Println(strings.TrimSpace(commitMessage))
 		return
 	}
 
