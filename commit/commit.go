@@ -3,6 +3,7 @@ package commit
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
@@ -25,8 +26,32 @@ func Main(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	configService := config.GetService()
+	apiConfig := configService.GetAPIConfig()
+	tokens := estimateTokens(diff)
+
+	info := fmt.Sprintf("Diff: ~%d tokens | Config: emoji:%t conv:%t tone:%s len:%s",
+		tokens,
+		userConfig.UseEmoji,
+		userConfig.UseConventional,
+		userConfig.Tone,
+		userConfig.Length)
+
+	if apiConfig.Provider == config.LocalOllama {
+		info += fmt.Sprintf(" | Model: %s", apiConfig.Model)
+	}
+
+	ui.Box(ui.BoxOptions{Message: info, Variant: ui.Primary})
+
 	var commitMessage string
-	err := ui.WithSpinner("Generating your commit message...", func() error {
+	var spinnerMessage string
+	if apiConfig.Provider == config.LocalOllama {
+		spinnerMessage = "Commit message generating locally..."
+	} else {
+		spinnerMessage = "Commit message generating via Diny cloud..."
+	}
+
+	err := ui.WithSpinner(spinnerMessage, func() error {
 		var genErr error
 		commitMessage, genErr = CreateCommitMessage(diff, userConfig)
 		return genErr
@@ -38,6 +63,12 @@ func Main(cmd *cobra.Command, args []string) {
 	}
 
 	HandleCommitFlow(commitMessage, diff, userConfig)
+}
+
+func estimateTokens(text string) int {
+	words := len(strings.Fields(text))
+	chars := len(text)
+	return (words*4 + chars) / 5
 }
 
 func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
@@ -61,9 +92,8 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		os.Exit(0)
 	}
 
-	// Load config
-	userConfig, err := config.Load()
-	if err != nil {
+	configService := config.GetService()
+	if err := configService.LoadUserConfig(); err != nil {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
 		} else {
@@ -71,6 +101,8 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		}
 		os.Exit(1)
 	}
+
+	userConfig := configService.GetUserConfig()
 
 	return gitDiff, userConfig
 }

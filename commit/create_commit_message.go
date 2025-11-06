@@ -3,14 +3,15 @@ package commit
 import (
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/groq"
+	"github.com/dinoDanic/diny/ollama"
 )
 
 func CreateCommitMessage(gitDiff string, userConfig *config.UserConfig) (string, error) {
-	commitMessage, err := groq.CreateCommitMessageWithGroq(gitDiff, userConfig)
+	configService := config.GetService()
 
-	if err != nil {
-		return "", err
+	if configService.IsUsingLocalAPI() {
+		return ollama.CreateCommitMessage(gitDiff, userConfig)
 	}
 
-	return commitMessage, nil
+	return groq.CreateCommitMessageWithGroq(gitDiff, userConfig)
 }
