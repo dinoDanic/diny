@@ -2,6 +2,13 @@
 
 <img src="https://diny-cli.vercel.app/diny-v2-200-light.png" alt="diny logo" width="200"/>
 
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 12px 20px; margin: 20px auto; max-width: 600px;">
+  <p style="margin: 0; color: white; font-size: 14px;">
+    🚀 <strong>diny v1.0 is coming</strong> — Full rework with customizable LLMs, prompts, and privacy options. 
+    <a href="./V1_ANNOUNCEMENT.md" style="color: #ffd700; text-decoration: underline;">Read more →</a>
+  </p>
+</div>
+
 # diny
 
 ### from git diff to clean commits
