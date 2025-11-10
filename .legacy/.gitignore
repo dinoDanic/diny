@@ -1,0 +1,9 @@
+AGENTS.md
+diny
+diny2
+diny.exe
+install.ps1
+# Added by goreleaser init:
+dist/
+.env
+release.sh

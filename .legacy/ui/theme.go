@@ -1,0 +1,135 @@
+package ui
+
+import (
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/dinoDanic/diny/ui/themes"
+)
+
+var currentTheme *themes.Theme
+
+func init() {
+	loadedTheme := LoadTheme()
+	if loadedTheme != "" {
+		SetTheme(loadedTheme)
+	} else {
+		currentTheme = themes.Catppuccin()
+	}
+}
+
+func SetTheme(name string) bool {
+	var theme *themes.Theme
+	switch name {
+	case "catppuccin":
+		theme = themes.Catppuccin()
+	case "tokyo":
+		theme = themes.Tokyo()
+	case "nord":
+		theme = themes.Nord()
+	case "dracula":
+		theme = themes.Dracula()
+	case "gruvbox-dark":
+		theme = themes.GruvboxDark()
+	case "onedark":
+		theme = themes.OneDark()
+	case "monokai":
+		theme = themes.Monokai()
+	case "solarized-dark":
+		theme = themes.SolarizedDark()
+	case "solarized-light":
+		theme = themes.SolarizedLight()
+	case "github-light":
+		theme = themes.GithubLight()
+	case "gruvbox-light":
+		theme = themes.GruvboxLight()
+	case "everforest-dark":
+		theme = &themes.EverforestDark
+	case "flexoki-dark":
+		theme = themes.FlexokiDark()
+	case "flexoki-light":
+		theme = themes.FlexokiLight()
+	default:
+		return false
+	}
+	currentTheme = theme
+	return true
+}
+
+func GetCurrentTheme() *themes.Theme {
+	return currentTheme
+}
+
+func GetAvailableThemes() []string {
+	return []string{
+		"catppuccin",
+		"tokyo",
+		"nord",
+		"dracula",
+		"gruvbox-dark",
+		"onedark",
+		"monokai",
+		"solarized-dark",
+		"everforest-dark",
+		"flexoki-dark",
+		"solarized-light",
+		"github-light",
+		"gruvbox-light",
+		"flexoki-light",
+	}
+}
+
+func GetDarkThemes() []string {
+	return []string{
+		"catppuccin",
+		"tokyo",
+		"nord",
+		"dracula",
+		"gruvbox-dark",
+		"onedark",
+		"monokai",
+		"solarized-dark",
+		"everforest-dark",
+		"flexoki-dark",
+	}
+}
+
+func GetLightThemes() []string {
+	return []string{
+		"solarized-light",
+		"github-light",
+		"gruvbox-light",
+		"flexoki-light",
+	}
+}
+
+func SaveTheme(themeName string) error {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
+	dinyDir := filepath.Join(homeDir, ".config", "diny")
+	if err := os.MkdirAll(dinyDir, 0755); err != nil {
+		return err
+	}
+
+	themePath := filepath.Join(dinyDir, "theme")
+	return os.WriteFile(themePath, []byte(themeName), 0644)
+}
+
+func LoadTheme() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	themePath := filepath.Join(homeDir, ".config", "diny", "theme")
+	data, err := os.ReadFile(themePath)
+	if err != nil {
+		return ""
+	}
+
+	return strings.TrimSpace(string(data))
+}
