@@ -23,6 +23,7 @@ const (
 )
 
 type Config struct {
+	Theme  string       `mapstructure:"theme"`
 	Commit CommitConfig `mapstructure:"commit"`
 }
 
@@ -48,6 +49,8 @@ func Load(cfgFile string) (*Config, error) {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName("config")
 	}
+
+	viper.SetDefault("theme", "catppuccin")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config: %w", err)
