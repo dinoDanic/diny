@@ -1,10 +1,12 @@
+/* Copyright © 2025 dinoDanic dino.danic@gmail.com */
 package config
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
-	"github.com/spf13/viper"
+	"go.yaml.in/yaml/v3"
 )
 
 type Tone string
@@ -23,65 +25,185 @@ const (
 )
 
 type Config struct {
-	Theme  string       `mapstructure:"theme"`
-	Commit CommitConfig `mapstructure:"commit"`
+	Theme  string       `yaml:"theme"`
+	Commit CommitConfig `yaml:"commit"`
 }
 
 type CommitConfig struct {
-	Conventional bool   `mapstructure:"conventional"`
-	Emoji        bool   `mapstructure:"emoji"`
-	Tone         Tone   `mapstructure:"tone"`
-	Length       Length `mapstructure:"length"`
+	Conventional bool   `yaml:"conventional"`
+	Emoji        bool   `yaml:"emoji"`
+	Tone         Tone   `yaml:"tone"`
+	Length       Length `yaml:"length"`
 }
 
 var cfg *Config
 
-func Load(cfgFile string) (*Config, error) {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get home directory: %w", err)
-		}
-
-		viper.AddConfigPath(home + "/.config/diny")
-		viper.SetConfigType("yaml")
-		viper.SetConfigName("config")
+func DefaultConfig() *Config {
+	return &Config{
+		Theme: "catppuccin",
+		Commit: CommitConfig{
+			Conventional: false,
+			Emoji:        false,
+			Tone:         Casual,
+			Length:       Short,
+		},
 	}
-
-	viper.SetDefault("theme", "catppuccin")
-	viper.SetDefault("commit.conventional", false)
-	viper.SetDefault("commit.emoji", false)
-	viper.SetDefault("commit.tone", "casual")
-	viper.SetDefault("commit.length", "short")
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read config: %w", err)
-	}
-
-	fmt.Println("Using config file:", viper.ConfigFileUsed())
-
-	var c Config
-	if err := viper.Unmarshal(&c); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
-	}
-
-	cfg = &c
-	return &c, nil
 }
 
-func Get() *Config {
-	if cfg == nil {
-		return &Config{
-			Theme: "catppuccin",
-			Commit: CommitConfig{
-				Conventional: false,
-				Emoji:        false,
-				Tone:         Casual,
-				Length:       Short,
-			},
+func getConfigPath() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(home, ".config", "diny", "config.yaml")
+}
+
+func createDefaultConfig(configPath string) error {
+	dir := filepath.Dir(configPath)
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	// Create config with comments
+	configContent := `# Diny Configuration
+# Learn more: https://github.com/dinoDanic/diny
+
+# UI theme for the CLI
+# Options: catppuccin, tokyo, nord, dracula, gruvbox-dark, onedark, monokai,
+#          solarized-dark, everforest-dark, flexoki-dark, solarized-light,
+#          github-light, gruvbox-light, flexoki-light
+theme: catppuccin
+
+commit:
+  # Use conventional commit format (feat:, fix:, docs:, etc.)
+  conventional: false
+  
+  # Include emojis in commit messages (✨, 🐛, 📝, etc.)
+  emoji: false
+  
+  # Commit message tone
+  # Options: professional, casual, friendly
+  tone: professional
+  
+  # Commit message length
+  # Options: short, normal, long
+  length: normal
+`
+
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	return nil
+}
+
+func Load(cfgFile string) (*Config, error) {
+	cfg := DefaultConfig()
+
+	configPath := cfgFile
+	if configPath == "" {
+		configPath = getConfigPath()
+		if configPath == "" {
+			return cfg, nil
 		}
 	}
+
+	data, err := os.ReadFile(configPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			if err := createDefaultConfig(configPath); err != nil {
+				fmt.Printf("Using default configuration (couldn't create config file: %v)\n", err)
+				return cfg, nil
+			}
+			fmt.Printf("Created default config at: %s\n", configPath)
+			return cfg, nil
+		}
+		return nil, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	// Parse YAML and merge with defaults
+	if err := yaml.Unmarshal(data, cfg); err != nil {
+		return nil, fmt.Errorf("invalid config file: %w", err)
+	}
+
+	// Validate configuration
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
+
+	fmt.Printf("Loaded config from: %s\n", configPath)
+
+	// Store in package variable for Get()
+	return cfg, nil
+}
+
+func (c *Config) Validate() error {
+	// Validate tone
+	validTones := []Tone{Professional, Casual, Friendly}
+	if !contains(validTones, c.Commit.Tone) {
+		return fmt.Errorf("invalid tone '%s', must be one of: professional, casual, friendly", c.Commit.Tone)
+	}
+
+	// Validate length
+	validLengths := []Length{Short, Normal, Long}
+	if !contains(validLengths, c.Commit.Length) {
+		return fmt.Errorf("invalid length '%s', must be one of: short, normal, long", c.Commit.Length)
+	}
+
+	// Validate theme (basic check - just ensure it's not empty)
+	if c.Theme == "" {
+		c.Theme = "catppuccin"
+	}
+
+	return nil
+}
+
+// contains checks if a slice contains a value
+func contains[T comparable](slice []T, item T) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+// Get returns the loaded configuration or defaults if not loaded
+func Get() *Config {
+	if cfg == nil {
+		return DefaultConfig()
+	}
 	return cfg
+}
+
+// Set stores the configuration in the package variable
+func Set(c *Config) {
+	cfg = c
+}
+
+func Save(c *Config, cfgFile string) error {
+	configPath := cfgFile
+	if configPath == "" {
+		configPath = getConfigPath()
+		if configPath == "" {
+			return fmt.Errorf("failed to determine config path")
+		}
+	}
+
+	dir := filepath.Dir(configPath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	data, err := yaml.Marshal(c)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if err := os.WriteFile(configPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+
+	return nil
 }

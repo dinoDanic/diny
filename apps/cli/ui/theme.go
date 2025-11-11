@@ -3,7 +3,6 @@ package ui
 import (
 	"github.com/dinoDanic/diny/cli/config"
 	"github.com/dinoDanic/diny/cli/ui/themes"
-	"github.com/spf13/viper"
 )
 
 var currentTheme *themes.Theme
@@ -103,10 +102,12 @@ func GetLightThemes() []string {
 }
 
 func SaveTheme(themeName string) error {
-	viper.Set("theme", themeName)
-	return viper.WriteConfig()
+	cfg := config.Get()
+	cfg.Theme = themeName
+	return config.Save(cfg, "")
 }
 
 func LoadTheme() string {
-	return viper.GetString("theme")
+	cfg := config.Get()
+	return cfg.Theme
 }

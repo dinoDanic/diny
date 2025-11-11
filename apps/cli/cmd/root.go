@@ -48,20 +48,13 @@ func Execute() {
 func init() {
 	// Call config.Load before running any command
 	cobra.OnInitialize(func() {
-		_, err := config.Load(cfgFile)
+		cfg, err := config.Load(cfgFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			// Don't exit, just use defaults
+			os.Exit(1)
 		}
+		config.Set(cfg)
 	})
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/diny/config.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
