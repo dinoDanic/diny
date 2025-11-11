@@ -1,0 +1,35 @@
+# Diny Configuration
+# Learn more: https://github.com/dinoDanic/diny
+
+# UI theme for the CLI
+# Available themes:
+#   Dark: catppuccin, tokyo, nord, dracula, gruvbox-dark, onedark, monokai,
+#         solarized-dark, everforest-dark, flexoki-dark
+#   Light: solarized-light, github-light, gruvbox-light, flexoki-light
+theme: catppuccin
+
+# Commit message generation settings
+commit:
+  # Use conventional commit format (feat:, fix:, docs:, chore:, style:, refactor:, test:, etc.)
+  # When enabled, messages will follow the Conventional Commits specification
+  # Learn more: https://www.conventionalcommits.org/
+  conventional: false
+
+  # Include emojis in commit messages for visual clarity
+  # Examples: ✨ (new feature), 🐛 (bug fix), 📝 (docs), ♻️ (refactor),
+  #           🎨 (style), ✅ (tests), 🔧 (config), 🚀 (performance)
+  emoji: false
+
+  # Commit message tone - affects the writing style
+  # Options:
+  #   - professional: Formal and precise language, suitable for corporate environments
+  #   - casual: Relaxed and conversational style, friendly for team communication
+  #   - friendly: Warm and approachable tone with encouraging language
+  tone: casual
+
+  # Commit message length - controls level of detail
+  # Options:
+  #   - short: Brief one-line messages, ideal for simple changes
+  #   - normal: Balanced with subject and short body, recommended for most commits
+  #   - long: Detailed with comprehensive context, great for complex changes
+  length: short

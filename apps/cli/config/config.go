@@ -2,12 +2,17 @@
 package config
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"go.yaml.in/yaml/v3"
 )
+
+//go:embed defaults.yaml
+var defaultConfigTemplate string
 
 type Tone string
 type Length string
@@ -38,16 +43,12 @@ type CommitConfig struct {
 
 var cfg *Config
 
-func DefaultConfig() *Config {
-	return &Config{
-		Theme: "catppuccin",
-		Commit: CommitConfig{
-			Conventional: false,
-			Emoji:        false,
-			Tone:         Casual,
-			Length:       Short,
-		},
+func loadDefaultConfig() (*Config, error) {
+	var defaultCfg Config
+	if err := yaml.Unmarshal([]byte(defaultConfigTemplate), &defaultCfg); err != nil {
+		return nil, fmt.Errorf("failed to parse embedded defaults: %w", err)
 	}
+	return &defaultCfg, nil
 }
 
 func getConfigPath() string {
@@ -59,39 +60,13 @@ func getConfigPath() string {
 }
 
 func createDefaultConfig(configPath string) error {
-	dir := filepath.Dir(configPath)
 
+	dir := filepath.Dir(configPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	// Create config with comments
-	configContent := `# Diny Configuration
-# Learn more: https://github.com/dinoDanic/diny
-
-# UI theme for the CLI
-# Options: catppuccin, tokyo, nord, dracula, gruvbox-dark, onedark, monokai,
-#          solarized-dark, everforest-dark, flexoki-dark, solarized-light,
-#          github-light, gruvbox-light, flexoki-light
-theme: catppuccin
-
-commit:
-  # Use conventional commit format (feat:, fix:, docs:, etc.)
-  conventional: false
-  
-  # Include emojis in commit messages (✨, 🐛, 📝, etc.)
-  emoji: false
-  
-  # Commit message tone
-  # Options: professional, casual, friendly
-  tone: professional
-  
-  # Commit message length
-  # Options: short, normal, long
-  length: normal
-`
-
-	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(defaultConfigTemplate), 0644); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
@@ -99,13 +74,11 @@ commit:
 }
 
 func Load(cfgFile string) (*Config, error) {
-	cfg := DefaultConfig()
-
 	configPath := cfgFile
 	if configPath == "" {
 		configPath = getConfigPath()
 		if configPath == "" {
-			return cfg, nil
+			return loadDefaultConfig()
 		}
 	}
 
@@ -114,16 +87,21 @@ func Load(cfgFile string) (*Config, error) {
 		if os.IsNotExist(err) {
 			if err := createDefaultConfig(configPath); err != nil {
 				fmt.Printf("Using default configuration (couldn't create config file: %v)\n", err)
-				return cfg, nil
+				return loadDefaultConfig()
 			}
 			fmt.Printf("Created default config at: %s\n", configPath)
-			return cfg, nil
+			data, err = os.ReadFile(configPath)
+			if err != nil {
+				return loadDefaultConfig()
+			}
+		} else {
+			return nil, fmt.Errorf("failed to read config file: %w", err)
 		}
-		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	// Parse YAML and merge with defaults
-	if err := yaml.Unmarshal(data, cfg); err != nil {
+	// Parse YAML
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("invalid config file: %w", err)
 	}
 
@@ -134,20 +112,19 @@ func Load(cfgFile string) (*Config, error) {
 
 	fmt.Printf("Loaded config from: %s\n", configPath)
 
-	// Store in package variable for Get()
-	return cfg, nil
+	return &cfg, nil
 }
 
 func (c *Config) Validate() error {
 	// Validate tone
 	validTones := []Tone{Professional, Casual, Friendly}
-	if !contains(validTones, c.Commit.Tone) {
+	if !slices.Contains(validTones, c.Commit.Tone) {
 		return fmt.Errorf("invalid tone '%s', must be one of: professional, casual, friendly", c.Commit.Tone)
 	}
 
 	// Validate length
 	validLengths := []Length{Short, Normal, Long}
-	if !contains(validLengths, c.Commit.Length) {
+	if !slices.Contains(validLengths, c.Commit.Length) {
 		return fmt.Errorf("invalid length '%s', must be one of: short, normal, long", c.Commit.Length)
 	}
 
@@ -159,25 +136,26 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// contains checks if a slice contains a value
-func contains[T comparable](slice []T, item T) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
-
 // Get returns the loaded configuration or defaults if not loaded
 func Get() *Config {
 	if cfg == nil {
-		return DefaultConfig()
+		defaultCfg, err := loadDefaultConfig()
+		if err != nil {
+			return &Config{
+				Theme: "catppuccin",
+				Commit: CommitConfig{
+					Conventional: false,
+					Emoji:        false,
+					Tone:         Casual,
+					Length:       Short,
+				},
+			}
+		}
+		return defaultCfg
 	}
 	return cfg
 }
 
-// Set stores the configuration in the package variable
 func Set(c *Config) {
 	cfg = c
 }
