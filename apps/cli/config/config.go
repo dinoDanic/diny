@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -160,6 +161,8 @@ func Set(c *Config) {
 	cfg = c
 }
 
+// Save writes the configuration to file while preserving comments
+// Uses simple line-based replacement to maintain file structure
 func Save(c *Config, cfgFile string) error {
 	configPath := cfgFile
 	if configPath == "" {
@@ -169,19 +172,81 @@ func Save(c *Config, cfgFile string) error {
 		}
 	}
 
+	// Ensure directory exists
 	dir := filepath.Dir(configPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	data, err := yaml.Marshal(c)
+	// Read existing file
+	data, err := os.ReadFile(configPath)
 	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
+		// File doesn't exist, create from template
+		if os.IsNotExist(err) {
+			if err := createDefaultConfig(configPath); err != nil {
+				return err
+			}
+			data, err = os.ReadFile(configPath)
+			if err != nil {
+				return fmt.Errorf("failed to read newly created config: %w", err)
+			}
+		} else {
+			return fmt.Errorf("failed to read config file: %w", err)
+		}
 	}
 
-	if err := os.WriteFile(configPath, data, 0644); err != nil {
-		return fmt.Errorf("failed to write config file: %w", err)
+	// Update values line by line (preserves comments and formatting)
+	lines := strings.Split(string(data), "\n")
+	inCommitSection := false
+
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Update theme
+		if strings.HasPrefix(trimmed, "theme:") {
+			lines[i] = "theme: " + c.Theme
+			continue
+		}
+
+		// Track if we're in the commit section
+		if trimmed == "commit:" {
+			inCommitSection = true
+			continue
+		}
+
+		// If we hit a non-indented line after commit section, we've exited
+		if inCommitSection && len(line) > 0 && line[0] != ' ' && line[0] != '#' {
+			inCommitSection = false
+		}
+
+		// Update commit fields
+		if inCommitSection {
+			if strings.HasPrefix(trimmed, "conventional:") {
+				indent := getIndent(line)
+				lines[i] = fmt.Sprintf("%sconventional: %t", indent, c.Commit.Conventional)
+			} else if strings.HasPrefix(trimmed, "emoji:") {
+				indent := getIndent(line)
+				lines[i] = fmt.Sprintf("%semoji: %t", indent, c.Commit.Emoji)
+			} else if strings.HasPrefix(trimmed, "tone:") {
+				indent := getIndent(line)
+				lines[i] = fmt.Sprintf("%stone: %s", indent, c.Commit.Tone)
+			} else if strings.HasPrefix(trimmed, "length:") {
+				indent := getIndent(line)
+				lines[i] = fmt.Sprintf("%slength: %s", indent, c.Commit.Length)
+			}
+		}
 	}
 
-	return nil
+	// Write back
+	return os.WriteFile(configPath, []byte(strings.Join(lines, "\n")), 0644)
+}
+
+// getIndent returns the leading whitespace of a line
+func getIndent(line string) string {
+	for i, char := range line {
+		if char != ' ' && char != '\t' {
+			return line[:i]
+		}
+	}
+	return ""
 }

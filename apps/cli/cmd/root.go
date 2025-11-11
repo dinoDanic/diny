@@ -30,7 +30,7 @@ Examples:
   diny commit                           # Interactive commit message generation
   diny commit --print                   # Non-interactive mode
   diny theme list                       # Show available themes
-  diny theme set catppuccin            # Set your preferred theme`,
+ `,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
