@@ -51,6 +51,10 @@ func Load(cfgFile string) (*Config, error) {
 	}
 
 	viper.SetDefault("theme", "catppuccin")
+	viper.SetDefault("commit.conventional", false)
+	viper.SetDefault("commit.emoji", false)
+	viper.SetDefault("commit.tone", "casual")
+	viper.SetDefault("commit.length", "short")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("failed to read config: %w", err)
@@ -69,7 +73,15 @@ func Load(cfgFile string) (*Config, error) {
 
 func Get() *Config {
 	if cfg == nil {
-		return &Config{}
+		return &Config{
+			Theme: "catppuccin",
+			Commit: CommitConfig{
+				Conventional: false,
+				Emoji:        false,
+				Tone:         Casual,
+				Length:       Short,
+			},
+		}
 	}
 	return cfg
 }

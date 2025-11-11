@@ -15,15 +15,24 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "cli",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Use:   "diny",
+	Short: "Privacy-first AI-powered git commit message generator",
+	Long: `Diny is a privacy-focused CLI tool that helps you write better git commit messages.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+It analyzes your staged changes and generates conventional, meaningful commit
+messages while keeping your data private—no tracking, no user identification.
+
+Commands:
+  commit - Generate commit messages from staged changes
+  theme  - Manage UI themes
+
+Examples:
+  diny commit                           # Interactive commit message generation
+  diny commit --print                   # Non-interactive mode
+  diny theme list                       # Show available themes
+  diny theme set catppuccin            # Set your preferred theme`,
 	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
 	},
 }
 
