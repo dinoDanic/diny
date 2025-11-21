@@ -55,7 +55,11 @@ func Main() {
 	}
 	ui.Box(ui.BoxOptions{Title: fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange), Message: strings.TrimSpace(commitList)})
 
-	userConfig, err := config.Load()
+	userConfig, err := config.Load("")
+	if err != nil {
+		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to load config: %v", err), Variant: ui.Error})
+		os.Exit(1)
+	}
 	prompt := fmt.Sprintf("Timeline: %s\nCommits:\n%s", dateRange, strings.Join(timelineCommits, "n"))
 
 	var analysis string
@@ -174,7 +178,7 @@ func generateYearOptions() []huh.Option[int] {
 	return options
 }
 
-func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.UserConfig, dateRange string, previousAnalyses []string) {
+func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.Config, dateRange string, previousAnalyses []string) {
 	choice := timelineChoicePrompt()
 
 	switch choice {

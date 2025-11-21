@@ -13,7 +13,7 @@ import (
 	"github.com/dinoDanic/diny/server"
 )
 
-func CreateTimelineWithGroq(prompt string, userConfig *config.UserConfig) (string, error) {
+func CreateTimelineWithGroq(prompt string, userConfig *config.Config) (string, error) {
 	payload := map[string]interface{}{
 		"prompt": prompt,
 	}

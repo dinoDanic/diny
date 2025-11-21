@@ -17,12 +17,12 @@ import (
 )
 
 type CommitRequest struct {
-	GitDiff    string             `json:"gitDiff"`
-	Version    string             `json:"version"`
-	Name       string             `json:"name"`
-	RepoName   string             `json:"repoName"`
-	UserConfig *config.UserConfig `json:"userConfig"`
-	System         string             `json:"system,omitempty"`
+	GitDiff    string         `json:"gitDiff"`
+	Version    string         `json:"version"`
+	Name       string         `json:"name"`
+	RepoName   string         `json:"repoName"`
+	UserConfig *config.Config `json:"userConfig"`
+	System     string         `json:"system,omitempty"`
 }
 
 type commitData struct {
@@ -34,7 +34,7 @@ type commitResp struct {
 	Data  *commitData `json:"data,omitempty"`
 }
 
-func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) (string, error) {
+func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.Config) (string, error) {
 	gitName := git.GetGitName()
 	repoName := git.GetRepoName()
 
@@ -44,7 +44,7 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) 
 		GitDiff:    gitDiff,
 		Name:       gitName,
 		RepoName:   repoName,
-		System:         getOS(),
+		System:     getOS(),
 	}
 
 	buf, err := json.Marshal(payload)
