@@ -40,7 +40,7 @@ func Main(cmd *cobra.Command, args []string) {
 	HandleCommitFlow(commitMessage, diff, userConfig)
 }
 
-func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
+func getCommitData(isQuietMode bool) (string, *config.Config) {
 	gitDiff, err := git.GetGitDiff()
 
 	if err != nil {
@@ -62,7 +62,7 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 	}
 
 	// Load config
-	userConfig, err := config.Load()
+	userConfig, err := config.Load("")
 	if err != nil {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)

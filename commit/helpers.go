@@ -13,11 +13,11 @@ import (
 	"github.com/dinoDanic/diny/ui"
 )
 
-func HandleCommitFlow(commitMessage, fullPrompt string, userConfig *config.UserConfig) {
+func HandleCommitFlow(commitMessage, fullPrompt string, userConfig *config.Config) {
 	HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, []string{})
 }
 
-func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *config.UserConfig, previousMessages []string) {
+func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *config.Config, previousMessages []string) {
 
 	ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
 

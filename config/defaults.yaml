@@ -1,0 +1,25 @@
+# Diny Configuration
+# Learn more: https://github.com/dinoDanic/diny
+
+# Dark: catppuccin, tokyo, nord, dracula, gruvbox-dark, onedark, monokai, solarized-dark, everforest-dark, flexoki-dark
+# Light: solarized-light, github-light, gruvbox-light, flexoki-light
+theme: catppuccin
+
+commit:
+  conventional: false
+  conventional_format: ['feat', 'fix', 'docs', 'chore', 'style', 'refactor', 'test']
+  emoji: false
+
+  # Commit message tone - affects the writing style
+  # Options:
+  #   - professional: Formal and precise language, suitable for corporate environments
+  #   - casual: Relaxed and conversational style, friendly for team communication
+  #   - friendly: Warm and approachable tone with encouraging language
+  tone: casual
+
+  # Commit message length - controls level of detail
+  # Options:
+  #   - short: Brief one-line messages, ideal for simple changes
+  #   - normal: Balanced with subject and short body, recommended for most commits
+  #   - long: Detailed with comprehensive context, great for complex changes
+  length: short
