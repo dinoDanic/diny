@@ -13,11 +13,11 @@ import (
 	"github.com/dinoDanic/diny/ui"
 )
 
-func HandleCommitFlow(commitMessage, fullPrompt string, userConfig *config.Config) {
-	HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, []string{})
+func HandleCommitFlow(commitMessage, fullPrompt string, cfg *config.Config) {
+	HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, []string{})
 }
 
-func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *config.Config, previousMessages []string) {
+func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.Config, previousMessages []string) {
 
 	ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
 
@@ -32,18 +32,18 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		editedMessage, err := openInEditor(commitMessage)
 		if err != nil {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to open editor: %v", err), Variant: ui.Error})
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 			return
 		}
 		if editedMessage != commitMessage && editedMessage != "" {
-			HandleCommitFlowWithHistory(editedMessage, fullPrompt, userConfig, previousMessages)
+			HandleCommitFlowWithHistory(editedMessage, fullPrompt, cfg, previousMessages)
 		} else {
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 		}
 	case "save":
 		if err := saveDraft(commitMessage); err != nil {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to save draft: %v", err), Variant: ui.Error})
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 			return
 		}
 
@@ -63,7 +63,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		var newCommitMessage string
 		err := ui.WithSpinner("Generating alternative commit message...", func() error {
 			var genErr error
-			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
+			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, cfg)
 			return genErr
 		})
 		if err != nil {
@@ -72,7 +72,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, cfg, updatedHistory)
 	case "custom":
 		customInput := customInputPrompt("What changes would you like to see in the commit message?")
 
@@ -81,7 +81,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		var newCommitMessage string
 		err := ui.WithSpinner("Refining commit message with your feedback...", func() error {
 			var genErr error
-			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
+			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, cfg)
 			return genErr
 		})
 		if err != nil {
@@ -90,7 +90,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, cfg, updatedHistory)
 	case "exit":
 		ui.RenderTitle("Bye!")
 		fmt.Println()

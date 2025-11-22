@@ -13,10 +13,10 @@ import (
 func Main(cmd *cobra.Command, args []string) {
 	printMode, _ := cmd.Flags().GetBool("print")
 
-	diff, userConfig := getCommitData(printMode)
+	diff, cfg := getCommitData(printMode)
 
 	if printMode {
-		commitMessage, err := CreateCommitMessage(diff, userConfig)
+		commitMessage, err := CreateCommitMessage(diff, cfg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating commit message: %v\n", err)
 			os.Exit(1)
@@ -28,7 +28,7 @@ func Main(cmd *cobra.Command, args []string) {
 	var commitMessage string
 	err := ui.WithSpinner("Generating your commit message...", func() error {
 		var genErr error
-		commitMessage, genErr = CreateCommitMessage(diff, userConfig)
+		commitMessage, genErr = CreateCommitMessage(diff, cfg)
 		return genErr
 	})
 
@@ -37,7 +37,7 @@ func Main(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	HandleCommitFlow(commitMessage, diff, userConfig)
+	HandleCommitFlow(commitMessage, diff, cfg)
 }
 
 func getCommitData(isQuietMode bool) (string, *config.Config) {
@@ -62,7 +62,7 @@ func getCommitData(isQuietMode bool) (string, *config.Config) {
 	}
 
 	// Load config
-	userConfig, err := config.Load("")
+	cfg, err := config.Load("")
 	if err != nil {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
@@ -72,5 +72,5 @@ func getCommitData(isQuietMode bool) (string, *config.Config) {
 		os.Exit(1)
 	}
 
-	return gitDiff, userConfig
+	return gitDiff, cfg
 }
