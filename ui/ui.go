@@ -185,16 +185,11 @@ func PrintThemeList() {
 		{"Flexoki Dark", "flexoki-dark"},
 	}
 
-	originalTheme := LoadTheme()
-
 	for _, t := range themes {
 		SetTheme(t.themeKey)
 		theme := GetCurrentTheme()
 
 		themeTitle := t.name
-		if t.themeKey == originalTheme {
-			themeTitle = t.name + " (current)"
-		}
 
 		titleStyle := lipgloss.NewStyle().
 			Foreground(theme.PrimaryForeground).
@@ -251,7 +246,9 @@ func PrintThemeList() {
 		fmt.Println()
 	}
 
-	if originalTheme != "" {
-		SetTheme(originalTheme)
-	}
+	SetTheme("catppuccin")
+	Box(BoxOptions{
+		Message: "Set theme in config file. Open with: diny config",
+		Variant: Primary,
+	})
 }

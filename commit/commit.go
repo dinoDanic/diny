@@ -10,13 +10,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Main(cmd *cobra.Command, args []string) {
+func Main(cmd *cobra.Command, args []string, cfg *config.Config) {
 	printMode, _ := cmd.Flags().GetBool("print")
+	noVerify, _ := cmd.Flags().GetBool("no-verify")
 
-	diff, userConfig := getCommitData(printMode)
+	diff := getGitDiff(printMode)
 
 	if printMode {
-		commitMessage, err := CreateCommitMessage(diff, userConfig)
+		commitMessage, err := CreateCommitMessage(diff, cfg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error generating commit message: %v\n", err)
 			os.Exit(1)
@@ -28,7 +29,7 @@ func Main(cmd *cobra.Command, args []string) {
 	var commitMessage string
 	err := ui.WithSpinner("Generating your commit message...", func() error {
 		var genErr error
-		commitMessage, genErr = CreateCommitMessage(diff, userConfig)
+		commitMessage, genErr = CreateCommitMessage(diff, cfg)
 		return genErr
 	})
 
@@ -37,10 +38,16 @@ func Main(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	HandleCommitFlow(commitMessage, diff, userConfig)
+	if noVerify {
+		ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
+		ExecuteCommit(commitMessage, false, true, cfg)
+		return
+	}
+
+	HandleCommitFlow(commitMessage, diff, cfg)
 }
 
-func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
+func getGitDiff(isQuietMode bool) string {
 	gitDiff, err := git.GetGitDiff()
 
 	if err != nil {
@@ -61,16 +68,5 @@ func getCommitData(isQuietMode bool) (string, *config.UserConfig) {
 		os.Exit(0)
 	}
 
-	// Load config
-	userConfig, err := config.Load()
-	if err != nil {
-		if isQuietMode {
-			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
-		} else {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to load config: %v", err), Variant: ui.Error})
-		}
-		os.Exit(1)
-	}
-
-	return gitDiff, userConfig
+	return gitDiff
 }

@@ -14,14 +14,6 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 </div>
 
-
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 12px 20px; margin: 20px auto; max-width: 600px;">
-  <p style="margin: 0; color: white; font-size: 14px;">
-    🚀 <strong>diny v1.0 is coming</strong> - Full rework with customizable LLMs, prompts, and privacy options. 
-    <a href="./docs/V1_ANNOUNCEMENT.md" style="color: #ffd700; text-decoration: underline;">Read more →</a>
-  </p>
-</div>
-
 <div align="center">
     <br />
 <a href="https://peerlist.io/dinodanic/project/diny"><img src="https://diny-cli.vercel.app/peerlist-project-of-the-day.png" alt="diny showcase" width="200"></a>
@@ -40,7 +32,7 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 - 🔍 Reads staged changes with `git diff`
 - 🧹 Filters out noise (lockfiles, binaries, build artifacts)
-- ⚡ Generates commit messages via Ollama
+- ⚡ Generates commit messages via AI
 - 📝 Produces concise, consistent messages
 - 🔄 Interactive workflow with multiple options
 - 🧠 Smart regeneration that learns from previous attempts
@@ -108,16 +100,53 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
     diny auto                                 # Set up a git alias so you can run `git auto`
 
     diny commit                               # Generate a commit message from your staged changes
+    diny commit  --no-verify                  # Commit without running git hooks
     diny commit  --print                      # Print generated message to stdout only
-    diny commit  --print | git commit -F -    # Generated message and commit
+    diny commit  --print | git commit -F -    # Pipe generated message to git commit
 
-    diny config                               # Show your current diny configuration
-    diny init                                 # Initialize diny with an interactive setup wizard
+    diny config                               # Open config file in your editor
     diny link lazygit                         # Integrate diny with LazyGit
-    diny theme                                # Select from 10+ dark and light UI themes
-    diny theme list                           # List all available themes with previews
+    diny theme                                # List all available UI themes
     diny timeline                             # Summarize and analyze your commit history
     diny update                               # Update diny to the latest version
+
+## Configuration
+
+diny uses a YAML config file at `~/.config/diny/config.yaml`. Run `diny config` to open it in your editor (creates default config if missing).
+
+### Options
+
+| Option | Description | Values |
+|--------|-------------|--------|
+| `theme` | UI color theme | catppuccin, tokyo, nord, dracula, gruvbox-dark, onedark, monokai, solarized-dark, solarized-light, github-light, etc. |
+| `commit.conventional` | Use conventional commit format | `true` / `false` |
+| `commit.conventional_format` | Commit types to use | `['feat', 'fix', 'docs', 'chore', ...]` |
+| `commit.emoji` | Add emoji prefix | `true` / `false` |
+| `commit.emoji_map` | Emoji for each type | `feat: 🚀, fix: 🐛, ...` |
+| `commit.tone` | Message tone | `professional` / `casual` / `friendly` |
+| `commit.length` | Message length | `short` / `normal` / `long` |
+| `commit.custom_instructions` | Custom AI guidance | Any text, e.g. "Always mention ticket number" |
+| `commit.hash_after_commit` | Show and copy commit hash | `true` / `false` |
+
+### Example Config
+
+```yaml
+theme: tokyo
+
+commit:
+  conventional: true
+  conventional_format: ['feat', 'fix', 'docs', 'chore']
+  emoji: true
+  emoji_map:
+    feat: 🚀
+    fix: 🐛
+    docs: 📚
+    chore: 🔧
+  tone: casual
+  length: short
+  custom_instructions: "Include JIRA ticket from branch name"
+  hash_after_commit: true
+```
 
 ## Update
 
@@ -148,5 +177,3 @@ I built **diny** because I wanted my commits to be useful without thinking about
 It's AI doing what it's actually good at—handling the repetitive stuff I'd rather not think about.
 
 
-## TODO
-[X] - Add lazygit integratio

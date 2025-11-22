@@ -7,17 +7,18 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/ui"
 )
 
-func HandleCommitFlow(commitMessage, fullPrompt string, userConfig *config.UserConfig) {
-	HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, []string{})
+func HandleCommitFlow(commitMessage, fullPrompt string, cfg *config.Config) {
+	HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, []string{})
 }
 
-func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *config.UserConfig, previousMessages []string) {
+func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.Config, previousMessages []string) {
 
 	ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
 
@@ -25,25 +26,27 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 
 	switch choice {
 	case "commit":
-		executeCommit(commitMessage, false)
+		ExecuteCommit(commitMessage, false, false, cfg)
+	case "commit-no-verify":
+		ExecuteCommit(commitMessage, false, true, cfg)
 	case "commit-push":
-		executeCommit(commitMessage, true)
+		ExecuteCommit(commitMessage, true, false, cfg)
 	case "edit":
 		editedMessage, err := openInEditor(commitMessage)
 		if err != nil {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to open editor: %v", err), Variant: ui.Error})
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 			return
 		}
 		if editedMessage != commitMessage && editedMessage != "" {
-			HandleCommitFlowWithHistory(editedMessage, fullPrompt, userConfig, previousMessages)
+			HandleCommitFlowWithHistory(editedMessage, fullPrompt, cfg, previousMessages)
 		} else {
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 		}
 	case "save":
 		if err := saveDraft(commitMessage); err != nil {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to save draft: %v", err), Variant: ui.Error})
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, userConfig, previousMessages)
+			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 			return
 		}
 
@@ -63,7 +66,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		var newCommitMessage string
 		err := ui.WithSpinner("Generating alternative commit message...", func() error {
 			var genErr error
-			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
+			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, cfg)
 			return genErr
 		})
 		if err != nil {
@@ -72,7 +75,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, cfg, updatedHistory)
 	case "custom":
 		customInput := customInputPrompt("What changes would you like to see in the commit message?")
 
@@ -81,7 +84,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		var newCommitMessage string
 		err := ui.WithSpinner("Refining commit message with your feedback...", func() error {
 			var genErr error
-			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, userConfig)
+			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, cfg)
 			return genErr
 		})
 		if err != nil {
@@ -90,7 +93,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, userConfig *c
 		}
 
 		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, userConfig, updatedHistory)
+		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, cfg, updatedHistory)
 	case "exit":
 		ui.RenderTitle("Bye!")
 		fmt.Println()
@@ -106,6 +109,7 @@ func choicePrompt() string {
 		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Commit this message", "commit"),
+			huh.NewOption("Commit (skip hooks)", "commit-no-verify"),
 			huh.NewOption("Commit and push", "commit-push"),
 			huh.NewOption("Edit in $EDITOR", "edit"),
 			huh.NewOption("Save as draft", "save"),
@@ -114,7 +118,7 @@ func choicePrompt() string {
 			huh.NewOption("Exit", "exit"),
 		).
 		Value(&choice).
-		Height(9).
+		Height(10).
 		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 
@@ -130,7 +134,7 @@ func customInputPrompt(message string) string {
 	var input string
 
 	err := huh.NewInput().
-		Title("🦕 " + message).
+		Title(message).
 		Description("Provide specific feedback to improve the commit message").
 		Placeholder("e.g., make it shorter, use conventional format, focus on the bug fix...").
 		CharLimit(200).
@@ -217,12 +221,17 @@ func saveDraft(message string) error {
 	return nil
 }
 
-func executeCommit(commitMessage string, push bool) {
+func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.Config) {
 	var output []byte
 	var err error
 
 	spinnerErr := ui.WithSpinner("Committing...", func() error {
-		commitCmd := exec.Command("git", "commit", "-m", commitMessage)
+		var commitCmd *exec.Cmd
+		if noVerify {
+			commitCmd = exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
+		} else {
+			commitCmd = exec.Command("git", "commit", "-m", commitMessage)
+		}
 		output, err = commitCmd.CombinedOutput()
 		return err
 	})
@@ -235,6 +244,19 @@ func executeCommit(commitMessage string, push bool) {
 		os.Exit(1)
 	}
 	ui.Box(ui.BoxOptions{Message: "Commited!", Variant: ui.Success})
+
+	if cfg != nil && cfg.Commit.HashAfterCommit {
+		hashCmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+		hashOutput, hashErr := hashCmd.Output()
+		if hashErr == nil {
+			hash := strings.TrimSpace(string(hashOutput))
+			if err := clipboard.WriteAll(hash); err != nil {
+				ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to copy hash: %v", err), Variant: ui.Error})
+			} else {
+				ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Hash: %s (copied)", hash), Variant: ui.Success})
+			}
+		}
+	}
 
 	if push {
 		var pushOutput []byte

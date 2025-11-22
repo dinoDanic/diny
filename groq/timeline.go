@@ -7,19 +7,44 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime"
 	"time"
 
 	"github.com/dinoDanic/diny/config"
+	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/server"
+	"github.com/dinoDanic/diny/version"
 )
 
-func CreateTimelineWithGroq(prompt string, userConfig *config.UserConfig) (string, error) {
-	payload := map[string]interface{}{
-		"prompt": prompt,
-	}
+type TimelineRequest struct {
+	Prompt   string         `json:"prompt"`
+	Version  string         `json:"version"`
+	Name     string         `json:"name"`
+	RepoName string         `json:"repoName"`
+	Config   *config.Config `json:"config"`
+	System   string         `json:"system,omitempty"`
+}
 
-	if userConfig != nil {
-		payload["user_config"] = *userConfig
+type timelineData struct {
+	Message string `json:"message"`
+}
+
+type timelineResp struct {
+	Error *string       `json:"error,omitempty"`
+	Data  *timelineData `json:"data,omitempty"`
+}
+
+func CreateTimelineWithGroq(prompt string, cfg *config.Config) (string, error) {
+	gitName := git.GetGitName()
+	repoName := git.GetRepoName()
+
+	payload := TimelineRequest{
+		Config:   cfg,
+		Version:  version.Get(),
+		Prompt:   prompt,
+		Name:     gitName,
+		RepoName: repoName,
+		System:   runtime.GOOS,
 	}
 
 	buf, err := json.Marshal(payload)
@@ -29,7 +54,7 @@ func CreateTimelineWithGroq(prompt string, userConfig *config.UserConfig) (strin
 
 	req, err := http.NewRequestWithContext(context.Background(),
 		http.MethodPost,
-		server.ServerConfig.BaseURL+"/api/timeline",
+		server.ServerConfig.BaseURL+"/api/v2/timeline",
 		bytes.NewReader(buf),
 	)
 	if err != nil {
@@ -49,27 +74,22 @@ func CreateTimelineWithGroq(prompt string, userConfig *config.UserConfig) (strin
 
 	body, _ := io.ReadAll(res.Body)
 
-	if res.StatusCode != http.StatusOK {
-		var e struct {
-			Error   string      `json:"error"`
-			Details interface{} `json:"details"`
-		}
-		_ = json.Unmarshal(body, &e)
-		if e.Error != "" {
-			return "", fmt.Errorf("proxy %d: %s", res.StatusCode, e.Error)
-		}
-		return "", fmt.Errorf("proxy %d: %s", res.StatusCode, string(body))
-	}
-
-	var out struct {
-		Message string `json:"message"`
-	}
+	var out timelineResp
 	if err := json.Unmarshal(body, &out); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
-	if out.Message == "" {
-		return "", fmt.Errorf("empty message from proxy")
+
+	if out.Error != nil {
+		return "", fmt.Errorf("%s", *out.Error)
 	}
 
-	return out.Message, nil
+	if out.Data == nil {
+		return "", fmt.Errorf("no data in response")
+	}
+
+	if out.Data.Message == "" {
+		return "", fmt.Errorf("empty message from server")
+	}
+
+	return out.Data.Message, nil
 }

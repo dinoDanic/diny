@@ -17,12 +17,12 @@ import (
 )
 
 type CommitRequest struct {
-	GitDiff    string             `json:"gitDiff"`
-	Version    string             `json:"version"`
-	Name       string             `json:"name"`
-	RepoName   string             `json:"repoName"`
-	UserConfig *config.UserConfig `json:"userConfig"`
-	System         string             `json:"system,omitempty"`
+	GitDiff    string         `json:"gitDiff"`
+	Version    string         `json:"version"`
+	Name       string         `json:"name"`
+	RepoName   string         `json:"repoName"`
+	Config     *config.Config `json:"config"`
+	System     string         `json:"system,omitempty"`
 }
 
 type commitData struct {
@@ -34,17 +34,17 @@ type commitResp struct {
 	Data  *commitData `json:"data,omitempty"`
 }
 
-func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) (string, error) {
+func CreateCommitMessageWithGroq(gitDiff string, cfg *config.Config) (string, error) {
 	gitName := git.GetGitName()
 	repoName := git.GetRepoName()
 
 	payload := CommitRequest{
-		UserConfig: userConfig,
+		Config: cfg,
 		Version:    version.Get(),
 		GitDiff:    gitDiff,
 		Name:       gitName,
 		RepoName:   repoName,
-		System:         getOS(),
+		System:     getOS(),
 	}
 
 	buf, err := json.Marshal(payload)
@@ -54,7 +54,7 @@ func CreateCommitMessageWithGroq(gitDiff string, userConfig *config.UserConfig) 
 
 	req, err := http.NewRequestWithContext(context.Background(),
 		http.MethodPost,
-		server.ServerConfig.BaseURL+"/api/commit",
+		server.ServerConfig.BaseURL+"/api/v2/commit",
 		bytes.NewReader(buf),
 	)
 	if err != nil {
