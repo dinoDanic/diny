@@ -12,6 +12,7 @@ import (
 
 func Main(cmd *cobra.Command, args []string) {
 	printMode, _ := cmd.Flags().GetBool("print")
+	noVerify, _ := cmd.Flags().GetBool("no-verify")
 
 	diff, cfg := getCommitData(printMode)
 
@@ -35,6 +36,13 @@ func Main(cmd *cobra.Command, args []string) {
 	if err != nil {
 		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("%v", err), Variant: ui.Error})
 		os.Exit(1)
+	}
+
+	// If --no-verify flag is set, skip the interactive menu and commit directly
+	if noVerify {
+		ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
+		ExecuteCommit(commitMessage, false, true)
+		return
 	}
 
 	HandleCommitFlow(commitMessage, diff, cfg)

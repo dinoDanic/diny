@@ -25,9 +25,11 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.C
 
 	switch choice {
 	case "commit":
-		executeCommit(commitMessage, false)
+		ExecuteCommit(commitMessage, false, false)
+	case "commit-no-verify":
+		ExecuteCommit(commitMessage, false, true)
 	case "commit-push":
-		executeCommit(commitMessage, true)
+		ExecuteCommit(commitMessage, true, false)
 	case "edit":
 		editedMessage, err := openInEditor(commitMessage)
 		if err != nil {
@@ -106,6 +108,7 @@ func choicePrompt() string {
 		Description("Select an option using arrow keys or j,k and press Enter").
 		Options(
 			huh.NewOption("Commit this message", "commit"),
+			huh.NewOption("Commit (skip hooks)", "commit-no-verify"),
 			huh.NewOption("Commit and push", "commit-push"),
 			huh.NewOption("Edit in $EDITOR", "edit"),
 			huh.NewOption("Save as draft", "save"),
@@ -114,7 +117,7 @@ func choicePrompt() string {
 			huh.NewOption("Exit", "exit"),
 		).
 		Value(&choice).
-		Height(9).
+		Height(10).
 		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 
@@ -217,12 +220,17 @@ func saveDraft(message string) error {
 	return nil
 }
 
-func executeCommit(commitMessage string, push bool) {
+func ExecuteCommit(commitMessage string, push bool, noVerify bool) {
 	var output []byte
 	var err error
 
 	spinnerErr := ui.WithSpinner("Committing...", func() error {
-		commitCmd := exec.Command("git", "commit", "-m", commitMessage)
+		var commitCmd *exec.Cmd
+		if noVerify {
+			commitCmd = exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
+		} else {
+			commitCmd = exec.Command("git", "commit", "-m", commitMessage)
+		}
 		output, err = commitCmd.CombinedOutput()
 		return err
 	})
