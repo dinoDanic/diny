@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 
 	"gopkg.in/yaml.v3"
 )
@@ -41,8 +40,6 @@ type CommitConfig struct {
 	Tone               Tone     `yaml:"tone"`
 	Length             Length   `yaml:"length"`
 }
-
-var cfg *Config
 
 func loadDefaultConfig() (*Config, error) {
 	var defaultCfg Config
@@ -105,56 +102,5 @@ func Load(cfgFile string) (*Config, error) {
 		return nil, fmt.Errorf("invalid config file: %w", err)
 	}
 
-	// Validate configuration
-	if err := loadedCfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
-	}
-
 	return &loadedCfg, nil
-}
-
-func (c *Config) Validate() error {
-	// Validate tone
-	validTones := []Tone{Professional, Casual, Friendly}
-	if !slices.Contains(validTones, c.Commit.Tone) {
-		return fmt.Errorf("invalid tone '%s', must be one of: professional, casual, friendly", c.Commit.Tone)
-	}
-
-	// Validate length
-	validLengths := []Length{Short, Normal, Long}
-	if !slices.Contains(validLengths, c.Commit.Length) {
-		return fmt.Errorf("invalid length '%s', must be one of: short, normal, long", c.Commit.Length)
-	}
-
-	// Validate theme (basic check - just ensure it's not empty)
-	if c.Theme == "" {
-		c.Theme = "catppuccin"
-	}
-
-	return nil
-}
-
-// Get returns the loaded configuration or defaults if not loaded
-func Get() *Config {
-	if cfg == nil {
-		defaultCfg, err := loadDefaultConfig()
-		if err != nil {
-			return &Config{
-				Theme: "catppuccin",
-				Commit: CommitConfig{
-					Conventional:       false,
-					ConventionalFormat: []string{"feat", "fix", "docs", "chore", "style", "refactor", "test"},
-					Emoji:              false,
-					Tone:               Casual,
-					Length:             Short,
-				},
-			}
-		}
-		return defaultCfg
-	}
-	return cfg
-}
-
-func Set(c *Config) {
-	cfg = c
 }

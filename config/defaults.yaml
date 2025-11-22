@@ -1,25 +1,31 @@
 # Diny Configuration
 # Learn more: https://github.com/dinoDanic/diny
 
+# UI theme for the CLI
 # Dark: catppuccin, tokyo, nord, dracula, gruvbox-dark, onedark, monokai, solarized-dark, everforest-dark, flexoki-dark
 # Light: solarized-light, github-light, gruvbox-light, flexoki-light
 theme: catppuccin
 
 commit:
+  # Use conventional commit format: type(scope): subject
   conventional: false
+  
   conventional_format: ['feat', 'fix', 'docs', 'chore', 'style', 'refactor', 'test']
+  
+  # Include emoji at the start of commit messages
+  # Examples: 🚀 feat, 🐛 fix, 📚 docs, 🎨 style, ♻️ refactor, ✅ test, 🔧 chore, ⚡ perf
   emoji: false
 
-  # Commit message tone - affects the writing style
+  # Commit message tone
   # Options:
-  #   - professional: Formal and precise language, suitable for corporate environments
-  #   - casual: Relaxed and conversational style, friendly for team communication
-  #   - friendly: Warm and approachable tone with encouraging language
+  #   - professional: Formal and precise
+  #   - casual: Relaxed and conversational
+  #   - friendly: Warm and approachable
   tone: casual
 
-  # Commit message length - controls level of detail
+  # Commit message length and structure
   # Options:
-  #   - short: Brief one-line messages, ideal for simple changes
-  #   - normal: Balanced with subject and short body, recommended for most commits
-  #   - long: Detailed with comprehensive context, great for complex changes
+  #   - short: Subject only, 1-2 sentences max, ≤60 chars, imperative verb first. No bullets.
+  #   - normal: Subject ≤70 chars (imperative). If needed, add 1-3 terse bullets for WHY/impact.
+  #   - long: Subject ≤80 chars (imperative). Then 2-6 terse bullets for context/impact.
   length: short

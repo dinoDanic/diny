@@ -55,7 +55,7 @@ func Main() {
 	}
 	ui.Box(ui.BoxOptions{Title: fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange), Message: strings.TrimSpace(commitList)})
 
-	userConfig, err := config.Load("")
+	cfg, err := config.Load("")
 	if err != nil {
 		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to load config: %v", err), Variant: ui.Error})
 		os.Exit(1)
@@ -65,7 +65,7 @@ func Main() {
 	var analysis string
 	err = ui.WithSpinner("Generating timeline analysis...", func() error {
 		var genErr error
-		analysis, genErr = groq.CreateTimelineWithGroq(prompt, userConfig)
+		analysis, genErr = groq.CreateTimelineWithGroq(prompt, cfg)
 		return genErr
 	})
 
@@ -76,7 +76,7 @@ func Main() {
 
 	ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: analysis})
 
-	HandleTimelineFlow(analysis, prompt, userConfig, dateRange, []string{})
+	HandleTimelineFlow(analysis, prompt, cfg, dateRange, []string{})
 }
 
 func timelinePrompt(message string) string {
@@ -178,14 +178,14 @@ func generateYearOptions() []huh.Option[int] {
 	return options
 }
 
-func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.Config, dateRange string, previousAnalyses []string) {
+func HandleTimelineFlow(analysis, fullPrompt string, cfg *config.Config, dateRange string, previousAnalyses []string) {
 	choice := timelineChoicePrompt()
 
 	switch choice {
 	case "copy":
 		if err := clipboard.WriteAll(analysis); err != nil {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to copy to clipboard: %v", err), Variant: ui.Error})
-			HandleTimelineFlow(analysis, fullPrompt, userConfig, dateRange, previousAnalyses)
+			HandleTimelineFlow(analysis, fullPrompt, cfg, dateRange, previousAnalyses)
 			return
 		}
 		ui.Box(ui.BoxOptions{Message: "Analysis copied to clipboard!", Variant: ui.Success})
@@ -194,7 +194,7 @@ func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.Config, 
 		filePath, err := saveTimelineAnalysis(analysis, dateRange)
 		if err != nil {
 			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to save analysis: %v", err), Variant: ui.Error})
-			HandleTimelineFlow(analysis, fullPrompt, userConfig, dateRange, previousAnalyses)
+			HandleTimelineFlow(analysis, fullPrompt, cfg, dateRange, previousAnalyses)
 			return
 		}
 		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Analysis saved!\n\n%s", filePath), Variant: ui.Success})
@@ -214,7 +214,7 @@ func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.Config, 
 		var newAnalysis string
 		err := ui.WithSpinner("Generating alternative analysis...", func() error {
 			var genErr error
-			newAnalysis, genErr = groq.CreateTimelineWithGroq(modifiedPrompt, userConfig)
+			newAnalysis, genErr = groq.CreateTimelineWithGroq(modifiedPrompt, cfg)
 			return genErr
 		})
 		if err != nil {
@@ -224,7 +224,7 @@ func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.Config, 
 
 		ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: newAnalysis})
 		updatedHistory := append(previousAnalyses, analysis)
-		HandleTimelineFlow(newAnalysis, fullPrompt, userConfig, dateRange, updatedHistory)
+		HandleTimelineFlow(newAnalysis, fullPrompt, cfg, dateRange, updatedHistory)
 	case "custom":
 		customInput := customTimelineInputPrompt("What changes would you like to see in the analysis?")
 
@@ -233,7 +233,7 @@ func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.Config, 
 		var newAnalysis string
 		err := ui.WithSpinner("Refining analysis with your feedback...", func() error {
 			var genErr error
-			newAnalysis, genErr = groq.CreateTimelineWithGroq(modifiedPrompt, userConfig)
+			newAnalysis, genErr = groq.CreateTimelineWithGroq(modifiedPrompt, cfg)
 			return genErr
 		})
 		if err != nil {
@@ -243,7 +243,7 @@ func HandleTimelineFlow(analysis, fullPrompt string, userConfig *config.Config, 
 
 		ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: newAnalysis})
 		updatedHistory := append(previousAnalyses, analysis)
-		HandleTimelineFlow(newAnalysis, fullPrompt, userConfig, dateRange, updatedHistory)
+		HandleTimelineFlow(newAnalysis, fullPrompt, cfg, dateRange, updatedHistory)
 	case "new":
 		Main()
 	case "exit":
