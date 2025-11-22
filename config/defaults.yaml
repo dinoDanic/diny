@@ -16,16 +16,17 @@ commit:
   # Include emoji at the start of commit messages
   emoji: false
   
-  # Optional: customize emojis for each commit type (only used when emoji: true)
-  # emoji_map:
-  #   feat: 🚀
-  #   fix: 🐛
-  #   docs: 📚
-  #   style: 🎨
-  #   refactor: ♻️
-  #   test: ✅
-  #   chore: 🔧
-  #   perf: ⚡
+  # Emojis for each commit type (used when emoji: true)
+  # Only types listed in conventional_format will be used
+  emoji_map:
+    feat: 🚀
+    fix: 🐛
+    docs: 📚
+    style: 🎨
+    refactor: ♻️
+    test: ✅
+    chore: 🔧
+    perf: ⚡
 
   # Commit message tone
   # Options:

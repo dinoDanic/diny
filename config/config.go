@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -37,7 +38,7 @@ type CommitConfig struct {
 	Conventional       bool              `yaml:"conventional" json:"Conventional"`
 	ConventionalFormat []string          `yaml:"conventional_format" json:"ConventionalFormat"`
 	Emoji              bool              `yaml:"emoji" json:"Emoji"`
-	EmojiMap           map[string]string `yaml:"emoji_map,omitempty" json:"EmojiMap,omitempty"`
+	EmojiMap           map[string]string `yaml:"emoji_map" json:"EmojiMap"`
 	Tone               Tone              `yaml:"tone" json:"Tone"`
 	Length             Length            `yaml:"length" json:"Length"`
 }
@@ -87,7 +88,6 @@ func Load(cfgFile string) (*Config, error) {
 				fmt.Printf("Using default configuration (couldn't create config file: %v)\n", err)
 				return loadDefaultConfig()
 			}
-			fmt.Printf("Created default config at: %s\n", configPath)
 			data, err = os.ReadFile(configPath)
 			if err != nil {
 				return loadDefaultConfig()
@@ -107,4 +107,64 @@ func Load(cfgFile string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+type LoadResult struct {
+	Config        *Config
+	RecoveryMsg   string
+	ValidationErr string
+}
+
+func LoadOrRecover(cfgFile string) (*LoadResult, error) {
+	configPath := cfgFile
+	if configPath == "" {
+		configPath = GetConfigPath()
+	}
+
+	cfg, err := Load(cfgFile)
+	if err == nil {
+		return &LoadResult{Config: cfg}, nil
+	}
+
+	if configPath != "" {
+		if _, statErr := os.Stat(configPath); statErr == nil {
+			validationErr := err.Error()
+
+			backupPath := getBackupPath(configPath)
+			if renameErr := os.Rename(configPath, backupPath); renameErr != nil {
+				return nil, fmt.Errorf("failed to backup config: %w", renameErr)
+			}
+
+			if createErr := createDefaultConfig(configPath); createErr != nil {
+				return nil, fmt.Errorf("failed to create new config: %w", createErr)
+			}
+
+			newCfg, loadErr := Load(cfgFile)
+			if loadErr != nil {
+				return nil, fmt.Errorf("failed to load new config: %w", loadErr)
+			}
+
+			return &LoadResult{
+				Config:        newCfg,
+				RecoveryMsg:   "Invalid config backed up, new default created",
+				ValidationErr: validationErr,
+			}, nil
+		}
+	}
+
+	return nil, err
+}
+
+func getBackupPath(configPath string) string {
+	dir := filepath.Dir(configPath)
+	ext := filepath.Ext(configPath)
+	base := strings.TrimSuffix(filepath.Base(configPath), ext)
+
+	for i := 1; ; i++ {
+		backupName := fmt.Sprintf("%s.backup%d%s", base, i, ext)
+		backupPath := filepath.Join(dir, backupName)
+		if _, err := os.Stat(backupPath); os.IsNotExist(err) {
+			return backupPath
+		}
+	}
 }

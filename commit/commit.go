@@ -61,8 +61,8 @@ func getCommitData(isQuietMode bool) (string, *config.Config) {
 		os.Exit(0)
 	}
 
-	// Load config
-	cfg, err := config.Load("")
+	// Load config with recovery
+	result, err := config.LoadOrRecover("")
 	if err != nil {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
@@ -72,5 +72,22 @@ func getCommitData(isQuietMode bool) (string, *config.Config) {
 		os.Exit(1)
 	}
 
-	return gitDiff, cfg
+	// Show recovery messages if any
+	if !isQuietMode {
+		if result.ValidationErr != "" {
+			ui.Box(ui.BoxOptions{
+				Title:   "Config Validation Error",
+				Message: result.ValidationErr,
+				Variant: ui.Error,
+			})
+		}
+		if result.RecoveryMsg != "" {
+			ui.Box(ui.BoxOptions{
+				Message: result.RecoveryMsg,
+				Variant: ui.Warning,
+			})
+		}
+	}
+
+	return gitDiff, result.Config
 }
