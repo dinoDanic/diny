@@ -42,6 +42,7 @@ type CommitConfig struct {
 	Tone               Tone              `yaml:"tone" json:"Tone"`
 	Length             Length            `yaml:"length" json:"Length"`
 	CustomInstructions string            `yaml:"custom_instructions" json:"CustomInstructions"`
+	HashAfterCommit    bool              `yaml:"hash_after_commit" json:"HashAfterCommit"`
 }
 
 func loadDefaultConfig() (*Config, error) {

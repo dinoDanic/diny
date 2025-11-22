@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
@@ -25,11 +26,11 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.C
 
 	switch choice {
 	case "commit":
-		ExecuteCommit(commitMessage, false, false)
+		ExecuteCommit(commitMessage, false, false, cfg)
 	case "commit-no-verify":
-		ExecuteCommit(commitMessage, false, true)
+		ExecuteCommit(commitMessage, false, true, cfg)
 	case "commit-push":
-		ExecuteCommit(commitMessage, true, false)
+		ExecuteCommit(commitMessage, true, false, cfg)
 	case "edit":
 		editedMessage, err := openInEditor(commitMessage)
 		if err != nil {
@@ -220,7 +221,7 @@ func saveDraft(message string) error {
 	return nil
 }
 
-func ExecuteCommit(commitMessage string, push bool, noVerify bool) {
+func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.Config) {
 	var output []byte
 	var err error
 
@@ -243,6 +244,19 @@ func ExecuteCommit(commitMessage string, push bool, noVerify bool) {
 		os.Exit(1)
 	}
 	ui.Box(ui.BoxOptions{Message: "Commited!", Variant: ui.Success})
+
+	if cfg != nil && cfg.Commit.HashAfterCommit {
+		hashCmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+		hashOutput, hashErr := hashCmd.Output()
+		if hashErr == nil {
+			hash := strings.TrimSpace(string(hashOutput))
+			if err := clipboard.WriteAll(hash); err != nil {
+				ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to copy hash: %v", err), Variant: ui.Error})
+			} else {
+				ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Hash: %s (copied)", hash), Variant: ui.Success})
+			}
+		}
+	}
 
 	if push {
 		var pushOutput []byte

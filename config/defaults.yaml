@@ -46,3 +46,6 @@ commit:
   # Add any extra guidance for generating commit messages
   # Example: "Write like a pirate, arrr!"
   custom_instructions: ""
+
+  # Show and copy commit hash to clipboard after committing
+  hash_after_commit: false

@@ -40,7 +40,7 @@ func Main(cmd *cobra.Command, args []string, cfg *config.Config) {
 
 	if noVerify {
 		ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
-		ExecuteCommit(commitMessage, false, true)
+		ExecuteCommit(commitMessage, false, true, cfg)
 		return
 	}
 
