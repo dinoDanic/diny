@@ -105,7 +105,7 @@ func dateInputPrompt(message string) string {
 	year := now.Year()
 
 	err := huh.NewSelect[int]().
-		Title("🦕 " + message).
+		Title(message).
 		Description("Day").
 		Options(generateDayOptions()...).
 		Value(&day).
@@ -118,7 +118,7 @@ func dateInputPrompt(message string) string {
 	}
 
 	err = huh.NewSelect[int]().
-		Title("🦕 " + message).
+		Title(message).
 		Description("Month").
 		Options(generateMonthOptions()...).
 		Value(&month).
@@ -131,7 +131,7 @@ func dateInputPrompt(message string) string {
 	}
 
 	err = huh.NewSelect[int]().
-		Title("🦕 " + message).
+		Title(message).
 		Description("Year").
 		Options(generateYearOptions()...).
 		Value(&year).

@@ -134,7 +134,7 @@ func customInputPrompt(message string) string {
 	var input string
 
 	err := huh.NewInput().
-		Title("🦕 " + message).
+		Title(message).
 		Description("Provide specific feedback to improve the commit message").
 		Placeholder("e.g., make it shorter, use conventional format, focus on the bug fix...").
 		CharLimit(200).
