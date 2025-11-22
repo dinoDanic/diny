@@ -1,22 +1,13 @@
 package ui
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/dinoDanic/diny/ui/themes"
 )
 
 var currentTheme *themes.Theme
 
 func init() {
-	loadedTheme := LoadTheme()
-	if loadedTheme != "" {
-		SetTheme(loadedTheme)
-	} else {
-		currentTheme = themes.Catppuccin()
-	}
+	currentTheme = themes.Catppuccin()
 }
 
 func SetTheme(name string) bool {
@@ -102,34 +93,4 @@ func GetLightThemes() []string {
 		"gruvbox-light",
 		"flexoki-light",
 	}
-}
-
-func SaveTheme(themeName string) error {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return err
-	}
-
-	dinyDir := filepath.Join(homeDir, ".config", "diny")
-	if err := os.MkdirAll(dinyDir, 0755); err != nil {
-		return err
-	}
-
-	themePath := filepath.Join(dinyDir, "theme")
-	return os.WriteFile(themePath, []byte(themeName), 0644)
-}
-
-func LoadTheme() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-
-	themePath := filepath.Join(homeDir, ".config", "diny", "theme")
-	data, err := os.ReadFile(themePath)
-	if err != nil {
-		return ""
-	}
-
-	return strings.TrimSpace(string(data))
 }

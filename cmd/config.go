@@ -34,29 +34,6 @@ func openConfig() {
 		os.Exit(1)
 	}
 
-	result, err := config.LoadOrRecover("")
-	if err != nil {
-		ui.Box(ui.BoxOptions{
-			Message: fmt.Sprintf("Failed to load config: %v", err),
-			Variant: ui.Error,
-		})
-		os.Exit(1)
-	}
-
-	if result.ValidationErr != "" {
-		ui.Box(ui.BoxOptions{
-			Title:   "Config Validation Error",
-			Message: result.ValidationErr,
-			Variant: ui.Error,
-		})
-	}
-	if result.RecoveryMsg != "" {
-		ui.Box(ui.BoxOptions{
-			Message: result.RecoveryMsg,
-			Variant: ui.Warning,
-		})
-	}
-
 	editor := getEditor()
 	if editor == "" {
 		ui.Box(ui.BoxOptions{

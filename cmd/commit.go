@@ -17,12 +17,13 @@ scripts.
 Examples:
   diny commit                           # Interactive mode with options
   diny commit --print                   # Print message to stdout only
+  diny commit --no-werify               # skip hooks
   diny commit --print | git commit -F - # Generate and commit directly
   diny commit --print | pbcopy          # Copy to clipboard (macOS)
   diny commit --print | xclip -sel clip # Copy to clipboard (Linux)
   diny commit --print | clip            # Copy to clipboard (Windows)`,
 	Run: func(cmd *cobra.Command, args []string) {
-		commit.Main(cmd, args)
+		commit.Main(cmd, args, AppConfig)
 	},
 }
 

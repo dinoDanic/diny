@@ -10,11 +10,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Main(cmd *cobra.Command, args []string) {
+func Main(cmd *cobra.Command, args []string, cfg *config.Config) {
 	printMode, _ := cmd.Flags().GetBool("print")
 	noVerify, _ := cmd.Flags().GetBool("no-verify")
 
-	diff, cfg := getCommitData(printMode)
+	diff := getGitDiff(printMode)
 
 	if printMode {
 		commitMessage, err := CreateCommitMessage(diff, cfg)
@@ -38,7 +38,6 @@ func Main(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	// If --no-verify flag is set, skip the interactive menu and commit directly
 	if noVerify {
 		ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
 		ExecuteCommit(commitMessage, false, true)
@@ -48,7 +47,7 @@ func Main(cmd *cobra.Command, args []string) {
 	HandleCommitFlow(commitMessage, diff, cfg)
 }
 
-func getCommitData(isQuietMode bool) (string, *config.Config) {
+func getGitDiff(isQuietMode bool) string {
 	gitDiff, err := git.GetGitDiff()
 
 	if err != nil {
@@ -69,33 +68,5 @@ func getCommitData(isQuietMode bool) (string, *config.Config) {
 		os.Exit(0)
 	}
 
-	// Load config with recovery
-	result, err := config.LoadOrRecover("")
-	if err != nil {
-		if isQuietMode {
-			fmt.Fprintf(os.Stderr, "Failed to load config: %v\n", err)
-		} else {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to load config: %v", err), Variant: ui.Error})
-		}
-		os.Exit(1)
-	}
-
-	// Show recovery messages if any
-	if !isQuietMode {
-		if result.ValidationErr != "" {
-			ui.Box(ui.BoxOptions{
-				Title:   "Config Validation Error",
-				Message: result.ValidationErr,
-				Variant: ui.Error,
-			})
-		}
-		if result.RecoveryMsg != "" {
-			ui.Box(ui.BoxOptions{
-				Message: result.RecoveryMsg,
-				Variant: ui.Warning,
-			})
-		}
-	}
-
-	return gitDiff, result.Config
+	return gitDiff
 }

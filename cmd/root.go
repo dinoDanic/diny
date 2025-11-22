@@ -7,9 +7,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dinoDanic/diny/config"
+	"github.com/dinoDanic/diny/ui"
 	"github.com/dinoDanic/diny/update"
 	"github.com/spf13/cobra"
 )
+
+var AppConfig *config.Config
 
 // Version will be set at build time via ldflags
 var Version = "dev"
@@ -26,6 +30,39 @@ spending time manually writing messages.
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		fmt.Println()
+
+		if cmd.Name() == "theme" {
+			return
+		}
+
+		result, err := config.LoadOrRecover("")
+		if err != nil {
+			ui.Box(ui.BoxOptions{
+				Message: fmt.Sprintf("Failed to load config: %v", err),
+				Variant: ui.Error,
+			})
+			os.Exit(1)
+		}
+
+		if result.ValidationErr != "" {
+			ui.Box(ui.BoxOptions{
+				Title:   "Config Validation Error",
+				Message: result.ValidationErr,
+				Variant: ui.Error,
+			})
+		}
+		if result.RecoveryMsg != "" {
+			ui.Box(ui.BoxOptions{
+				Message: result.RecoveryMsg,
+				Variant: ui.Warning,
+			})
+		}
+
+		AppConfig = result.Config
+
+		if AppConfig != nil && AppConfig.Theme != "" {
+			ui.SetTheme(AppConfig.Theme)
+		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		checker := update.NewUpdateChecker(Version)

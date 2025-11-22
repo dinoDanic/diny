@@ -22,7 +22,7 @@ You can analyze commits from:
 This will show you statistics about your commit message style,
 including conventional commit usage, average length, and common patterns.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		timeline.Main()
+		timeline.Main(AppConfig)
 	},
 }
 

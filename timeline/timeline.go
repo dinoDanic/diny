@@ -15,7 +15,7 @@ import (
 	"github.com/dinoDanic/diny/ui"
 )
 
-func Main() {
+func Main(cfg *config.Config) {
 	choice := timelinePrompt("Choose timeline for commit analysis:")
 
 	var timelineCommits []string
@@ -55,27 +55,6 @@ func Main() {
 	}
 	ui.Box(ui.BoxOptions{Title: fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange), Message: strings.TrimSpace(commitList)})
 
-	result, err := config.LoadOrRecover("")
-	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to load config: %v", err), Variant: ui.Error})
-		os.Exit(1)
-	}
-
-	if result.ValidationErr != "" {
-		ui.Box(ui.BoxOptions{
-			Title:   "Config Validation Error",
-			Message: result.ValidationErr,
-			Variant: ui.Error,
-		})
-	}
-	if result.RecoveryMsg != "" {
-		ui.Box(ui.BoxOptions{
-			Message: result.RecoveryMsg,
-			Variant: ui.Warning,
-		})
-	}
-
-	cfg := result.Config
 	prompt := fmt.Sprintf("Timeline: %s\nCommits:\n%s", dateRange, strings.Join(timelineCommits, "n"))
 
 	var analysis string
@@ -261,7 +240,7 @@ func HandleTimelineFlow(analysis, fullPrompt string, cfg *config.Config, dateRan
 		updatedHistory := append(previousAnalyses, analysis)
 		HandleTimelineFlow(newAnalysis, fullPrompt, cfg, dateRange, updatedHistory)
 	case "new":
-		Main()
+		Main(cfg)
 	case "exit":
 		ui.RenderTitle("Bye!")
 		os.Exit(0)
