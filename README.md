@@ -126,6 +126,7 @@ diny uses a YAML config file at `~/.config/diny/config.yaml`. Run `diny config` 
 | `commit.tone` | Message tone | `professional` / `casual` / `friendly` |
 | `commit.length` | Message length | `short` / `normal` / `long` |
 | `commit.custom_instructions` | Custom AI guidance | Any text, e.g. "Always mention ticket number" |
+| `commit.hash_after_commit` | Show/copy commit hash | `none` / `show` / `copy` / `both` |
 
 ### Example Config
 
