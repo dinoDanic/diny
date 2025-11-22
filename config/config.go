@@ -41,6 +41,7 @@ type CommitConfig struct {
 	EmojiMap           map[string]string `yaml:"emoji_map" json:"EmojiMap"`
 	Tone               Tone              `yaml:"tone" json:"Tone"`
 	Length             Length            `yaml:"length" json:"Length"`
+	CustomInstructions string            `yaml:"custom_instructions" json:"CustomInstructions"`
 }
 
 func loadDefaultConfig() (*Config, error) {

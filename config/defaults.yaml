@@ -41,3 +41,8 @@ commit:
   #   - normal: Subject ≤70 chars (imperative). If needed, add 1-3 terse bullets for WHY/impact.
   #   - long: Subject ≤80 chars (imperative). Then 2-6 terse bullets for context/impact.
   length: short
+
+  # Custom instructions for the AI model (optional)
+  # Add any extra guidance for generating commit messages
+  # Example: "Write like a pirate, arrr!"
+  custom_instructions: ""
