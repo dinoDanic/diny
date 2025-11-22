@@ -44,7 +44,7 @@ commit:
 
   # Custom instructions for the AI model (optional)
   # Add any extra guidance for generating commit messages
-  # Example: "Write like a pirate, arrr!"
+  # Example: "Include JIRA ticket from branch name", "Write like a pirate, arrr!"
   custom_instructions: ""
 
   # Show and copy commit hash to clipboard after committing
