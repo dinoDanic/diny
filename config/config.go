@@ -29,17 +29,17 @@ const (
 )
 
 type Config struct {
-	Theme  string       `yaml:"theme"`
-	Commit CommitConfig `yaml:"commit"`
+	Theme  string       `yaml:"theme" json:"Theme"`
+	Commit CommitConfig `yaml:"commit" json:"Commit"`
 }
 
 type CommitConfig struct {
-	Conventional       bool              `yaml:"conventional"`
-	ConventionalFormat []string          `yaml:"conventional_format"`
-	Emoji              bool              `yaml:"emoji"`
-	EmojiMap           map[string]string `yaml:"emoji_map,omitempty"`
-	Tone               Tone              `yaml:"tone"`
-	Length             Length            `yaml:"length"`
+	Conventional       bool              `yaml:"conventional" json:"Conventional"`
+	ConventionalFormat []string          `yaml:"conventional_format" json:"ConventionalFormat"`
+	Emoji              bool              `yaml:"emoji" json:"Emoji"`
+	EmojiMap           map[string]string `yaml:"emoji_map,omitempty" json:"EmojiMap,omitempty"`
+	Tone               Tone              `yaml:"tone" json:"Tone"`
+	Length             Length            `yaml:"length" json:"Length"`
 }
 
 func loadDefaultConfig() (*Config, error) {
@@ -98,10 +98,15 @@ func Load(cfgFile string) (*Config, error) {
 	}
 
 	// Parse YAML
-	var loadedCfg Config
-	if err := yaml.Unmarshal(data, &loadedCfg); err != nil {
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("invalid config file: %w", err)
 	}
 
-	return &loadedCfg, nil
+	// Validate config
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
+	}
+
+	return &cfg, nil
 }
