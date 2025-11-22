@@ -34,11 +34,12 @@ type Config struct {
 }
 
 type CommitConfig struct {
-	Conventional       bool     `yaml:"conventional"`
-	ConventionalFormat []string `yaml:"conventional_format"`
-	Emoji              bool     `yaml:"emoji"`
-	Tone               Tone     `yaml:"tone"`
-	Length             Length   `yaml:"length"`
+	Conventional       bool              `yaml:"conventional"`
+	ConventionalFormat []string          `yaml:"conventional_format"`
+	Emoji              bool              `yaml:"emoji"`
+	EmojiMap           map[string]string `yaml:"emoji_map,omitempty"`
+	Tone               Tone              `yaml:"tone"`
+	Length             Length            `yaml:"length"`
 }
 
 func loadDefaultConfig() (*Config, error) {

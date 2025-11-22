@@ -10,11 +10,22 @@ commit:
   # Use conventional commit format: type(scope): subject
   conventional: false
   
-  conventional_format: ['feat', 'fix', 'docs', 'chore', 'style', 'refactor', 'test']
+  # Available commit types for conventional format
+  conventional_format: ['feat', 'fix', 'docs', 'chore', 'style', 'refactor', 'test', 'perf']
   
   # Include emoji at the start of commit messages
-  # Examples: 🚀 feat, 🐛 fix, 📚 docs, 🎨 style, ♻️ refactor, ✅ test, 🔧 chore, ⚡ perf
   emoji: false
+  
+  # Optional: customize emojis for each commit type (only used when emoji: true)
+  # emoji_map:
+  #   feat: 🚀
+  #   fix: 🐛
+  #   docs: 📚
+  #   style: 🎨
+  #   refactor: ♻️
+  #   test: ✅
+  #   chore: 🔧
+  #   perf: ⚡
 
   # Commit message tone
   # Options:
