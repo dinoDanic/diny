@@ -50,7 +50,7 @@ func loadDefaultConfig() (*Config, error) {
 	return &defaultCfg, nil
 }
 
-func getConfigPath() string {
+func GetConfigPath() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""
@@ -74,7 +74,7 @@ func createDefaultConfig(configPath string) error {
 func Load(cfgFile string) (*Config, error) {
 	configPath := cfgFile
 	if configPath == "" {
-		configPath = getConfigPath()
+		configPath = GetConfigPath()
 		if configPath == "" {
 			return loadDefaultConfig()
 		}
@@ -97,13 +97,11 @@ func Load(cfgFile string) (*Config, error) {
 		}
 	}
 
-	// Parse YAML
 	var cfg Config
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("invalid config file: %w", err)
 	}
 
-	// Validate config
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}

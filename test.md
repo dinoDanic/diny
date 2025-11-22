@@ -1,1 +1,2 @@
-aiaa
+--no-verify
+diny config
