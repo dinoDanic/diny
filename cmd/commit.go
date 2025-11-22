@@ -30,4 +30,5 @@ func init() {
 	rootCmd.AddCommand(commitCmd)
 
 	commitCmd.Flags().BoolP("print", "p", false, "Print commit message to stdout (no interactive UI)")
+	commitCmd.Flags().BoolP("no-verify", "n", false, "Skip pre-commit and commit-msg hooks")
 }
