@@ -35,7 +35,7 @@ spending time manually writing messages.
 			return
 		}
 
-		result, err := config.LoadOrRecover("")
+		result, err := config.LoadOrRecoverWithProject("")
 		if err != nil {
 			ui.Box(ui.BoxOptions{
 				Message: fmt.Sprintf("Failed to load config: %v", err),
