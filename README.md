@@ -42,6 +42,7 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 - ✏️ Edit in your editor before committing
 - 📊 Timeline analysis of commit history and message patterns
 - 🎨 Customizable UI themes (10+ dark and light themes)
+- ⚙️ Three-tier config system (global, project-shared, project-private)
 
 
 ## Install
@@ -112,7 +113,29 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
 
 ## Configuration
 
-diny uses a YAML config file at `~/.config/diny/config.yaml`. Run `diny config` to open it in your editor (creates default config if missing).
+diny supports a three-tier configuration system that allows you to customize settings globally, per-project (shared with your team), or per-project (private to you).
+
+### Configuration Levels
+
+When you run `diny config` in a git repository, you can choose between three config levels:
+
+| Level | Location | Description | Committed? |
+|-------|----------|-------------|------------|
+| **Global** | `~/.config/diny/config.yaml` | Your default settings for all projects | No |
+| **Project (Versioned)** | `.diny.yaml` | Team-shared settings for this project | Yes ✓ |
+| **Project (Local)** | `.git/diny/config.yaml` | Your personal overrides for this project | No |
+
+**Priority:** Local > Versioned > Global (higher priority overrides lower)
+
+**Outside a git repository:** Only global config is available.
+
+### When to Use Each Level
+
+- **Global**: Your personal defaults across all projects (e.g., preferred theme, tone)
+- **Versioned**: Team standards everyone should follow (e.g., conventional commits, emoji usage)
+- **Local**: Your personal preferences on a specific project (e.g., different tone or length)
+
+Project configs only need to specify settings you want to override—they automatically inherit from lower levels.
 
 ### Options
 
