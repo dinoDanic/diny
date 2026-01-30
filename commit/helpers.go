@@ -187,7 +187,7 @@ func openInEditor(message string) (string, error) {
 }
 
 func saveDraft(message string) error {
-	repoRoot, err := git.FindGitRoot()
+	gitDir, err := git.FindGitDir()
 	if err != nil {
 		return fmt.Errorf("failed to find git repository: %v", err)
 	}
@@ -202,7 +202,7 @@ func saveDraft(message string) error {
 	successCount := 0
 
 	for _, file := range draftFiles {
-		filePath := filepath.Join(repoRoot, ".git", file)
+		filePath := filepath.Join(gitDir, file)
 		if err := os.WriteFile(filePath, []byte(message), 0644); err != nil {
 			errors = append(errors, fmt.Sprintf("%s: %v", file, err))
 		} else {

@@ -295,12 +295,12 @@ func customTimelineInputPrompt(message string) string {
 }
 
 func saveTimelineAnalysis(analysis, dateRange string) (string, error) {
-	repoRoot, err := git.FindGitRoot()
+	gitDir, err := git.FindGitDir()
 	if err != nil {
 		return "", fmt.Errorf("failed to find git repository: %v", err)
 	}
 
-	timelineDir := filepath.Join(repoRoot, ".git", "diny", "timeline")
+	timelineDir := filepath.Join(gitDir, "diny", "timeline")
 	if err := os.MkdirAll(timelineDir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create timeline directory: %v", err)
 	}

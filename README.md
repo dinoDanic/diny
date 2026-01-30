@@ -123,7 +123,7 @@ When you run `diny config` in a git repository, you can choose between three con
 |-------|----------|-------------|------------|
 | **Global** | `~/.config/diny/config.yaml` | Your default settings for all projects | No |
 | **Project (Versioned)** | `.diny.yaml` | Team-shared settings for this project | Yes ✓ |
-| **Project (Local)** | `.git/diny/config.yaml` | Your personal overrides for this project | No |
+| **Project (Local)** | `<gitdir>/diny/config.yaml` | Your personal overrides for this project | No |
 
 **Priority:** Local > Versioned > Global (higher priority overrides lower)
 
@@ -198,5 +198,4 @@ I'm terrible at commit messages. I type fast, make mistakes, and my history ends
 I built **diny** because I wanted my commits to be useful without thinking about them. It reads your changes, writes a decent message, and has a timeline feature that summarizes your day. Super handy for client updates or just remembering what you worked on when your brain already moved on.
 
 It's AI doing what it's actually good at—handling the repetitive stuff I'd rather not think about.
-
 

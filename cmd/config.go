@@ -23,7 +23,7 @@ var configCmd = &cobra.Command{
 If in a git repository, you can choose between:
   - Global config: ~/.config/diny/config.yaml (applies to all projects)
   - Project config - versioned: .diny.yaml (can be committed, shared with team)
-  - Project config - local: .git/diny/config.yaml (never committed, personal overrides)
+  - Project config - local: <gitdir>/diny/config.yaml (never committed, personal overrides)
 
 Config priority: local > versioned > global (higher priority overrides lower)
 
@@ -53,7 +53,7 @@ func openConfig() {
 			Options(
 				huh.NewOption("Global config (~/.config/diny/config.yaml)", "global"),
 				huh.NewOption("Project config - versioned (.diny.yaml)", "versioned"),
-				huh.NewOption("Project config - local only (.git/diny/config.yaml)", "local"),
+				huh.NewOption("Project config - local only (<gitdir>/diny/config.yaml)", "local"),
 			).
 			Value(&choice).
 			WithTheme(ui.GetHuhPrimaryTheme()).

@@ -197,11 +197,11 @@ func GetVersionedProjectConfigPath() string {
 }
 
 func GetLocalProjectConfigPath() string {
-	repoRoot, err := git.FindGitRoot()
+	gitDir, err := git.FindGitDir()
 	if err != nil {
 		return ""
 	}
-	return filepath.Join(repoRoot, ".git", "diny", "config.yaml")
+	return filepath.Join(gitDir, "diny", "config.yaml")
 }
 
 func loadLocalConfig(path string) (*LocalConfig, error) {
@@ -332,7 +332,7 @@ func LoadOrRecoverWithProject(cfgFile string) (*LoadResult, error) {
 		if strings.Contains(source, "versioned-error") {
 			result.RecoveryMsg = "Versioned project config (.diny.yaml) has errors, skipping"
 		} else if strings.Contains(source, "local-error") {
-			result.RecoveryMsg = "Local project config (.git/diny/config.yaml) has errors, skipping"
+			result.RecoveryMsg = "Local project config (<gitdir>/diny/config.yaml) has errors, skipping"
 		} else if source == "global (merged config invalid)" {
 			result.RecoveryMsg = "Merged config is invalid, using global config only"
 		}
@@ -451,7 +451,7 @@ func createLocalProjectConfigIfNeeded() error {
 	}
 
 	template := `# Diny Local Project Configuration (Not Versioned)
-# This file is in .git/diny/ and will never be committed
+# This file is stored under <gitdir>/diny/ and will never be committed
 # Use this for personal overrides on top of team config (.diny.yaml) and global config
 # It has highest priority: local > versioned (.diny.yaml) > global
 # Only specify the settings you want to override
