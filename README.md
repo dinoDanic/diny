@@ -106,6 +106,8 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
     diny commit  --print                      # Print generated message to stdout only
     diny commit  --print | git commit -F -    # Pipe generated message to git commit
 
+    diny yolo                                 # Stage all changes, generate commit, and push (fully automated)
+
     diny changelog                            # View and interact with GitHub release changelogs
     diny config                               # Open config file in your editor
     diny link lazygit                         # Integrate diny with LazyGit
