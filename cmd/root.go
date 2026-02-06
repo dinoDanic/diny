@@ -35,6 +35,9 @@ spending time manually writing messages.
 			return
 		}
 
+		checker := update.NewUpdateChecker(Version)
+		checker.CheckForUpdate()
+
 		result, err := config.LoadOrRecoverWithProject("")
 		if err != nil {
 			ui.Box(ui.BoxOptions{
@@ -63,11 +66,6 @@ spending time manually writing messages.
 		if AppConfig != nil && AppConfig.Theme != "" {
 			ui.SetTheme(AppConfig.Theme)
 		}
-	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		checker := update.NewUpdateChecker(Version)
-		checker.CheckForUpdate()
-		fmt.Println()
 	},
 }
 
