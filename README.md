@@ -41,7 +41,7 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 - 📝 Draft mode (prepare a commit message without committing)
 - ✏️ Edit in your editor before committing
 - 📊 Timeline analysis of commit history and message patterns
-- 📋 Interactive changelog viewer for GitHub releases
+- 📋 AI-powered changelog generation between tags or commits
 - 🎨 Customizable UI themes (10+ dark and light themes)
 - ⚙️ Three-tier config system (global, project-shared, project-private)
 
@@ -112,7 +112,7 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
 
     diny yolo                                 # Stage all changes, generate commit, and push (fully automated)
 
-    diny changelog                            # View and interact with GitHub release changelogs
+    diny changelog                            # Generate an AI-powered changelog (by tag or by commit)
     diny config                               # Open config file in your editor
     diny link lazygit                         # Integrate diny with LazyGit
     diny theme                                # List all available UI themes
