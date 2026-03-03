@@ -105,6 +105,10 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
     diny commit  --no-verify                  # Commit without running git hooks
     diny commit  --print                      # Print generated message to stdout only
     diny commit  --print | git commit -F -    # Pipe generated message to git commit
+    diny commit  --length short               # Force short commit message length (-l short)
+    diny commit  --length normal              # Force normal commit message length (-l normal)
+    diny commit  --length long                # Force long commit message length (-l long)
+    diny commit  --custom "mention ticket"    # One-off custom instruction for the AI (-c "mention ticket")
 
     diny yolo                                 # Stage all changes, generate commit, and push (fully automated)
 
