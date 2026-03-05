@@ -32,7 +32,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.C
 	case "commit-push":
 		ExecuteCommit(commitMessage, true, false, cfg)
 	case "edit":
-		editedMessage, err := openInEditor(commitMessage)
+		editedMessage, err := OpenInEditor(commitMessage)
 		if err != nil {
 			ui.Error("Failed to open editor: %v", err)
 			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
@@ -44,7 +44,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.C
 			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 		}
 	case "save":
-		if err := saveDraft(commitMessage); err != nil {
+		if err := SaveDraft(commitMessage); err != nil {
 			ui.Error("Failed to save draft: %v", err)
 			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 			return
@@ -150,7 +150,7 @@ func customInputPrompt(message string) string {
 	return input
 }
 
-func openInEditor(message string) (string, error) {
+func OpenInEditor(message string) (string, error) {
 	editor := git.GetGitEditor()
 
 	tmpFile, err := os.CreateTemp("", "diny-commit-*.txt")
@@ -186,7 +186,7 @@ func openInEditor(message string) (string, error) {
 	return strings.TrimSpace(string(editedContent)), nil
 }
 
-func saveDraft(message string) error {
+func SaveDraft(message string) error {
 	gitDir, err := git.FindGitDir()
 	if err != nil {
 		return fmt.Errorf("failed to find git repository: %v", err)
@@ -221,61 +221,63 @@ func saveDraft(message string) error {
 	return nil
 }
 
-func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.Config) {
-	var output []byte
-	var err error
-
-	spinnerErr := ui.WithSpinner("Committing...", func() error {
-		var commitCmd *exec.Cmd
-		if noVerify {
-			commitCmd = exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
-		} else {
-			commitCmd = exec.Command("git", "commit", "-m", commitMessage)
-		}
-		output, err = commitCmd.CombinedOutput()
-		return err
-	})
-
-	if spinnerErr != nil {
-		if len(output) > 0 {
-			fmt.Fprint(os.Stderr, string(output))
-		}
-		ui.Error("Commit failed: %v", spinnerErr)
-		os.Exit(1)
+func TryCommit(commitMessage string, push bool, noVerify bool, cfg *config.Config) error {
+	var commitCmd *exec.Cmd
+	if noVerify {
+		commitCmd = exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
+	} else {
+		commitCmd = exec.Command("git", "commit", "-m", commitMessage)
 	}
-	ui.Success("Commited!")
+	output, err := commitCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("commit failed: %s", strings.TrimSpace(string(output)))
+	}
 
 	if cfg != nil && cfg.Commit.HashAfterCommit {
 		hashCmd := exec.Command("git", "rev-parse", "--short", "HEAD")
 		hashOutput, hashErr := hashCmd.Output()
 		if hashErr == nil {
 			hash := strings.TrimSpace(string(hashOutput))
-			if err := clipboard.WriteAll(hash); err != nil {
-				ui.Error("Failed to copy hash: %v", err)
-			} else {
-				ui.Success("Hash: %s (copied)", hash)
-			}
+			_ = clipboard.WriteAll(hash)
 		}
 	}
 
 	if push {
-		var pushOutput []byte
-		var pushErr error
-
-		pushSpinnerErr := ui.WithSpinner("Pushing...", func() error {
-			pushCmd := exec.Command("git", "push")
-			pushOutput, pushErr = pushCmd.CombinedOutput()
-			return pushErr
-		})
-
-		if pushSpinnerErr != nil {
-			if len(pushOutput) > 0 {
-				fmt.Fprint(os.Stderr, string(pushOutput))
-			}
-			ui.Error("Push failed: %v", pushSpinnerErr)
-			os.Exit(1)
+		pushCmd := exec.Command("git", "push")
+		pushOutput, pushErr := pushCmd.CombinedOutput()
+		if pushErr != nil {
+			return fmt.Errorf("push failed: %s", strings.TrimSpace(string(pushOutput)))
 		}
+	}
+
+	return nil
+}
+
+func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.Config) {
+	var commitErr error
+
+	spinnerErr := ui.WithSpinner("Committing...", func() error {
+		commitErr = TryCommit(commitMessage, push, noVerify, cfg)
+		return commitErr
+	})
+
+	if spinnerErr != nil {
+		ui.Error("%v", spinnerErr)
+		os.Exit(1)
+	}
+
+	ui.Success("Commited!")
+	if push {
 		ui.Success("Pushed!")
+	}
+
+	if cfg != nil && cfg.Commit.HashAfterCommit {
+		hashCmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+		hashOutput, hashErr := hashCmd.Output()
+		if hashErr == nil {
+			hash := strings.TrimSpace(string(hashOutput))
+			ui.Success("Hash: %s (copied)", hash)
+		}
 	}
 
 	fmt.Println()
