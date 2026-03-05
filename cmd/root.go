@@ -40,25 +40,15 @@ spending time manually writing messages.
 
 		result, err := config.LoadOrRecoverWithProject("")
 		if err != nil {
-			ui.Box(ui.BoxOptions{
-				Message: fmt.Sprintf("Failed to load config: %v", err),
-				Variant: ui.Error,
-			})
+			ui.Error("Failed to load config: %v", err)
 			os.Exit(1)
 		}
 
 		if result.ValidationErr != "" {
-			ui.Box(ui.BoxOptions{
-				Title:   "Config Validation Error",
-				Message: result.ValidationErr,
-				Variant: ui.Error,
-			})
+			ui.Error("Config Validation Error\n\n%s", result.ValidationErr)
 		}
 		if result.RecoveryMsg != "" {
-			ui.Box(ui.BoxOptions{
-				Message: result.RecoveryMsg,
-				Variant: ui.Warning,
-			})
+			ui.Warning("%s", result.RecoveryMsg)
 		}
 
 		AppConfig = result.Config

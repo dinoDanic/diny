@@ -97,7 +97,7 @@ func LinkLazyGit() error {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 
-	ui.Box(ui.BoxOptions{Message: "Successfully linked diny with LazyGit!", Variant: ui.Success})
+	ui.Success("Successfully linked diny with LazyGit!")
 
 	return nil
 }

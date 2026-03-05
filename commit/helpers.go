@@ -20,7 +20,7 @@ func HandleCommitFlow(commitMessage, fullPrompt string, cfg *config.Config) {
 
 func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.Config, previousMessages []string) {
 
-	ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
+	ui.Box("Commit message", commitMessage)
 
 	choice := choicePrompt()
 
@@ -34,7 +34,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.C
 	case "edit":
 		editedMessage, err := openInEditor(commitMessage)
 		if err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to open editor: %v", err), Variant: ui.Error})
+			ui.Error("Failed to open editor: %v", err)
 			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 			return
 		}
@@ -45,12 +45,12 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.C
 		}
 	case "save":
 		if err := saveDraft(commitMessage); err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to save draft: %v", err), Variant: ui.Error})
+			ui.Error("Failed to save draft: %v", err)
 			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
 			return
 		}
 
-		ui.Box(ui.BoxOptions{Message: "Draft saved!", Variant: ui.Success})
+		ui.Success("Draft saved!")
 	case "regenerate":
 		modifiedPrompt := fullPrompt
 		if len(previousMessages) > 0 {
@@ -70,7 +70,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.C
 			return genErr
 		})
 		if err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
+			ui.Error("Error: %v", err)
 			os.Exit(1)
 		}
 
@@ -88,7 +88,7 @@ func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.C
 			return genErr
 		})
 		if err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
+			ui.Error("Error: %v", err)
 			os.Exit(1)
 		}
 
@@ -123,7 +123,7 @@ func choicePrompt() string {
 		Run()
 
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
+		ui.Error("Error running prompt: %v", err)
 		os.Exit(1)
 	}
 
@@ -143,7 +143,7 @@ func customInputPrompt(message string) string {
 		Run()
 
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
+		ui.Error("Error running prompt: %v", err)
 		os.Exit(1)
 	}
 
@@ -240,10 +240,10 @@ func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.C
 		if len(output) > 0 {
 			fmt.Fprint(os.Stderr, string(output))
 		}
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Commit failed: %v", spinnerErr), Variant: ui.Error})
+		ui.Error("Commit failed: %v", spinnerErr)
 		os.Exit(1)
 	}
-	ui.Box(ui.BoxOptions{Message: "Commited!", Variant: ui.Success})
+	ui.Success("Commited!")
 
 	if cfg != nil && cfg.Commit.HashAfterCommit {
 		hashCmd := exec.Command("git", "rev-parse", "--short", "HEAD")
@@ -251,9 +251,9 @@ func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.C
 		if hashErr == nil {
 			hash := strings.TrimSpace(string(hashOutput))
 			if err := clipboard.WriteAll(hash); err != nil {
-				ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to copy hash: %v", err), Variant: ui.Error})
+				ui.Error("Failed to copy hash: %v", err)
 			} else {
-				ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Hash: %s (copied)", hash), Variant: ui.Success})
+				ui.Success("Hash: %s (copied)", hash)
 			}
 		}
 	}
@@ -272,10 +272,10 @@ func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.C
 			if len(pushOutput) > 0 {
 				fmt.Fprint(os.Stderr, string(pushOutput))
 			}
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Push failed: %v", pushSpinnerErr), Variant: ui.Error})
+			ui.Error("Push failed: %v", pushSpinnerErr)
 			os.Exit(1)
 		}
-		ui.Box(ui.BoxOptions{Message: "Pushed!", Variant: ui.Success})
+		ui.Success("Pushed!")
 	}
 
 	fmt.Println()

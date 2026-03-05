@@ -34,12 +34,12 @@ func Main(cmd *cobra.Command, args []string, cfg *config.Config) {
 	})
 
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("%v", err), Variant: ui.Error})
+		ui.Error("%v", err)
 		os.Exit(1)
 	}
 
 	if noVerify {
-		ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
+		ui.Box("Commit message", commitMessage)
 		ExecuteCommit(commitMessage, false, true, cfg)
 		return
 	}
@@ -54,7 +54,7 @@ func getGitDiff(isQuietMode bool) string {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "Failed to get git diff: %v\n", err)
 		} else {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get git diff: %v", err), Variant: ui.Error})
+			ui.Error("Failed to get git diff: %v", err)
 		}
 		os.Exit(1)
 	}
@@ -63,7 +63,7 @@ func getGitDiff(isQuietMode bool) string {
 		if isQuietMode {
 			fmt.Fprintf(os.Stderr, "No staged changes found. Stage files first with `git add`.\n")
 		} else {
-			ui.Box(ui.BoxOptions{Message: "No staged changes found. Stage files first with `git add`.", Variant: ui.Warning})
+			ui.Warning("No staged changes found. Stage files first with `git add`.")
 		}
 		os.Exit(0)
 	}

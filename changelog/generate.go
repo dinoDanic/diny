@@ -18,15 +18,12 @@ import (
 func GenerateByTag(cfg *config.Config) error {
 	tags, err := git.GetTags()
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to list tags: %v", err), Variant: ui.Error})
+		ui.Error("Failed to list tags: %v", err)
 		return err
 	}
 
 	if len(tags) < 2 {
-		ui.Box(ui.BoxOptions{
-			Message: "At least two tags are required to generate a changelog. No tags found or only one tag exists.",
-			Variant: ui.Warning,
-		})
+		ui.Warning("At least two tags are required to generate a changelog. No tags found or only one tag exists.")
 		return nil
 	}
 
@@ -38,10 +35,7 @@ func GenerateByTag(cfg *config.Config) error {
 	newerIdx := indexOf(tags, newerTag)
 	olderTags := tags[newerIdx+1:]
 	if len(olderTags) == 0 {
-		ui.Box(ui.BoxOptions{
-			Message: fmt.Sprintf("No older tags available before %s.", newerTag),
-			Variant: ui.Warning,
-		})
+		ui.Warning("No older tags available before %s.", newerTag)
 		return nil
 	}
 
@@ -56,15 +50,12 @@ func GenerateByTag(cfg *config.Config) error {
 func GenerateByCommit(cfg *config.Config) error {
 	commits, err := git.GetRecentCommits(50)
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get recent commits: %v", err), Variant: ui.Error})
+		ui.Error("Failed to get recent commits: %v", err)
 		return err
 	}
 
 	if len(commits) < 2 {
-		ui.Box(ui.BoxOptions{
-			Message: "At least two commits are required to generate a changelog.",
-			Variant: ui.Warning,
-		})
+		ui.Warning("At least two commits are required to generate a changelog.")
 		return nil
 	}
 
@@ -90,23 +81,20 @@ func GenerateByCommit(cfg *config.Config) error {
 func generateChangelog(olderRef, newerRef string, cfg *config.Config) error {
 	commits, err := git.GetCommitsBetweenRefs(olderRef, newerRef)
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get commits: %v", err), Variant: ui.Error})
+		ui.Error("Failed to get commits: %v", err)
 		return err
 	}
 
 	rangeLabel := fmt.Sprintf("%s → %s", olderRef, newerRef)
 
 	if len(commits) == 0 {
-		ui.Box(ui.BoxOptions{
-			Message: fmt.Sprintf("No commits found between %s.", rangeLabel),
-			Variant: ui.Warning,
-		})
+		ui.Warning("No commits found between %s.", rangeLabel)
 		return nil
 	}
 
 	diff, err := git.GetDiffBetweenRefs(olderRef, newerRef)
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get diff: %v", err), Variant: ui.Error})
+		ui.Error("Failed to get diff: %v", err)
 		return err
 	}
 
@@ -123,11 +111,11 @@ func generateChangelog(olderRef, newerRef string, cfg *config.Config) error {
 	})
 
 	if spinErr != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to generate changelog: %v", spinErr), Variant: ui.Error})
+		ui.Error("Failed to generate changelog: %v", spinErr)
 		return spinErr
 	}
 
-	ui.Box(ui.BoxOptions{Title: fmt.Sprintf("Changelog: %s", rangeLabel), Message: result, Variant: ui.Primary})
+	ui.Box(fmt.Sprintf("Changelog: %s", rangeLabel), result)
 
 	handleGenerateFlow(result, rangeLabel, olderRef, newerRef, prompt, cfg, []string{})
 	return nil
@@ -196,19 +184,19 @@ func handleGenerateFlow(result, rangeLabel, olderRef, newerRef, prompt string, c
 	switch choice {
 	case "copy":
 		if err := clipboard.WriteAll(result); err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to copy to clipboard: %v", err), Variant: ui.Error})
+			ui.Error("Failed to copy to clipboard: %v", err)
 		} else {
-			ui.Box(ui.BoxOptions{Message: "Changelog copied to clipboard!", Variant: ui.Success})
+			ui.Success("Changelog copied to clipboard!")
 		}
 
 	case "save":
 		filePath, saveErr := saveChangelog(result, rangeLabel)
 		if saveErr != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to save changelog: %v", saveErr), Variant: ui.Error})
+			ui.Error("Failed to save changelog: %v", saveErr)
 			handleGenerateFlow(result, rangeLabel, olderRef, newerRef, prompt, cfg, previousResults)
 			return
 		}
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Changelog saved!\n\n%s", filePath), Variant: ui.Success})
+		ui.Success("Changelog saved!\n\n%s", filePath)
 
 	case "regenerate":
 		modifiedPrompt := prompt
@@ -229,11 +217,11 @@ func handleGenerateFlow(result, rangeLabel, olderRef, newerRef, prompt string, c
 			return genErr
 		})
 		if spinErr != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", spinErr), Variant: ui.Error})
+			ui.Error("Error: %v", spinErr)
 			return
 		}
 
-		ui.Box(ui.BoxOptions{Title: fmt.Sprintf("Changelog: %s", rangeLabel), Message: newResult, Variant: ui.Primary})
+		ui.Box(fmt.Sprintf("Changelog: %s", rangeLabel), newResult)
 		updated := append(previousResults, result)
 		handleGenerateFlow(newResult, rangeLabel, olderRef, newerRef, prompt, cfg, updated)
 

@@ -4,7 +4,6 @@ Copyright © 2025 NAME HERE dino.danic@gmail.com
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/dinoDanic/diny/ui"
@@ -43,19 +42,19 @@ func runUpdate(force bool) {
 	checker := update.NewUpdateChecker(Version)
 	latestVersion, err := checker.GetLatestVersion()
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to check for updates: %v", err), Variant: ui.Error})
+		ui.Error("Failed to check for updates: %v", err)
 		os.Exit(1)
 	}
 
 	if !force && !checker.CompareVersions(Version, latestVersion) {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("You're already on the latest version (%s)", Version), Variant: ui.Success})
+		ui.Success("You're already on the latest version (%s)", Version)
 		return
 	}
 
-	ui.Box(ui.BoxOptions{Message: fmt.Sprintf("New version available: %s\nUpdate with: diny update", latestVersion), Variant: ui.Warning})
+	ui.Warning("New version available: %s\nUpdate with: diny update", latestVersion)
 
 	if err := checker.PerformUpdate(); err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Update failed: %v", err), Variant: ui.Error})
+		ui.Error("Update failed: %v", err)
 		os.Exit(1)
 	}
 }

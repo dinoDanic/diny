@@ -11,19 +11,46 @@ import (
 	"golang.org/x/term"
 )
 
-type BoxVariant string
+type boxVariant string
 
 const (
-	Primary BoxVariant = "primary"
-	Success BoxVariant = "success"
-	Error   BoxVariant = "error"
-	Warning BoxVariant = "warning"
+	varPrimary boxVariant = "primary"
+	varSuccess boxVariant = "success"
+	varError   boxVariant = "error"
+	varWarning boxVariant = "warning"
 )
 
-type BoxOptions struct {
+type boxOptions struct {
 	Title   string
 	Message string
-	Variant BoxVariant
+	variant boxVariant
+}
+
+func sprintf(format string, args ...any) string {
+	if len(args) == 0 {
+		return format
+	}
+	return fmt.Sprintf(format, args...)
+}
+
+func Success(format string, args ...any) {
+	box(boxOptions{Message: sprintf(format, args...), variant: varSuccess})
+}
+
+func Error(format string, args ...any) {
+	box(boxOptions{Message: sprintf(format, args...), variant: varError})
+}
+
+func Warning(format string, args ...any) {
+	box(boxOptions{Message: sprintf(format, args...), variant: varWarning})
+}
+
+func Primary(format string, args ...any) {
+	box(boxOptions{Message: sprintf(format, args...), variant: varPrimary})
+}
+
+func Box(title, message string) {
+	box(boxOptions{Title: title, Message: message, variant: varPrimary})
 }
 
 func getTerminalWidth() int {
@@ -43,27 +70,27 @@ func getBaseBoxStyle() lipgloss.Style {
 		Width(width)
 }
 
-func getBoxStyleByVariant(variant BoxVariant) lipgloss.Style {
+func getBoxStyleByVariant(variant boxVariant) lipgloss.Style {
 	base := getBaseBoxStyle()
 	theme := GetCurrentTheme()
 
 	switch variant {
-	case Success:
+	case varSuccess:
 		return base.
 			Background(theme.SuccessBackground).
 			Foreground(theme.SuccessForeground).
 			BorderForeground(theme.SuccessForeground)
-	case Error:
+	case varError:
 		return base.
 			Background(theme.ErrorBackground).
 			Foreground(theme.ErrorForeground).
 			BorderForeground(theme.ErrorForeground)
-	case Warning:
+	case varWarning:
 		return base.
 			Background(theme.WarningBackground).
 			Foreground(theme.WarningForeground).
 			BorderForeground(theme.WarningForeground)
-	case Primary:
+	case varPrimary:
 		fallthrough
 	default:
 		return base.
@@ -73,19 +100,19 @@ func getBoxStyleByVariant(variant BoxVariant) lipgloss.Style {
 	}
 }
 
-func Box(opts BoxOptions) {
-	if opts.Variant == "" {
-		opts.Variant = Primary
+func box(opts boxOptions) {
+	if opts.variant == "" {
+		opts.variant = varPrimary
 	}
 
-	style := getBoxStyleByVariant(opts.Variant)
+	style := getBoxStyleByVariant(opts.variant)
 
 	var content string
 	if opts.Title != "" && opts.Message != "" {
-		titleStyle := getTitleStyleByVariant(opts.Variant)
+		titleStyle := getTitleStyleByVariant(opts.variant)
 		content = titleStyle.Render(opts.Title) + "\n\n" + strings.TrimSpace(opts.Message)
 	} else if opts.Title != "" {
-		titleStyle := getTitleStyleByVariant(opts.Variant)
+		titleStyle := getTitleStyleByVariant(opts.variant)
 		content = titleStyle.Render(opts.Title)
 	} else if opts.Message != "" {
 		content = strings.TrimSpace(opts.Message)
@@ -96,18 +123,18 @@ func Box(opts BoxOptions) {
 	}
 }
 
-func getTitleStyleByVariant(variant BoxVariant) lipgloss.Style {
+func getTitleStyleByVariant(variant boxVariant) lipgloss.Style {
 	base := lipgloss.NewStyle().Bold(true)
 	theme := GetCurrentTheme()
 
 	switch variant {
-	case Success:
+	case varSuccess:
 		return base.Foreground(theme.SuccessForeground)
-	case Error:
+	case varError:
 		return base.Foreground(theme.ErrorForeground)
-	case Warning:
+	case varWarning:
 		return base.Foreground(theme.WarningForeground)
-	case Primary:
+	case varPrimary:
 		fallthrough
 	default:
 		return base.Foreground(theme.PrimaryForeground)
@@ -115,7 +142,7 @@ func getTitleStyleByVariant(variant BoxVariant) lipgloss.Style {
 }
 
 func RenderTitle(text string) {
-	Box(BoxOptions{Title: text})
+	box(boxOptions{Title: text})
 }
 
 func WithSpinner(message string, fn func() error) error {
@@ -157,10 +184,10 @@ func GetHuhPrimaryTheme() *huh.Theme {
 func DebugUI() {
 	fmt.Println("=== DINY UI DEBUG ===")
 	RenderTitle("Sample Title")
-	Box(BoxOptions{Title: "Primary Box", Message: "This is a primary box with some content to demonstrate the styling and border.", Variant: Primary})
-	Box(BoxOptions{Title: "Error Box", Message: "This is an error message to show how errors are displayed with red styling and border.", Variant: Error})
-	Box(BoxOptions{Title: "Warning Box", Message: "This is a warning message to show how warnings are displayed with orange styling and border.", Variant: Warning})
-	Box(BoxOptions{Title: "Success Box", Message: "This is a success message to show how success messages are displayed with green styling and border.", Variant: Success})
+	Box("Primary Box", "This is a primary box with some content to demonstrate the styling and border.")
+	Error("This is an error message to show how errors are displayed with red styling and border.")
+	Warning("This is a warning message to show how warnings are displayed with orange styling and border.")
+	Success("This is a success message to show how success messages are displayed with green styling and border.")
 	fmt.Println("=== END DEBUG ===")
 }
 
@@ -247,8 +274,5 @@ func PrintThemeList() {
 	}
 
 	SetTheme("catppuccin")
-	Box(BoxOptions{
-		Message: "Set theme in config file. Open with: diny config",
-		Variant: Primary,
-	})
+	Primary("Set theme in config file. Open with: diny config")
 }

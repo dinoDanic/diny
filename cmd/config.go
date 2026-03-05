@@ -4,7 +4,6 @@ Copyright © 2025 dinoDanic dino.danic@gmail.com
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -60,35 +59,26 @@ func openConfig() {
 			Run()
 
 		if err != nil {
-			ui.Box(ui.BoxOptions{
-				Message: fmt.Sprintf("Error running prompt: %v", err),
-				Variant: ui.Error,
-			})
+			ui.Error("Error running prompt: %v", err)
 			os.Exit(1)
 		}
 
 		switch choice {
 		case "versioned":
 			if err := config.CreateVersionedProjectConfigIfNeeded(); err != nil {
-				ui.Box(ui.BoxOptions{
-					Message: fmt.Sprintf("Failed to create versioned project config: %v", err),
-					Variant: ui.Error,
-				})
+				ui.Error("Failed to create versioned project config: %v", err)
 				os.Exit(1)
 			}
 			configPath = versionedPath
 			configType = "versioned project"
 		case "local":
 			if err := config.CreateLocalProjectConfigIfNeeded(); err != nil {
-				ui.Box(ui.BoxOptions{
-					Message: fmt.Sprintf("Failed to create local project config: %v", err),
-					Variant: ui.Error,
-				})
+				ui.Error("Failed to create local project config: %v", err)
 				os.Exit(1)
 			}
 			configPath = localPath
 			configType = "local project"
-		default: 
+		default:
 			configPath = config.GetConfigPath()
 			configType = "global"
 		}
@@ -98,19 +88,13 @@ func openConfig() {
 	}
 
 	if configPath == "" {
-		ui.Box(ui.BoxOptions{
-			Message: "Could not determine config path",
-			Variant: ui.Error,
-		})
+		ui.Error("Could not determine config path")
 		os.Exit(1)
 	}
 
 	editor := getEditor()
 	if editor == "" {
-		ui.Box(ui.BoxOptions{
-			Message: "No editor found. Set $EDITOR or $VISUAL environment variable",
-			Variant: ui.Error,
-		})
+		ui.Error("No editor found. Set $EDITOR or $VISUAL environment variable")
 		os.Exit(1)
 	}
 
@@ -124,17 +108,11 @@ func openConfig() {
 	execCmd.Stderr = os.Stderr
 
 	if err := execCmd.Run(); err != nil {
-		ui.Box(ui.BoxOptions{
-			Message: fmt.Sprintf("Error opening editor: %v", err),
-			Variant: ui.Error,
-		})
+		ui.Error("Error opening editor: %v", err)
 		os.Exit(1)
 	}
 
-	ui.Box(ui.BoxOptions{
-		Message: fmt.Sprintf("Saved %s config", configType),
-		Variant: ui.Success,
-	})
+	ui.Success("Saved %s config", configType)
 }
 
 func getEditor() string {

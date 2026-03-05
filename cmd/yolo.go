@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/dinoDanic/diny/commit"
@@ -30,17 +29,17 @@ func runYolo() {
 		return git.AddAll()
 	})
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to stage changes: %v", err), Variant: ui.Error})
+		ui.Error("Failed to stage changes: %v", err)
 		os.Exit(1)
 	}
 
 	diff, err := git.GetGitDiff()
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get git diff: %v", err), Variant: ui.Error})
+		ui.Error("Failed to get git diff: %v", err)
 		os.Exit(1)
 	}
 	if len(diff) == 0 {
-		ui.Box(ui.BoxOptions{Message: "No changes to commit.", Variant: ui.Warning})
+		ui.Warning("No changes to commit.")
 		os.Exit(0)
 	}
 
@@ -51,11 +50,11 @@ func runYolo() {
 		return genErr
 	})
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to generate commit message: %v", err), Variant: ui.Error})
+		ui.Error("Failed to generate commit message: %v", err)
 		os.Exit(1)
 	}
 
-	ui.Box(ui.BoxOptions{Title: "Commit message", Message: commitMessage})
+	ui.Box("Commit message", commitMessage)
 
 	commit.ExecuteCommit(commitMessage, true, true, AppConfig)
 }

@@ -40,12 +40,12 @@ func Main(cfg *config.Config) {
 	}
 
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to get timeline commits: %v", err), Variant: ui.Error})
+		ui.Error("Failed to get timeline commits: %v", err)
 		os.Exit(1)
 	}
 
 	if len(timelineCommits) == 0 {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("No commits found for the selected period (%s).", dateRange), Variant: ui.Warning})
+		ui.Warning("No commits found for the selected period (%s).", dateRange)
 		return
 	}
 
@@ -53,7 +53,7 @@ func Main(cfg *config.Config) {
 	for i, commit := range timelineCommits {
 		commitList += fmt.Sprintf("%d. %s\n", i+1, commit)
 	}
-	ui.Box(ui.BoxOptions{Title: fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange), Message: strings.TrimSpace(commitList)})
+	ui.Box(fmt.Sprintf("Found %d commits from %s", len(timelineCommits), dateRange), strings.TrimSpace(commitList))
 
 	prompt := fmt.Sprintf("Timeline: %s\nCommits:\n%s", dateRange, strings.Join(timelineCommits, "n"))
 
@@ -65,11 +65,11 @@ func Main(cfg *config.Config) {
 	})
 
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to generate analysis: %v", err), Variant: ui.Error})
+		ui.Error("Failed to generate analysis: %v", err)
 		os.Exit(1)
 	}
 
-	ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: analysis})
+	ui.Box("Timeline Analysis", analysis)
 
 	HandleTimelineFlow(analysis, prompt, cfg, dateRange, []string{})
 }
@@ -91,7 +91,7 @@ func timelinePrompt(message string) string {
 		Run()
 
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
+		ui.Error("Error running prompt: %v", err)
 		os.Exit(1)
 	}
 
@@ -113,7 +113,7 @@ func dateInputPrompt(message string) string {
 		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error selecting day: %v", err), Variant: ui.Error})
+		ui.Error("Error selecting day: %v", err)
 		os.Exit(1)
 	}
 
@@ -126,7 +126,7 @@ func dateInputPrompt(message string) string {
 		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error selecting month: %v", err), Variant: ui.Error})
+		ui.Error("Error selecting month: %v", err)
 		os.Exit(1)
 	}
 
@@ -139,7 +139,7 @@ func dateInputPrompt(message string) string {
 		WithTheme(ui.GetHuhPrimaryTheme()).
 		Run()
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error selecting year: %v", err), Variant: ui.Error})
+		ui.Error("Error selecting year: %v", err)
 		os.Exit(1)
 	}
 
@@ -179,20 +179,20 @@ func HandleTimelineFlow(analysis, fullPrompt string, cfg *config.Config, dateRan
 	switch choice {
 	case "copy":
 		if err := clipboard.WriteAll(analysis); err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to copy to clipboard: %v", err), Variant: ui.Error})
+			ui.Error("Failed to copy to clipboard: %v", err)
 			HandleTimelineFlow(analysis, fullPrompt, cfg, dateRange, previousAnalyses)
 			return
 		}
-		ui.Box(ui.BoxOptions{Message: "Analysis copied to clipboard!", Variant: ui.Success})
+		ui.Success("Analysis copied to clipboard!")
 		fmt.Println()
 	case "save":
 		filePath, err := saveTimelineAnalysis(analysis, dateRange)
 		if err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Failed to save analysis: %v", err), Variant: ui.Error})
+			ui.Error("Failed to save analysis: %v", err)
 			HandleTimelineFlow(analysis, fullPrompt, cfg, dateRange, previousAnalyses)
 			return
 		}
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Analysis saved!\n\n%s", filePath), Variant: ui.Success})
+		ui.Success("Analysis saved!\n\n%s", filePath)
 		fmt.Println()
 	case "regenerate":
 		modifiedPrompt := fullPrompt
@@ -213,11 +213,11 @@ func HandleTimelineFlow(analysis, fullPrompt string, cfg *config.Config, dateRan
 			return genErr
 		})
 		if err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
+			ui.Error("Error: %v", err)
 			os.Exit(1)
 		}
 
-		ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: newAnalysis})
+		ui.Box("Timeline Analysis", newAnalysis)
 		updatedHistory := append(previousAnalyses, analysis)
 		HandleTimelineFlow(newAnalysis, fullPrompt, cfg, dateRange, updatedHistory)
 	case "custom":
@@ -232,11 +232,11 @@ func HandleTimelineFlow(analysis, fullPrompt string, cfg *config.Config, dateRan
 			return genErr
 		})
 		if err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
+			ui.Error("Error: %v", err)
 			os.Exit(1)
 		}
 
-		ui.Box(ui.BoxOptions{Title: "Timeline Analysis", Message: newAnalysis})
+		ui.Box("Timeline Analysis", newAnalysis)
 		updatedHistory := append(previousAnalyses, analysis)
 		HandleTimelineFlow(newAnalysis, fullPrompt, cfg, dateRange, updatedHistory)
 	case "new":
@@ -267,7 +267,7 @@ func timelineChoicePrompt() string {
 		Run()
 
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
+		ui.Error("Error running prompt: %v", err)
 		os.Exit(1)
 	}
 
@@ -287,7 +287,7 @@ func customTimelineInputPrompt(message string) string {
 		Run()
 
 	if err != nil {
-		ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error running prompt: %v", err), Variant: ui.Error})
+		ui.Error("Error running prompt: %v", err)
 		os.Exit(1)
 	}
 

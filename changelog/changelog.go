@@ -1,7 +1,6 @@
 package changelog
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/charmbracelet/huh"
@@ -31,11 +30,11 @@ func Main(cfg *config.Config) {
 	switch mode {
 	case "tag":
 		if err := GenerateByTag(cfg); err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
+			ui.Error("Error: %v", err)
 		}
 	case "commit":
 		if err := GenerateByCommit(cfg); err != nil {
-			ui.Box(ui.BoxOptions{Message: fmt.Sprintf("Error: %v", err), Variant: ui.Error})
+			ui.Error("Error: %v", err)
 		}
 	}
 }
