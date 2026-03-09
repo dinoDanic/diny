@@ -222,25 +222,19 @@ func saveDraft(message string) error {
 }
 
 func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.Config) {
-	var output []byte
-	var err error
+	ui.PrintAction("Committing...")
 
-	spinnerErr := ui.WithSpinner("Committing...", func() error {
-		var commitCmd *exec.Cmd
-		if noVerify {
-			commitCmd = exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
-		} else {
-			commitCmd = exec.Command("git", "commit", "-m", commitMessage)
-		}
-		output, err = commitCmd.CombinedOutput()
-		return err
-	})
+	var commitCmd *exec.Cmd
+	if noVerify {
+		commitCmd = exec.Command("git", "commit", "--no-verify", "-m", commitMessage)
+	} else {
+		commitCmd = exec.Command("git", "commit", "-m", commitMessage)
+	}
+	commitCmd.Stdout = os.Stdout
+	commitCmd.Stderr = os.Stderr
 
-	if spinnerErr != nil {
-		if len(output) > 0 {
-			fmt.Fprint(os.Stderr, string(output))
-		}
-		ui.Error("Commit failed: %v", spinnerErr)
+	if err := commitCmd.Run(); err != nil {
+		ui.Error("Commit failed: %v", err)
 		os.Exit(1)
 	}
 	ui.Success("Commited!")

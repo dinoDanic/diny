@@ -145,6 +145,14 @@ func RenderTitle(text string) {
 	box(boxOptions{Title: text})
 }
 
+func PrintAction(format string, args ...any) {
+	theme := GetCurrentTheme()
+	titleStyle := lipgloss.NewStyle().
+		Foreground(theme.PrimaryForeground).
+		Bold(true)
+	fmt.Println(titleStyle.Render(sprintf(format, args...)))
+}
+
 func WithSpinner(message string, fn func() error) error {
 	var actionErr error
 	theme := GetCurrentTheme()
