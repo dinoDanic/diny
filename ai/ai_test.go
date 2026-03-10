@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dinoDanic/diny/config"
 )
@@ -228,6 +229,41 @@ func TestLocalMode_AllowsLocalRequests(t *testing.T) {
 	}
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("expected 200, got %d", resp.StatusCode)
+	}
+}
+
+func TestDoPost_HTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"error":"invalid api key"}`))
+	}))
+	defer server.Close()
+
+	_, err := doPost(server.URL, nil, map[string]string{"hello": "world"}, 5*time.Second)
+	if err == nil {
+		t.Fatal("expected error for 401 response")
+	}
+	if !strings.Contains(err.Error(), "HTTP 401") {
+		t.Errorf("expected 'HTTP 401' in error, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "invalid api key") {
+		t.Errorf("expected error body in message, got: %v", err)
+	}
+}
+
+func TestDoPost_EmptyBody(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		// write nothing
+	}))
+	defer server.Close()
+
+	_, err := doPost(server.URL, nil, map[string]string{"hello": "world"}, 5*time.Second)
+	if err == nil {
+		t.Fatal("expected error for empty body")
+	}
+	if !strings.Contains(err.Error(), "empty response body") {
+		t.Errorf("expected 'empty response body' in error, got: %v", err)
 	}
 }
 

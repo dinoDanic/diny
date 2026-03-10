@@ -266,7 +266,7 @@ func requestCustom(apiURL, apiKey, model, prompt string) (string, error) {
 		"Authorization": "Bearer " + apiKey,
 	}
 
-	body, err := doPost(apiURL, headers, payload, 30*time.Second)
+	body, err := doPost(apiURL, headers, payload, 60*time.Second)
 	if err != nil {
 		return "", err
 	}
@@ -341,7 +341,27 @@ func doPost(url string, headers map[string]string, payload any, timeout time.Dur
 	}
 	defer res.Body.Close()
 
-	return io.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		detail := string(body)
+		if len(detail) > 200 {
+			detail = detail[:200]
+		}
+		if detail == "" {
+			detail = "(empty body)"
+		}
+		return nil, fmt.Errorf("HTTP %d from %s: %s", res.StatusCode, url, detail)
+	}
+
+	if len(body) == 0 {
+		return nil, fmt.Errorf("empty response body from %s", url)
+	}
+
+	return body, nil
 }
 
 // buildCommitPrompt creates a prompt for local/custom AI models from the git diff and config.
