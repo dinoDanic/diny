@@ -13,6 +13,7 @@ ai:
   #   - remote: Use the diny cloud server (default, zero-config)
   #   - local: Use a local AI server like Ollama (all external requests blocked)
   #   - custom: Use a custom OpenAI-compatible API with your own API key
+  #   - anthropic: Use Anthropic's Claude API directly with your API key
   mode: remote
 
   # Local AI server URL (required when mode: local)
@@ -20,13 +21,15 @@ ai:
   # local_url: ""
 
   # Custom API URL (required when mode: custom)
+  # Must be an OpenAI-compatible chat completions endpoint.
   # Example: https://api.openai.com/v1/chat/completions
+  # Note: Anthropic/Claude API is NOT OpenAI-compatible and won't work here.
   # api_url: ""
 
-  # API key for custom API (required when mode: custom)
+  # API key (required when mode: custom or anthropic)
   # api_key: ""
 
-  # Model name for local or custom mode (optional)
+  # Model name for local, custom, or anthropic mode (optional)
   # Examples: llama3, gpt-4, claude-sonnet-4-20250514
   # model: ""
 

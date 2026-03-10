@@ -32,9 +32,10 @@ const (
 )
 
 const (
-	AIRemote AIMode = "remote"
-	AILocal  AIMode = "local"
-	AICustom AIMode = "custom"
+	AIRemote    AIMode = "remote"
+	AILocal     AIMode = "local"
+	AICustom    AIMode = "custom"
+	AIAnthropic AIMode = "anthropic"
 )
 
 type AIConfig struct {
@@ -443,19 +444,20 @@ func createVersionedProjectConfigIfNeeded() error {
 
 # AI generation settings
 # ai:
-#   # Generation mode: remote (default), local (e.g. Ollama), or custom (OpenAI-compatible)
+#   # Generation mode: remote (default), local (e.g. Ollama), custom (OpenAI-compatible), or anthropic (Claude)
 #   mode: remote
 #
 #   # Local AI server URL (required when mode: local)
 #   # local_url: "http://localhost:11434"
 #
-#   # Custom API URL (required when mode: custom)
+#   # Custom API URL (required when mode: custom, must be OpenAI-compatible)
+#   # Note: Anthropic/Claude API is NOT compatible — use an OpenAI-compatible endpoint
 #   # api_url: "https://api.openai.com/v1/chat/completions"
 #
-#   # API key for custom API (required when mode: custom)
+#   # API key (required when mode: custom or anthropic)
 #   # api_key: ""
 #
-#   # Model name for local or custom mode
+#   # Model name for local, custom, or anthropic mode
 #   # model: "llama3"
 
 # Commit configuration
@@ -527,19 +529,20 @@ func createLocalProjectConfigIfNeeded() error {
 
 # AI generation settings
 # ai:
-#   # Generation mode: remote (default), local (e.g. Ollama), or custom (OpenAI-compatible)
+#   # Generation mode: remote (default), local (e.g. Ollama), custom (OpenAI-compatible), or anthropic (Claude)
 #   mode: local
 #
 #   # Local AI server URL (required when mode: local)
 #   # local_url: "http://localhost:11434"
 #
-#   # Custom API URL (required when mode: custom)
+#   # Custom API URL (required when mode: custom, must be OpenAI-compatible)
+#   # Note: Anthropic/Claude API is NOT compatible — use an OpenAI-compatible endpoint
 #   # api_url: "https://api.openai.com/v1/chat/completions"
 #
-#   # API key for custom API (required when mode: custom)
+#   # API key (required when mode: custom or anthropic)
 #   # api_key: "sk-your-key-here"
 #
-#   # Model name for local or custom mode
+#   # Model name for local, custom, or anthropic mode
 #   # model: "llama3"
 
 # Commit configuration

@@ -42,7 +42,7 @@ func (c *Config) Validate() error {
 }
 
 func (c *Config) validateAI() error {
-	validModes := []AIMode{AIRemote, AILocal, AICustom}
+	validModes := []AIMode{AIRemote, AILocal, AICustom, AIAnthropic}
 
 	// Empty mode is treated as remote (backward compatible)
 	if c.AI.Mode == "" {
@@ -50,7 +50,7 @@ func (c *Config) validateAI() error {
 	}
 
 	if !slices.Contains(validModes, c.AI.Mode) {
-		return fmt.Errorf("invalid ai.mode '%s', must be one of: remote, local, custom", c.AI.Mode)
+		return fmt.Errorf("invalid ai.mode '%s', must be one of: remote, local, custom, anthropic", c.AI.Mode)
 	}
 
 	switch c.AI.Mode {
@@ -64,6 +64,10 @@ func (c *Config) validateAI() error {
 		}
 		if c.AI.APIKey == "" {
 			return fmt.Errorf("ai.api_key is required when ai.mode is 'custom'")
+		}
+	case AIAnthropic:
+		if c.AI.APIKey == "" {
+			return fmt.Errorf("ai.api_key is required when ai.mode is 'anthropic'")
 		}
 	}
 
