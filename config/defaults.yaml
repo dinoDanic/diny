@@ -20,7 +20,9 @@ ai:
   # local_url: ""
 
   # Custom API URL (required when mode: custom)
+  # Must be an OpenAI-compatible chat completions endpoint.
   # Example: https://api.openai.com/v1/chat/completions
+  # Note: Anthropic/Claude API is NOT OpenAI-compatible and won't work here.
   # api_url: ""
 
   # API key for custom API (required when mode: custom)

@@ -449,7 +449,8 @@ func createVersionedProjectConfigIfNeeded() error {
 #   # Local AI server URL (required when mode: local)
 #   # local_url: "http://localhost:11434"
 #
-#   # Custom API URL (required when mode: custom)
+#   # Custom API URL (required when mode: custom, must be OpenAI-compatible)
+#   # Note: Anthropic/Claude API is NOT compatible — use an OpenAI-compatible endpoint
 #   # api_url: "https://api.openai.com/v1/chat/completions"
 #
 #   # API key for custom API (required when mode: custom)
@@ -533,7 +534,8 @@ func createLocalProjectConfigIfNeeded() error {
 #   # Local AI server URL (required when mode: local)
 #   # local_url: "http://localhost:11434"
 #
-#   # Custom API URL (required when mode: custom)
+#   # Custom API URL (required when mode: custom, must be OpenAI-compatible)
+#   # Note: Anthropic/Claude API is NOT compatible — use an OpenAI-compatible endpoint
 #   # api_url: "https://api.openai.com/v1/chat/completions"
 #
 #   # API key for custom API (required when mode: custom)
