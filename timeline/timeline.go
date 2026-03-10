@@ -11,7 +11,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
-	"github.com/dinoDanic/diny/groq"
+	"github.com/dinoDanic/diny/ai"
 	"github.com/dinoDanic/diny/ui"
 )
 
@@ -60,7 +60,7 @@ func Main(cfg *config.Config) {
 	var analysis string
 	err = ui.WithSpinner("Generating timeline analysis...", func() error {
 		var genErr error
-		analysis, genErr = groq.CreateTimelineWithGroq(prompt, cfg)
+		analysis, genErr = ai.GenerateTimeline(prompt, cfg)
 		return genErr
 	})
 
@@ -209,7 +209,7 @@ func HandleTimelineFlow(analysis, fullPrompt string, cfg *config.Config, dateRan
 		var newAnalysis string
 		err := ui.WithSpinner("Generating alternative analysis...", func() error {
 			var genErr error
-			newAnalysis, genErr = groq.CreateTimelineWithGroq(modifiedPrompt, cfg)
+			newAnalysis, genErr = ai.GenerateTimeline(modifiedPrompt, cfg)
 			return genErr
 		})
 		if err != nil {
@@ -228,7 +228,7 @@ func HandleTimelineFlow(analysis, fullPrompt string, cfg *config.Config, dateRan
 		var newAnalysis string
 		err := ui.WithSpinner("Refining analysis with your feedback...", func() error {
 			var genErr error
-			newAnalysis, genErr = groq.CreateTimelineWithGroq(modifiedPrompt, cfg)
+			newAnalysis, genErr = ai.GenerateTimeline(modifiedPrompt, cfg)
 			return genErr
 		})
 		if err != nil {

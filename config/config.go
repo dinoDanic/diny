@@ -17,6 +17,7 @@ var defaultConfigTemplate string
 
 type Tone string
 type Length string
+type AIMode string
 
 const (
 	Professional Tone = "professional"
@@ -30,8 +31,23 @@ const (
 	Long   Length = "long"
 )
 
+const (
+	AIRemote AIMode = "remote"
+	AILocal  AIMode = "local"
+	AICustom AIMode = "custom"
+)
+
+type AIConfig struct {
+	Mode     AIMode `yaml:"mode" json:"Mode"`
+	LocalURL string `yaml:"local_url" json:"LocalURL"`
+	APIURL   string `yaml:"api_url" json:"APIURL"`
+	APIKey   string `yaml:"api_key" json:"APIKey"`
+	Model    string `yaml:"model" json:"Model"`
+}
+
 type Config struct {
 	Theme  string       `yaml:"theme" json:"Theme"`
+	AI     AIConfig     `yaml:"ai" json:"AI"`
 	Commit CommitConfig `yaml:"commit" json:"Commit"`
 }
 
@@ -46,8 +62,17 @@ type CommitConfig struct {
 	HashAfterCommit    bool              `yaml:"hash_after_commit" json:"HashAfterCommit"`
 }
 
+type LocalAIConfig struct {
+	Mode     *AIMode `yaml:"mode,omitempty"`
+	LocalURL string  `yaml:"local_url,omitempty"`
+	APIURL   string  `yaml:"api_url,omitempty"`
+	APIKey   string  `yaml:"api_key,omitempty"`
+	Model    string  `yaml:"model,omitempty"`
+}
+
 type LocalConfig struct {
 	Theme  string            `yaml:"theme,omitempty"`
+	AI     LocalAIConfig     `yaml:"ai,omitempty"`
 	Commit LocalCommitConfig `yaml:"commit,omitempty"`
 }
 
@@ -225,6 +250,13 @@ func loadLocalConfig(path string) (*LocalConfig, error) {
 func mergeConfigWithLocal(base *Config, overlay *LocalConfig) *Config {
 	merged := &Config{
 		Theme: base.Theme,
+		AI: AIConfig{
+			Mode:     base.AI.Mode,
+			LocalURL: base.AI.LocalURL,
+			APIURL:   base.AI.APIURL,
+			APIKey:   base.AI.APIKey,
+			Model:    base.AI.Model,
+		},
 		Commit: CommitConfig{
 			Conventional:       base.Commit.Conventional,
 			ConventionalFormat: make([]string, len(base.Commit.ConventionalFormat)),
@@ -244,6 +276,22 @@ func mergeConfigWithLocal(base *Config, overlay *LocalConfig) *Config {
 
 	if overlay.Theme != "" {
 		merged.Theme = overlay.Theme
+	}
+
+	if overlay.AI.Mode != nil {
+		merged.AI.Mode = *overlay.AI.Mode
+	}
+	if overlay.AI.LocalURL != "" {
+		merged.AI.LocalURL = overlay.AI.LocalURL
+	}
+	if overlay.AI.APIURL != "" {
+		merged.AI.APIURL = overlay.AI.APIURL
+	}
+	if overlay.AI.APIKey != "" {
+		merged.AI.APIKey = overlay.AI.APIKey
+	}
+	if overlay.AI.Model != "" {
+		merged.AI.Model = overlay.AI.Model
 	}
 
 	if overlay.Commit.Conventional != nil {
@@ -393,6 +441,23 @@ func createVersionedProjectConfigIfNeeded() error {
 # UI theme (catppuccin, tokyonight, nord, dracula, gruvbox, etc.)
 # theme: catppuccin
 
+# AI generation settings
+# ai:
+#   # Generation mode: remote (default), local (e.g. Ollama), or custom (OpenAI-compatible)
+#   mode: remote
+#
+#   # Local AI server URL (required when mode: local)
+#   # local_url: "http://localhost:11434"
+#
+#   # Custom API URL (required when mode: custom)
+#   # api_url: "https://api.openai.com/v1/chat/completions"
+#
+#   # API key for custom API (required when mode: custom)
+#   # api_key: ""
+#
+#   # Model name for local or custom mode
+#   # model: "llama3"
+
 # Commit configuration
 # commit:
 #   # Use conventional commit format (feat, fix, docs, etc.)
@@ -459,6 +524,23 @@ func createLocalProjectConfigIfNeeded() error {
 
 # UI theme (catppuccin, tokyonight, nord, dracula, gruvbox, etc.)
 # theme: dracula
+
+# AI generation settings
+# ai:
+#   # Generation mode: remote (default), local (e.g. Ollama), or custom (OpenAI-compatible)
+#   mode: local
+#
+#   # Local AI server URL (required when mode: local)
+#   # local_url: "http://localhost:11434"
+#
+#   # Custom API URL (required when mode: custom)
+#   # api_url: "https://api.openai.com/v1/chat/completions"
+#
+#   # API key for custom API (required when mode: custom)
+#   # api_key: "sk-your-key-here"
+#
+#   # Model name for local or custom mode
+#   # model: "llama3"
 
 # Commit configuration
 # commit:
