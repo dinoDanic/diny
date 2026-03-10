@@ -150,6 +150,11 @@ Project configs only need to specify settings you want to override—they automa
 | Option | Description | Values |
 |--------|-------------|--------|
 | `theme` | UI color theme | catppuccin, tokyo, nord, dracula, gruvbox-dark, onedark, monokai, solarized-dark, solarized-light, github-light, etc. |
+| `ai.mode` | AI generation mode | `remote` (default) / `local` / `custom` |
+| `ai.local_url` | Local AI server URL | e.g. `http://localhost:11434` (required for `local` mode) |
+| `ai.api_url` | Custom API endpoint | e.g. `https://api.openai.com/v1/chat/completions` (required for `custom` mode) |
+| `ai.api_key` | API key for custom API | Your API key (required for `custom` mode) |
+| `ai.model` | Model name | e.g. `llama3`, `gpt-4` (optional, for `local`/`custom` modes) |
 | `commit.conventional` | Use conventional commit format | `true` / `false` |
 | `commit.conventional_format` | Commit types to use | `['feat', 'fix', 'docs', 'chore', ...]` |
 | `commit.emoji` | Add emoji prefix | `true` / `false` |
@@ -159,10 +164,48 @@ Project configs only need to specify settings you want to override—they automa
 | `commit.custom_instructions` | Custom AI guidance | Any text, e.g. "Always mention ticket number" |
 | `commit.hash_after_commit` | Show and copy commit hash | `true` / `false` |
 
+### AI Generation Modes
+
+diny supports three AI generation modes, configurable via the `ai.mode` setting:
+
+| Mode | Description | Privacy | Setup |
+|------|-------------|---------|-------|
+| **remote** | Uses the diny cloud server (default) | Diff sent to diny server | Zero-config |
+| **local** | Uses a local AI like [Ollama](https://ollama.com) | Everything stays on your machine | Requires local AI server |
+| **custom** | Uses any OpenAI-compatible API | Diff sent to your chosen provider | Requires API key |
+
+**Local mode** blocks all external network requests, ensuring your code never leaves your machine. Only requests to the configured `local_url` are permitted.
+
+#### Local Mode (Ollama)
+
+```yaml
+ai:
+  mode: local
+  local_url: "http://localhost:11434"
+  model: "llama3"
+```
+
+Make sure Ollama is running: `ollama serve`
+
+#### Custom API Mode
+
+```yaml
+ai:
+  mode: custom
+  api_url: "https://api.openai.com/v1/chat/completions"
+  api_key: "sk-your-key-here"
+  model: "gpt-4"
+```
+
+Works with any OpenAI-compatible API (OpenAI, Anthropic via proxy, Groq, Together, etc.)
+
 ### Example Config
 
 ```yaml
 theme: tokyo
+
+ai:
+  mode: remote
 
 commit:
   conventional: true

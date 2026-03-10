@@ -6,6 +6,30 @@
 # Light: solarized-light, github-light, gruvbox-light, flexoki-light
 theme: catppuccin
 
+# AI generation settings
+# Controls how diny generates commit messages, timelines, and changelogs
+ai:
+  # Generation mode:
+  #   - remote: Use the diny cloud server (default, zero-config)
+  #   - local: Use a local AI server like Ollama (all external requests blocked)
+  #   - custom: Use a custom OpenAI-compatible API with your own API key
+  mode: remote
+
+  # Local AI server URL (required when mode: local)
+  # Example: http://localhost:11434 (Ollama default)
+  # local_url: ""
+
+  # Custom API URL (required when mode: custom)
+  # Example: https://api.openai.com/v1/chat/completions
+  # api_url: ""
+
+  # API key for custom API (required when mode: custom)
+  # api_key: ""
+
+  # Model name for local or custom mode (optional)
+  # Examples: llama3, gpt-4, claude-sonnet-4-20250514
+  # model: ""
+
 commit:
   # Use conventional commit format: type(scope): subject
   conventional: false

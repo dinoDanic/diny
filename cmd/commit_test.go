@@ -39,7 +39,7 @@ func TestCommitCommand(t *testing.T) {
 			t.Error("Long description should not be empty")
 		}
 
-		expectedShort := "Generate commit messages from staged changes"
+		expectedShort := "Generate clean, conventional commit messages from staged changes"
 		if commitCmd.Short != expectedShort {
 			t.Errorf("expected Short to be '%s', got '%s'", expectedShort, commitCmd.Short)
 		}
