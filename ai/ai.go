@@ -49,6 +49,9 @@ func GenerateCommitMessage(gitDiff string, cfg *config.Config, opts ...Option) (
 	case config.AICustom:
 		prompt := buildCommitPrompt(gitDiff, cfg)
 		return requestCustom(cfg.AI.APIURL, cfg.AI.APIKey, cfg.AI.Model, prompt)
+	case config.AIAnthropic:
+		prompt := buildCommitPrompt(gitDiff, cfg)
+		return requestAnthropic(cfg.AI.APIURL, cfg.AI.APIKey, cfg.AI.Model, prompt)
 	default:
 		return requestRemoteCommit(gitDiff, cfg, applyOptions(opts))
 	}
@@ -63,6 +66,8 @@ func GenerateTimeline(prompt string, cfg *config.Config, opts ...Option) (string
 		return requestLocal(cfg.AI.LocalURL, cfg.AI.Model, prompt)
 	case config.AICustom:
 		return requestCustom(cfg.AI.APIURL, cfg.AI.APIKey, cfg.AI.Model, prompt)
+	case config.AIAnthropic:
+		return requestAnthropic(cfg.AI.APIURL, cfg.AI.APIKey, cfg.AI.Model, prompt)
 	default:
 		return requestRemoteTimeline(prompt, cfg, applyOptions(opts))
 	}
@@ -281,6 +286,68 @@ func requestCustom(apiURL, apiKey, model, prompt string) (string, error) {
 	}
 
 	return strings.TrimSpace(out.Choices[0].Message.Content), nil
+}
+
+// --- Anthropic (Claude) API ---
+
+const anthropicAPIURL = "https://api.anthropic.com/v1/messages"
+
+type anthropicRequest struct {
+	Model     string             `json:"model"`
+	MaxTokens int                `json:"max_tokens"`
+	Messages  []anthropicMessage `json:"messages"`
+}
+
+type anthropicMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type anthropicContentBlock struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type anthropicResponse struct {
+	Content []anthropicContentBlock `json:"content"`
+}
+
+func requestAnthropic(apiURL, apiKey, model, prompt string) (string, error) {
+	if model == "" {
+		model = "claude-sonnet-4-20250514"
+	}
+	if apiURL == "" {
+		apiURL = anthropicAPIURL
+	}
+
+	payload := anthropicRequest{
+		Model:     model,
+		MaxTokens: 1024,
+		Messages: []anthropicMessage{
+			{Role: "user", Content: prompt},
+		},
+	}
+
+	headers := map[string]string{
+		"x-api-key":         apiKey,
+		"anthropic-version": "2023-06-01",
+	}
+
+	body, err := doPost(apiURL, headers, payload, 60*time.Second)
+	if err != nil {
+		return "", err
+	}
+
+	var out anthropicResponse
+	if err := json.Unmarshal(body, &out); err != nil {
+		return "", fmt.Errorf("decode anthropic response: %w", err)
+	}
+
+	if len(out.Content) == 0 || out.Content[0].Text == "" {
+		return "", fmt.Errorf("empty response from Anthropic API")
+	}
+
+	return strings.TrimSpace(out.Content[0].Text), nil
 }
 
 // --- Local-mode network restriction ---

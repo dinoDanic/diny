@@ -140,6 +140,32 @@ func TestConfig_AIValidation(t *testing.T) {
 		}
 	})
 
+	t.Run("anthropic mode requires api_key", func(t *testing.T) {
+		cfg := Config{
+			Theme:  "catppuccin",
+			AI:     AIConfig{Mode: AIAnthropic},
+			Commit: baseCommit,
+		}
+		err := cfg.Validate()
+		if err == nil {
+			t.Error("anthropic mode without api_key should fail")
+		}
+	})
+
+	t.Run("anthropic mode with api_key passes", func(t *testing.T) {
+		cfg := Config{
+			Theme: "catppuccin",
+			AI: AIConfig{
+				Mode:   AIAnthropic,
+				APIKey: "sk-ant-test",
+			},
+			Commit: baseCommit,
+		}
+		if err := cfg.Validate(); err != nil {
+			t.Errorf("anthropic mode with api_key should pass: %v", err)
+		}
+	})
+
 	t.Run("invalid AI mode fails", func(t *testing.T) {
 		cfg := Config{
 			Theme:  "catppuccin",

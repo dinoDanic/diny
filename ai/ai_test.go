@@ -126,6 +126,46 @@ func TestGenerateCommitMessage_Custom(t *testing.T) {
 	}
 }
 
+func TestGenerateCommitMessage_Anthropic(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Verify Anthropic-specific headers
+		if r.Header.Get("x-api-key") != "sk-ant-test" {
+			t.Errorf("expected x-api-key 'sk-ant-test', got '%s'", r.Header.Get("x-api-key"))
+		}
+		if r.Header.Get("anthropic-version") != "2023-06-01" {
+			t.Errorf("expected anthropic-version header")
+		}
+		// Should NOT have Bearer auth
+		if auth := r.Header.Get("Authorization"); auth != "" {
+			t.Errorf("expected no Authorization header, got '%s'", auth)
+		}
+
+		resp := map[string]any{
+			"content": []map[string]any{
+				{
+					"type": "text",
+					"text": "refactor: extract helper function",
+				},
+			},
+		}
+		json.NewEncoder(w).Encode(resp)
+	}))
+	defer server.Close()
+
+	cfg := newTestConfig(config.AIAnthropic)
+	cfg.AI.APIURL = server.URL
+	cfg.AI.APIKey = "sk-ant-test"
+	cfg.AI.Model = "claude-sonnet-4-20250514"
+
+	msg, err := GenerateCommitMessage("diff content", cfg)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if msg != "refactor: extract helper function" {
+		t.Errorf("expected 'refactor: extract helper function', got '%s'", msg)
+	}
+}
+
 func TestGenerateCommitMessage_EmptyModeDefaultsToRemote(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := map[string]any{
