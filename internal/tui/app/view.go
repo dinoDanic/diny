@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dinoDanic/diny/ui"
 )
 
 func (m model) View() string {
@@ -81,6 +82,8 @@ func (m model) renderWelcome() string {
 
 func (m model) renderGenerating() string {
 	indent := indentStyle()
+	t := ui.GetCurrentTheme()
+	genStyle := lipgloss.NewStyle().Foreground(t.PrimaryForeground)
 	var b strings.Builder
 
 	if len(m.stagedFiles) > 0 {
@@ -89,7 +92,7 @@ func (m model) renderGenerating() string {
 		b.WriteString("\n")
 	}
 
-	b.WriteString(indent.Render(m.spinner.View() + " Generating commit message..."))
+	b.WriteString(indent.Render(genStyle.Render(m.spinner.View() + " Generating commit message...")))
 	b.WriteString("\n")
 	return b.String()
 }
@@ -210,6 +213,11 @@ func (m model) renderSuccess() string {
 	var b strings.Builder
 
 	b.WriteString("\n")
+	b.WriteString(m.renderStagedFiles())
+	b.WriteString("\n")
+	b.WriteString(m.renderCommitMessage())
+	b.WriteString("\n")
+
 	b.WriteString(indent.Render(successBigStyle().Render(m.statusMessage)))
 	b.WriteString("\n\n")
 	return b.String()

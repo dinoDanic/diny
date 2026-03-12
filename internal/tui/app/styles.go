@@ -52,9 +52,8 @@ func fileRenamedStyle() lipgloss.Style {
 }
 
 func commitMessageStyle() lipgloss.Style {
-	t := ui.GetCurrentTheme()
 	return lipgloss.NewStyle().
-		Foreground(t.PrimaryForeground)
+		PaddingLeft(2)
 }
 
 func footerKeyStyle() lipgloss.Style {
