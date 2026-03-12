@@ -1,12 +1,12 @@
 package app
 
 import (
-	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
+	"github.com/dinoDanic/diny/internal/tui/loader"
 )
 
 type state int
@@ -48,6 +48,10 @@ type commitDoneMsg struct {
 	push bool
 }
 
+type unstagedFilesMsg struct {
+	files []git.StagedFile
+}
+
 type errMsg struct {
 	err error
 }
@@ -79,8 +83,8 @@ type model struct {
 	previousMessages []string
 
 	// Components
-	spinner   spinner.Model
-	viewport  viewport.Model
+	loader   loader.Model
+	viewport viewport.Model
 	textinput textinput.Model
 	textarea  textarea.Model
 
@@ -98,12 +102,14 @@ type model struct {
 	// Commit options
 	pendingPush     bool
 	pendingNoVerify bool
+
+	// File picker (stateNoStaged)
+	unstagedFiles []git.StagedFile
+	fileCursor    int
+	fileSelected  []bool
 }
 
 func newModel(cfg *config.Config, version string) model {
-	s := spinner.New()
-	s.Spinner = spinner.Dot
-
 	ti := textinput.New()
 	ti.Placeholder = "Describe what to change..."
 	ti.CharLimit = 200
@@ -115,6 +121,6 @@ func newModel(cfg *config.Config, version string) model {
 		cfg:     cfg,
 		version: version,
 		state:   stateWelcome,
-		spinner: s,
+		loader:  loader.New(loader.InitMessages),
 	}
 }

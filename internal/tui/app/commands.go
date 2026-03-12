@@ -2,6 +2,8 @@ package app
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/atotto/clipboard"
@@ -106,6 +108,31 @@ func doSaveDraft(message string) tea.Cmd {
 			return errMsg{err: fmt.Errorf("failed to save draft: %w", err)}
 		}
 		return draftSavedMsg{}
+	}
+}
+
+func loadUnstagedFiles() tea.Cmd {
+	return func() tea.Msg {
+		files, err := git.GetUnstagedFiles()
+		if err != nil {
+			return errMsg{err: fmt.Errorf("failed to get unstaged files: %w", err)}
+		}
+		return unstagedFilesMsg{files: files}
+	}
+}
+
+func doStageFiles(paths []string) tea.Cmd {
+	return func() tea.Msg {
+		args := append([]string{"add", "--"}, paths...)
+		cmd := exec.Command("git", args...)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			return errMsg{err: fmt.Errorf("git add failed: %s", strings.TrimSpace(string(out)))}
+		}
+		files, err := git.GetStagedFiles()
+		if err != nil {
+			return errMsg{err: fmt.Errorf("failed to get staged files: %w", err)}
+		}
+		return stagedFilesMsg{files: files}
 	}
 }
 
