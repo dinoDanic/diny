@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/dinoDanic/diny/commit"
 	"github.com/dinoDanic/diny/config"
+	"github.com/dinoDanic/diny/internal/tui/app"
 
 	"github.com/spf13/cobra"
 )
@@ -31,6 +32,11 @@ Examples:
   diny commit --print | clip            # Copy to clipboard (Windows)
   diny commit --custom "include jira ticket from branch name"`,
 	Run: func(cmd *cobra.Command, args []string) {
+		tuiMode, _ := cmd.Flags().GetBool("tui")
+		if tuiMode {
+			app.Run(AppConfig, Version)
+			return
+		}
 		if length != "" {
 			AppConfig.Commit.Length = config.Length(length)
 		}
@@ -48,4 +54,5 @@ func init() {
 	commitCmd.Flags().BoolP("no-verify", "n", false, "Skip pre-commit and commit-msg hooks")
 	commitCmd.Flags().StringVarP(&length, "length", "l", "", "Override commit message length: short | normal | long")
 	commitCmd.Flags().StringVarP(&custom, "custom", "c", "", "One-off custom instruction for the AI")
+	commitCmd.Flags().BoolP("tui", "t", false, "Interactive TUI mode")
 }
