@@ -50,6 +50,45 @@ func GetStagedFiles() ([]StagedFile, error) {
 	return files, nil
 }
 
+// GetUnstagedFiles returns modified, deleted, and untracked files not yet staged.
+func GetUnstagedFiles() ([]StagedFile, error) {
+	cmd := exec.Command("git", "status", "--porcelain")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	raw := strings.TrimSpace(string(output))
+	if raw == "" {
+		return nil, nil
+	}
+	var files []StagedFile
+	for _, line := range strings.Split(raw, "\n") {
+		if len(line) < 4 {
+			continue
+		}
+		xy := line[:2]
+		path := line[3:]
+
+		if xy == "??" {
+			files = append(files, StagedFile{Status: "?", Path: path})
+			continue
+		}
+		unstaged := rune(xy[1])
+		if unstaged == ' ' || unstaged == '!' {
+			continue
+		}
+		switch unstaged {
+		case 'M':
+			files = append(files, StagedFile{Status: "M", Path: path})
+		case 'D':
+			files = append(files, StagedFile{Status: "D", Path: path})
+		default:
+			files = append(files, StagedFile{Status: "?", Path: path})
+		}
+	}
+	return files, nil
+}
+
 func GetCurrentBranch() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
 	output, err := cmd.Output()

@@ -9,11 +9,12 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dinoDanic/diny/git"
+	"github.com/dinoDanic/diny/internal/tui/loader"
 )
 
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
-		m.spinner.Tick,
+		m.loader.Tick,
 		loadRepoInfo(),
 		loadStagedFiles(),
 		startWelcomeTimer(),
@@ -41,6 +42,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.stagedFiles = msg.files
 		m.filesLoaded = true
 		return m.checkWelcomeDone()
+
+	case unstagedFilesMsg:
+		m.unstagedFiles = msg.files
+		m.fileSelected = make([]bool, len(msg.files))
+		m.fileCursor = 0
+		return m, nil
 
 	case welcomeTimerDoneMsg:
 		m.welcomeReady = true
@@ -98,7 +105,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch m.state {
 	case stateWelcome, stateGenerating, stateCommitting:
-		m.spinner, cmd = m.spinner.Update(msg)
+		m.loader, cmd = m.loader.Update(msg)
 		return m, cmd
 	case stateFeedback:
 		m.textinput, cmd = m.textinput.Update(msg)
@@ -121,7 +128,9 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleEditingKey(msg)
 	case stateHelp:
 		return m.handleHelpKey(msg)
-	case stateNoStaged, stateError, stateSuccess:
+	case stateNoStaged:
+		return m.handleNoStagedKey(msg)
+	case stateError, stateSuccess:
 		if msg.String() == "q" || msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
@@ -137,18 +146,22 @@ func (m model) handleReadyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch {
 	case msg.String() == "enter":
 		m.state = stateCommitting
+		m.loader = loader.New(loader.CommittingMessages)
 		return m, doCommit(m.commitMessage, false, false, m.cfg)
 	case msg.String() == "n":
 		m.state = stateCommitting
+		m.loader = loader.New(loader.CommittingMessages)
 		return m, doCommit(m.commitMessage, false, true, m.cfg)
 	case msg.String() == "p":
 		m.state = stateCommitting
+		m.loader = loader.New(loader.CommittingMessages)
 		return m, doCommit(m.commitMessage, true, false, m.cfg)
 	case msg.String() == "r":
 		m.state = stateGenerating
+		m.loader = loader.New(loader.GeneratingMessages)
 		prev := m.previousMessages
 		m.previousMessages = append(m.previousMessages, m.commitMessage)
-		return m, tea.Batch(m.spinner.Tick, doRegenerate(m.diff, m.cfg, prev, m.commitMessage))
+		return m, tea.Batch(m.loader.Tick, doRegenerate(m.diff, m.cfg, prev, m.commitMessage))
 	case msg.String() == "f":
 		m.state = stateFeedback
 		m.textinput = textinput.New()
@@ -189,8 +202,9 @@ func (m model) handleFeedbackKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 		m.state = stateGenerating
+		m.loader = loader.New(loader.GeneratingMessages)
 		m.previousMessages = append(m.previousMessages, m.commitMessage)
-		return m, tea.Batch(m.spinner.Tick, doFeedback(m.diff, m.cfg, m.commitMessage, feedback))
+		return m, tea.Batch(m.loader.Tick, doFeedback(m.diff, m.cfg, m.commitMessage, feedback))
 	case "esc":
 		m.state = stateReady
 		return m, nil
@@ -217,6 +231,48 @@ func (m model) handleEditingKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m model) handleNoStagedKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "q", "ctrl+c":
+		return m, tea.Quit
+	case "up", "k":
+		if m.fileCursor > 0 {
+			m.fileCursor--
+		}
+	case "down", "j":
+		if m.fileCursor < len(m.unstagedFiles)-1 {
+			m.fileCursor++
+		}
+	case " ":
+		if len(m.fileSelected) > m.fileCursor {
+			m.fileSelected[m.fileCursor] = !m.fileSelected[m.fileCursor]
+		}
+	case "a":
+		allSelected := true
+		for _, s := range m.fileSelected {
+			if !s {
+				allSelected = false
+				break
+			}
+		}
+		for i := range m.fileSelected {
+			m.fileSelected[i] = !allSelected
+		}
+	case "enter":
+		var paths []string
+		for i, s := range m.fileSelected {
+			if s {
+				paths = append(paths, m.unstagedFiles[i].Path)
+			}
+		}
+		if len(paths) == 0 {
+			return m, nil
+		}
+		return m, doStageFiles(paths)
+	}
+	return m, nil
+}
+
 func (m model) handleHelpKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	m.state = stateReady
 	return m, nil
@@ -231,11 +287,12 @@ func (m model) checkWelcomeDone() (tea.Model, tea.Cmd) {
 
 	if len(m.stagedFiles) == 0 {
 		m.state = stateNoStaged
-		return m, nil
+		return m, loadUnstagedFiles()
 	}
 
 	m.state = stateGenerating
-	return m, tea.Batch(m.spinner.Tick, loadDiffAndGenerate(m.cfg))
+	m.loader = loader.New(loader.GeneratingMessages)
+	return m, tea.Batch(m.loader.Tick, loadDiffAndGenerate(m.cfg))
 }
 
 func (m model) openExternalEditor() (tea.Model, tea.Cmd) {

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dinoDanic/diny/ui"
 )
 
 func (m model) View() string {
@@ -77,13 +76,11 @@ func (m model) renderHeader() string {
 
 func (m model) renderWelcome() string {
 	indent := indentStyle()
-	return "\n" + indent.Render(m.spinner.View()+" Loading...") + "\n"
+	return "\n" + indent.Render(m.loader.View()) + "\n"
 }
 
 func (m model) renderGenerating() string {
 	indent := indentStyle()
-	t := ui.GetCurrentTheme()
-	genStyle := lipgloss.NewStyle().Foreground(t.PrimaryForeground)
 	var b strings.Builder
 
 	if len(m.stagedFiles) > 0 {
@@ -92,7 +89,7 @@ func (m model) renderGenerating() string {
 		b.WriteString("\n")
 	}
 
-	b.WriteString(indent.Render(genStyle.Render(m.spinner.View() + " Generating commit message...")))
+	b.WriteString(indent.Render(m.loader.View()))
 	b.WriteString("\n")
 	return b.String()
 }
@@ -203,7 +200,7 @@ func (m model) renderCommitting() string {
 	b.WriteString(m.renderCommitMessage())
 	b.WriteString("\n")
 
-	b.WriteString(indent.Render(m.spinner.View() + " Committing..."))
+	b.WriteString(indent.Render(m.loader.View()))
 	b.WriteString("\n")
 	return b.String()
 }
@@ -228,12 +225,56 @@ func (m model) renderNoStaged() string {
 	var b strings.Builder
 
 	b.WriteString("\n")
-	b.WriteString(indent.Render(noStagedStyle().Render("No staged changes found.")))
-	b.WriteString("\n")
-	b.WriteString(indent.Render(metaStyle().Render("Stage files with: git add <files>")))
+
+	if len(m.unstagedFiles) == 0 {
+		b.WriteString(indent.Render(noStagedStyle().Render("Working tree is clean. Nothing to stage.")))
+		b.WriteString("\n\n")
+		b.WriteString(indent.Render(footerKeyStyle().Render("q") + " " + footerDescStyle().Render("quit")))
+		b.WriteString("\n")
+		return b.String()
+	}
+
+	b.WriteString(indent.Render(noStagedStyle().Render("No staged files detected. Select files to stage:")))
 	b.WriteString("\n\n")
-	b.WriteString(indent.Render(footerKeyStyle().Render("q")+" "+footerDescStyle().Render("quit")))
+	b.WriteString(indent.Render(sectionTitleStyle().Render("Unstaged Files")))
 	b.WriteString("\n")
+
+	for i, f := range m.unstagedFiles {
+		cursor := "  "
+		if i == m.fileCursor {
+			cursor = "> "
+		}
+		checkbox := "[ ]"
+		if i < len(m.fileSelected) && m.fileSelected[i] {
+			checkbox = "[x]"
+		}
+
+		var style lipgloss.Style
+		switch f.Status {
+		case "M":
+			style = fileModifiedStyle()
+		case "D":
+			style = fileDeletedStyle()
+		default:
+			style = metaStyle()
+		}
+
+		line := cursor + checkbox + " " + style.Render(f.Path)
+		b.WriteString(indent.Render(line))
+		b.WriteString("\n")
+	}
+
+	b.WriteString("\n")
+	keys := []struct{ key, desc string }{
+		{"↑/k", "up"}, {"↓/j", "down"}, {"space", "toggle"}, {"a", "all"}, {"enter", "stage"}, {"q", "quit"},
+	}
+	var parts []string
+	for _, k := range keys {
+		parts = append(parts, footerKeyStyle().Render(k.key)+" "+footerDescStyle().Render(k.desc))
+	}
+	b.WriteString(indent.Render(strings.Join(parts, "  ")))
+	b.WriteString("\n")
+
 	return b.String()
 }
 
