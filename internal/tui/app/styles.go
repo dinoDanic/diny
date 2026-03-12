@@ -54,11 +54,7 @@ func fileRenamedStyle() lipgloss.Style {
 func commitMessageStyle() lipgloss.Style {
 	t := ui.GetCurrentTheme()
 	return lipgloss.NewStyle().
-		Foreground(t.PrimaryForeground).
-		BorderLeft(true).
-		BorderStyle(lipgloss.ThickBorder()).
-		BorderForeground(t.PrimaryForeground).
-		PaddingLeft(2)
+		Foreground(t.PrimaryForeground)
 }
 
 func footerKeyStyle() lipgloss.Style {
