@@ -117,3 +117,4 @@ func successBigStyle() lipgloss.Style {
 func indentStyle() lipgloss.Style {
 	return lipgloss.NewStyle().PaddingLeft(3)
 }
+

@@ -36,14 +36,12 @@ type Config struct {
 }
 
 type CommitConfig struct {
-	Conventional       bool              `yaml:"conventional" json:"Conventional"`
-	ConventionalFormat []string          `yaml:"conventional_format" json:"ConventionalFormat"`
-	Emoji              bool              `yaml:"emoji" json:"Emoji"`
-	EmojiMap           map[string]string `yaml:"emoji_map" json:"EmojiMap"`
-	Tone               Tone              `yaml:"tone" json:"Tone"`
-	Length             Length            `yaml:"length" json:"Length"`
-	CustomInstructions string            `yaml:"custom_instructions" json:"CustomInstructions"`
-	HashAfterCommit    bool              `yaml:"hash_after_commit" json:"HashAfterCommit"`
+	Conventional       bool   `yaml:"conventional" json:"Conventional"`
+	Emoji              bool   `yaml:"emoji" json:"Emoji"`
+	Tone               Tone   `yaml:"tone" json:"Tone"`
+	Length             Length `yaml:"length" json:"Length"`
+	CustomInstructions string `yaml:"custom_instructions" json:"CustomInstructions"`
+	HashAfterCommit    bool   `yaml:"hash_after_commit" json:"HashAfterCommit"`
 }
 
 type LocalConfig struct {
@@ -52,14 +50,12 @@ type LocalConfig struct {
 }
 
 type LocalCommitConfig struct {
-	Conventional       *bool             `yaml:"conventional,omitempty"`
-	ConventionalFormat []string          `yaml:"conventional_format,omitempty"`
-	Emoji              *bool             `yaml:"emoji,omitempty"`
-	EmojiMap           map[string]string `yaml:"emoji_map,omitempty"`
-	Tone               Tone              `yaml:"tone,omitempty"`
-	Length             Length            `yaml:"length,omitempty"`
-	CustomInstructions string            `yaml:"custom_instructions,omitempty"`
-	HashAfterCommit    *bool             `yaml:"hash_after_commit,omitempty"`
+	Conventional       *bool  `yaml:"conventional,omitempty"`
+	Emoji              *bool  `yaml:"emoji,omitempty"`
+	Tone               Tone   `yaml:"tone,omitempty"`
+	Length             Length `yaml:"length,omitempty"`
+	CustomInstructions string `yaml:"custom_instructions,omitempty"`
+	HashAfterCommit    *bool  `yaml:"hash_after_commit,omitempty"`
 }
 
 func loadDefaultConfig() (*Config, error) {
@@ -227,9 +223,7 @@ func mergeConfigWithLocal(base *Config, overlay *LocalConfig) *Config {
 		Theme: base.Theme,
 		Commit: CommitConfig{
 			Conventional:       base.Commit.Conventional,
-			ConventionalFormat: make([]string, len(base.Commit.ConventionalFormat)),
 			Emoji:              base.Commit.Emoji,
-			EmojiMap:           make(map[string]string),
 			Tone:               base.Commit.Tone,
 			Length:             base.Commit.Length,
 			CustomInstructions: base.Commit.CustomInstructions,
@@ -237,15 +231,9 @@ func mergeConfigWithLocal(base *Config, overlay *LocalConfig) *Config {
 		},
 	}
 
-	copy(merged.Commit.ConventionalFormat, base.Commit.ConventionalFormat)
-	for k, v := range base.Commit.EmojiMap {
-		merged.Commit.EmojiMap[k] = v
-	}
-
 	if overlay.Theme != "" {
 		merged.Theme = overlay.Theme
 	}
-
 	if overlay.Commit.Conventional != nil {
 		merged.Commit.Conventional = *overlay.Commit.Conventional
 	}
@@ -255,7 +243,6 @@ func mergeConfigWithLocal(base *Config, overlay *LocalConfig) *Config {
 	if overlay.Commit.HashAfterCommit != nil {
 		merged.Commit.HashAfterCommit = *overlay.Commit.HashAfterCommit
 	}
-
 	if overlay.Commit.Tone != "" {
 		merged.Commit.Tone = overlay.Commit.Tone
 	}
@@ -264,17 +251,6 @@ func mergeConfigWithLocal(base *Config, overlay *LocalConfig) *Config {
 	}
 	if overlay.Commit.CustomInstructions != "" {
 		merged.Commit.CustomInstructions = overlay.Commit.CustomInstructions
-	}
-
-	if len(overlay.Commit.ConventionalFormat) > 0 {
-		merged.Commit.ConventionalFormat = make([]string, len(overlay.Commit.ConventionalFormat))
-		copy(merged.Commit.ConventionalFormat, overlay.Commit.ConventionalFormat)
-	}
-
-	if len(overlay.Commit.EmojiMap) > 0 {
-		for k, v := range overlay.Commit.EmojiMap {
-			merged.Commit.EmojiMap[k] = v
-		}
 	}
 
 	return merged
@@ -390,41 +366,16 @@ func createVersionedProjectConfigIfNeeded() error {
 # Only specify the settings you want to override from the global config
 # Learn more: https://github.com/dinoDanic/diny
 
-# UI theme (catppuccin, tokyonight, nord, dracula, gruvbox, etc.)
+# UI theme (catppuccin, tokyo, nord, dracula, gruvbox-dark, etc.)
 # theme: catppuccin
 
 # Commit configuration
 # commit:
-#   # Use conventional commit format (feat, fix, docs, etc.)
 #   conventional: false
-#
-#   # Conventional commit types (only used if conventional: true)
-#   conventional_format: ['feat', 'fix', 'docs', 'chore', 'style', 'refactor', 'test', 'perf']
-#
-#   # Add emoji prefix to commits
 #   emoji: false
-#
-#   # Emoji mappings for each commit type (only used if emoji: true)
-#   emoji_map:
-#     feat: 🚀
-#     fix: 🐛
-#     docs: 📚
-#     chore: 🔧
-#     style: 💄
-#     refactor: ♻️
-#     test: ✅
-#     perf: ⚡
-#
-#   # Commit message tone: professional, casual, or friendly
 #   tone: casual
-#
-#   # Commit message length: short, normal, or long
 #   length: short
-#
-#   # Custom instructions for AI (e.g., "Include JIRA ticket from branch name")
 #   custom_instructions: ""
-#
-#   # Show/copy commit hash after committing
 #   hash_after_commit: false
 `
 
@@ -457,41 +408,16 @@ func createLocalProjectConfigIfNeeded() error {
 # Only specify the settings you want to override
 # Learn more: https://github.com/dinoDanic/diny
 
-# UI theme (catppuccin, tokyonight, nord, dracula, gruvbox, etc.)
+# UI theme (catppuccin, tokyo, nord, dracula, gruvbox-dark, etc.)
 # theme: dracula
 
 # Commit configuration
 # commit:
-#   # Use conventional commit format (feat, fix, docs, etc.)
 #   conventional: false
-#
-#   # Conventional commit types (only used if conventional: true)
-#   conventional_format: ['feat', 'fix', 'docs', 'chore', 'style', 'refactor', 'test', 'perf']
-#
-#   # Add emoji prefix to commits
 #   emoji: false
-#
-#   # Emoji mappings for each commit type (only used if emoji: true)
-#   emoji_map:
-#     feat: 🚀
-#     fix: 🐛
-#     docs: 📚
-#     chore: 🔧
-#     style: 💄
-#     refactor: ♻️
-#     test: ✅
-#     perf: ⚡
-#
-#   # Commit message tone: professional, casual, or friendly
 #   tone: casual
-#
-#   # Commit message length: short, normal, or long
 #   length: short
-#
-#   # Custom instructions for AI (e.g., "Include JIRA ticket from branch name")
 #   custom_instructions: ""
-#
-#   # Show/copy commit hash after committing
 #   hash_after_commit: false
 `
 
@@ -499,6 +425,34 @@ func createLocalProjectConfigIfNeeded() error {
 		return fmt.Errorf("failed to create local project config: %w", err)
 	}
 
+	return nil
+}
+
+func Save(cfg *Config, path string) error {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
+	return nil
+}
+
+func SaveLocal(cfg *LocalConfig, path string) error {
+	data, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return fmt.Errorf("failed to write config file: %w", err)
+	}
 	return nil
 }
 

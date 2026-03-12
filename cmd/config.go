@@ -4,20 +4,16 @@ Copyright © 2025 dinoDanic dino.danic@gmail.com
 package cmd
 
 import (
-	"os"
-	"os/exec"
-	"strings"
-
-	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
-	"github.com/dinoDanic/diny/ui"
+	"github.com/dinoDanic/diny/git"
+	configtui "github.com/dinoDanic/diny/internal/tui/config"
 	"github.com/spf13/cobra"
 )
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Open config file in your default editor",
-	Long: `Open the Diny configuration file in your default editor.
+	Short: "Open interactive TUI config editor",
+	Long: `Open the Diny configuration file in an interactive TUI editor.
 
 If in a git repository, you can choose between:
   - Global config: ~/.config/diny/config.yaml (applies to all projects)
@@ -26,108 +22,34 @@ If in a git repository, you can choose between:
 
 Config priority: local > versioned > global (higher priority overrides lower)
 
-Project configs overlay on top of global config, allowing per-project customization.
-
-If not in a git repository, only global config is available.
-
-If the config file doesn't exist, it will be created with default values.`,
+If not in a git repository, only global config is available.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		openConfig()
+		openConfigTUI()
 	},
 }
 
-func openConfig() {
+func openConfigTUI() {
 	versionedPath := config.GetVersionedProjectConfigPath()
 	localPath := config.GetLocalProjectConfigPath()
 	inGitRepo := versionedPath != "" && localPath != ""
 
-	var configPath string
-	var configType string
+	repoName := git.GetRepoName()
+	branchName, _ := git.GetCurrentBranch()
 
-	if inGitRepo {
-		var choice string
-		err := huh.NewSelect[string]().
-			Title("Which config would you like to edit?").
-			Description("Select using arrow keys or j,k and press Enter").
-			Options(
-				huh.NewOption("Global config (~/.config/diny/config.yaml)", "global"),
-				huh.NewOption("Project config - versioned (.diny.yaml)", "versioned"),
-				huh.NewOption("Project config - local only (<gitdir>/diny/config.yaml)", "local"),
-			).
-			Value(&choice).
-			WithTheme(ui.GetHuhPrimaryTheme()).
-			Run()
+	var configPath, configType string
+	var cfg *config.Config
 
-		if err != nil {
-			ui.Error("Error running prompt: %v", err)
-			os.Exit(1)
-		}
-
-		switch choice {
-		case "versioned":
-			if err := config.CreateVersionedProjectConfigIfNeeded(); err != nil {
-				ui.Error("Failed to create versioned project config: %v", err)
-				os.Exit(1)
-			}
-			configPath = versionedPath
-			configType = "versioned project"
-		case "local":
-			if err := config.CreateLocalProjectConfigIfNeeded(); err != nil {
-				ui.Error("Failed to create local project config: %v", err)
-				os.Exit(1)
-			}
-			configPath = localPath
-			configType = "local project"
-		default:
-			configPath = config.GetConfigPath()
-			configType = "global"
-		}
-	} else {
+	if !inGitRepo {
 		configPath = config.GetConfigPath()
 		configType = "global"
-	}
-
-	if configPath == "" {
-		ui.Error("Could not determine config path")
-		os.Exit(1)
-	}
-
-	editor := getEditor()
-	if editor == "" {
-		ui.Error("No editor found. Set $EDITOR or $VISUAL environment variable")
-		os.Exit(1)
-	}
-
-	editorArgs := strings.Fields(editor)
-	editorCmd := editorArgs[0]
-	args := append(editorArgs[1:], configPath)
-
-	execCmd := exec.Command(editorCmd, args...)
-	execCmd.Stdin = os.Stdin
-	execCmd.Stdout = os.Stdout
-	execCmd.Stderr = os.Stderr
-
-	if err := execCmd.Run(); err != nil {
-		ui.Error("Error opening editor: %v", err)
-		os.Exit(1)
-	}
-
-	ui.Success("Saved %s config", configType)
-}
-
-func getEditor() string {
-	if editor := os.Getenv("VISUAL"); editor != "" {
-		return editor
-	}
-	if editor := os.Getenv("EDITOR"); editor != "" {
-		return editor
-	}
-	for _, editor := range []string{"vim", "vi", "nano"} {
-		if _, err := exec.LookPath(editor); err == nil {
-			return editor
+		var err error
+		cfg, err = config.Load(configPath)
+		if err != nil {
+			cfg = &config.Config{}
 		}
 	}
-	return ""
+
+	configtui.Run(Version, repoName, branchName, configPath, configType, cfg)
 }
 
 func init() {

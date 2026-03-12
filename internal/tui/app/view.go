@@ -5,13 +5,14 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dinoDanic/diny/internal/tui/shared"
 )
 
 func (m model) View() string {
 	var b strings.Builder
 
 	b.WriteString("\n")
-	b.WriteString(m.renderHeader())
+	b.WriteString(shared.RenderHeader(m.version, m.repoName, m.branchName, m.width))
 	b.WriteString("\n")
 
 	switch m.state {
@@ -40,39 +41,6 @@ func (m model) View() string {
 	return b.String()
 }
 
-func (m model) renderHeader() string {
-	indent := indentStyle()
-	brand := brandStyle().Render(" diny ")
-	version := metaStyle().Render("v" + m.version)
-
-	line1 := indent.Render(brand + "  " + version)
-
-	var metaParts []string
-	if m.repoName != "" {
-		metaParts = append(metaParts, m.repoName)
-	}
-	if m.branchName != "" {
-		metaParts = append(metaParts, m.branchName)
-	}
-	if len(m.stagedFiles) > 0 {
-		metaParts = append(metaParts, fmt.Sprintf("%d files staged", len(m.stagedFiles)))
-	}
-
-	line2 := ""
-	if len(metaParts) > 0 {
-		sep := metaStyle().Render(" \u00b7 ")
-		rendered := make([]string, len(metaParts))
-		for i, p := range metaParts {
-			rendered[i] = metaStyle().Render(p)
-		}
-		line2 = indent.Render(strings.Join(rendered, sep))
-	}
-
-	if line2 != "" {
-		return line1 + "\n" + line2 + "\n"
-	}
-	return line1 + "\n"
-}
 
 func (m model) renderWelcome() string {
 	indent := indentStyle()

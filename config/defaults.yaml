@@ -9,24 +9,9 @@ theme: catppuccin
 commit:
   # Use conventional commit format: type(scope): subject
   conventional: false
-  
-  # Available commit types for conventional format
-  conventional_format: ['feat', 'fix', 'docs', 'chore', 'style', 'refactor', 'test', 'perf']
-  
+
   # Include emoji at the start of commit messages
   emoji: false
-  
-  # Emojis for each commit type (used when emoji: true)
-  # Only types listed in conventional_format will be used
-  emoji_map:
-    feat: 🚀
-    fix: 🐛
-    docs: 📚
-    style: 🎨
-    refactor: ♻️
-    test: ✅
-    chore: 🔧
-    perf: ⚡
 
   # Commit message tone
   # Options:
@@ -43,7 +28,6 @@ commit:
   length: short
 
   # Custom instructions for the AI model (optional)
-  # Add any extra guidance for generating commit messages
   # Example: "Include JIRA ticket from branch name", "Write like a pirate, arrr!"
   custom_instructions: ""
 
