@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/dinoDanic/diny/internal/tui/app"
+	"github.com/dinoDanic/diny/tui/app"
 	"github.com/spf13/cobra"
 )
 

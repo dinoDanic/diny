@@ -6,7 +6,7 @@ package cmd
 import (
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
-	configtui "github.com/dinoDanic/diny/internal/tui/config"
+	configtui "github.com/dinoDanic/diny/tui/config"
 	"github.com/spf13/cobra"
 )
 

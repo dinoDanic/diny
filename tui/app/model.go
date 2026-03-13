@@ -6,7 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
-	"github.com/dinoDanic/diny/internal/tui/loader"
+	"github.com/dinoDanic/diny/tui/loader"
 )
 
 type state int

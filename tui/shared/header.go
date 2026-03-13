@@ -38,7 +38,7 @@ func RenderHeader(version, repoName, branchName string, width int) string {
 	rows = append(rows, indent.Render(metaStyle.Render(pwd)))
 
 	sep := metaStyle.Render(strings.Repeat("─", width))
-	rows = append(rows, sep)
+	rows = append(rows, sep, )
 
-	return strings.Join(rows, "\n") + "\n"
+	return strings.Join(rows, "\n") + "\n" 
 }

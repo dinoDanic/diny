@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dinoDanic/diny/git"
-	"github.com/dinoDanic/diny/internal/tui/loader"
+	"github.com/dinoDanic/diny/tui/loader"
 )
 
 func (m model) Init() tea.Cmd {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dinoDanic/diny/internal/tui/shared"
+	"github.com/dinoDanic/diny/tui/shared"
 )
 
 func (m model) View() string {
