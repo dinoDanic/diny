@@ -8,220 +8,11 @@ import (
 	"strings"
 
 	"github.com/atotto/clipboard"
-	"github.com/charmbracelet/huh"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
-	"github.com/dinoDanic/diny/ui"
 )
 
-func HandleCommitFlow(commitMessage, fullPrompt string, cfg *config.Config) {
-	HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, []string{})
-}
-
-func HandleCommitFlowWithHistory(commitMessage, fullPrompt string, cfg *config.Config, previousMessages []string) {
-
-	ui.Box("Commit message", commitMessage)
-
-	choice := choicePrompt()
-
-	switch choice {
-	case "commit":
-		ExecuteCommit(commitMessage, false, false, cfg)
-	case "commit-no-verify":
-		ExecuteCommit(commitMessage, false, true, cfg)
-	case "commit-push":
-		ExecuteCommit(commitMessage, true, false, cfg)
-	case "edit":
-		editedMessage, err := OpenInEditor(commitMessage)
-		if err != nil {
-			ui.Error("Failed to open editor: %v", err)
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
-			return
-		}
-		if editedMessage != commitMessage && editedMessage != "" {
-			HandleCommitFlowWithHistory(editedMessage, fullPrompt, cfg, previousMessages)
-		} else {
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
-		}
-	case "save":
-		if err := SaveDraft(commitMessage); err != nil {
-			ui.Error("Failed to save draft: %v", err)
-			HandleCommitFlowWithHistory(commitMessage, fullPrompt, cfg, previousMessages)
-			return
-		}
-
-		ui.Success("Draft saved!")
-	case "regenerate":
-		modifiedPrompt := fullPrompt
-		if len(previousMessages) > 0 {
-			modifiedPrompt += "\n\nPrevious commit messages that were not satisfactory:\n"
-			for i, msg := range previousMessages {
-				modifiedPrompt += fmt.Sprintf("%d. %s\n", i+1, msg)
-			}
-			modifiedPrompt += "\nPlease generate a different commit message that avoids the style and approach of the previous ones."
-		} else {
-			modifiedPrompt += "\n\nPlease provide an alternative commit message with a different approach or focus."
-		}
-
-		var newCommitMessage string
-		err := ui.WithSpinner("Generating alternative commit message...", func() error {
-			var genErr error
-			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, cfg)
-			return genErr
-		})
-		if err != nil {
-			ui.Error("Error: %v", err)
-			os.Exit(1)
-		}
-
-		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, cfg, updatedHistory)
-	case "custom":
-		customInput := customInputPrompt("What changes would you like to see in the commit message?")
-
-		modifiedPrompt := fullPrompt + fmt.Sprintf("\n\nCurrent commit message:\n%s\n\nUser feedback: %s\n\nPlease generate a new commit message that addresses the user's feedback.", commitMessage, customInput)
-
-		var newCommitMessage string
-		err := ui.WithSpinner("Refining commit message with your feedback...", func() error {
-			var genErr error
-			newCommitMessage, genErr = CreateCommitMessage(modifiedPrompt, cfg)
-			return genErr
-		})
-		if err != nil {
-			ui.Error("Error: %v", err)
-			os.Exit(1)
-		}
-
-		updatedHistory := append(previousMessages, commitMessage)
-		HandleCommitFlowWithHistory(newCommitMessage, fullPrompt, cfg, updatedHistory)
-	case "exit":
-		ui.RenderTitle("Bye!")
-		fmt.Println()
-		os.Exit(0)
-	}
-}
-
-func choicePrompt() string {
-	var choice string
-
-	err := huh.NewSelect[string]().
-		Title("What would you like to do next?").
-		Description("Select an option using arrow keys or j,k and press Enter").
-		Options(
-			huh.NewOption("Commit this message", "commit"),
-			huh.NewOption("Commit (skip hooks)", "commit-no-verify"),
-			huh.NewOption("Commit and push", "commit-push"),
-			huh.NewOption("Edit in $EDITOR", "edit"),
-			huh.NewOption("Save as draft", "save"),
-			huh.NewOption("Generate different message", "regenerate"),
-			huh.NewOption("Refine with feedback", "custom"),
-			huh.NewOption("Exit", "exit"),
-		).
-		Value(&choice).
-		Height(10).
-		WithTheme(ui.GetHuhPrimaryTheme()).
-		Run()
-
-	if err != nil {
-		ui.Error("Error running prompt: %v", err)
-		os.Exit(1)
-	}
-
-	return choice
-}
-
-func customInputPrompt(message string) string {
-	var input string
-
-	err := huh.NewInput().
-		Title(message).
-		Description("Provide specific feedback to improve the commit message").
-		Placeholder("e.g., make it shorter, use conventional format, focus on the bug fix...").
-		CharLimit(200).
-		Value(&input).
-		WithTheme(ui.GetHuhPrimaryTheme()).
-		Run()
-
-	if err != nil {
-		ui.Error("Error running prompt: %v", err)
-		os.Exit(1)
-	}
-
-	return input
-}
-
-func OpenInEditor(message string) (string, error) {
-	editor := git.GetGitEditor()
-
-	tmpFile, err := os.CreateTemp("", "diny-commit-*.txt")
-	if err != nil {
-		return "", fmt.Errorf("failed to create temp file: %v", err)
-	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
-
-	if _, err := tmpFile.WriteString(message); err != nil {
-		return "", fmt.Errorf("failed to write to temp file: %v", err)
-	}
-	tmpFile.Close()
-
-	editorArgs := strings.Fields(editor)
-	editorCmd := editorArgs[0]
-	args := append(editorArgs[1:], tmpFile.Name())
-
-	cmd := exec.Command(editorCmd, args...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("editor exited with error: %v", err)
-	}
-
-	editedContent, err := os.ReadFile(tmpFile.Name())
-	if err != nil {
-		return "", fmt.Errorf("failed to read edited file: %v", err)
-	}
-
-	return strings.TrimSpace(string(editedContent)), nil
-}
-
-func SaveDraft(message string) error {
-	gitDir, err := git.FindGitDir()
-	if err != nil {
-		return fmt.Errorf("failed to find git repository: %v", err)
-	}
-
-	draftFiles := []string{
-		"COMMIT_EDITMSG",         // Standard git, tig, magit
-		"PREPARE_COMMIT_MSG",     // Git hooks & some GUIs
-		"LAZYGIT_PENDING_COMMIT", // lazygit
-	}
-
-	var errors []string
-	successCount := 0
-
-	for _, file := range draftFiles {
-		filePath := filepath.Join(gitDir, file)
-		if err := os.WriteFile(filePath, []byte(message), 0644); err != nil {
-			errors = append(errors, fmt.Sprintf("%s: %v", file, err))
-		} else {
-			successCount++
-		}
-	}
-
-	if successCount == 0 {
-		return fmt.Errorf("failed to write to any draft files: %s", strings.Join(errors, ", "))
-	}
-
-	if len(errors) > 0 {
-		return fmt.Errorf("partial success - some files failed: %s", strings.Join(errors, ", "))
-	}
-
-	return nil
-}
-
-// TryCommit runs git commit without UI output and returns the short hash on success.
+// TryCommit runs git commit and returns the short hash on success.
 func TryCommit(message string, push bool, noVerify bool, cfg *config.Config) (string, error) {
 	var commitCmd *exec.Cmd
 	if noVerify {
@@ -255,24 +46,34 @@ func TryCommit(message string, push bool, noVerify bool, cfg *config.Config) (st
 	return hash, nil
 }
 
-func ExecuteCommit(commitMessage string, push bool, noVerify bool, cfg *config.Config) {
-	ui.PrintAction("Committing...")
-
-	hash, err := TryCommit(commitMessage, push, noVerify, cfg)
+// SaveDraft writes the commit message to git draft files for use by other tools.
+func SaveDraft(message string) error {
+	gitDir, err := git.FindGitDir()
 	if err != nil {
-		ui.Error("%v", err)
-		os.Exit(1)
+		return fmt.Errorf("failed to find git repository: %v", err)
 	}
 
-	ui.Success("Committed!")
-
-	if hash != "" {
-		ui.Success("Hash: %s (copied)", hash)
+	draftFiles := []string{
+		"COMMIT_EDITMSG",
+		"PREPARE_COMMIT_MSG",
+		"LAZYGIT_PENDING_COMMIT",
 	}
 
-	if push {
-		ui.Success("Pushed!")
+	var errors []string
+	successCount := 0
+
+	for _, file := range draftFiles {
+		filePath := filepath.Join(gitDir, file)
+		if err := os.WriteFile(filePath, []byte(message), 0644); err != nil {
+			errors = append(errors, fmt.Sprintf("%s: %v", file, err))
+		} else {
+			successCount++
+		}
 	}
 
-	fmt.Println()
+	if successCount == 0 {
+		return fmt.Errorf("failed to write to any draft files: %s", strings.Join(errors, ", "))
+	}
+
+	return nil
 }

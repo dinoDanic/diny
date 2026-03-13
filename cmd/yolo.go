@@ -56,5 +56,15 @@ func runYolo() {
 
 	ui.Box("Commit message", commitMessage)
 
-	commit.ExecuteCommit(commitMessage, true, true, AppConfig)
+	hash, err := commit.TryCommit(commitMessage, true, true, AppConfig)
+	if err != nil {
+		ui.Error("%v", err)
+		os.Exit(1)
+	}
+
+	ui.Success("Committed!")
+	if hash != "" {
+		ui.Success("Hash: %s (copied)", hash)
+	}
+	ui.Success("Pushed!")
 }
