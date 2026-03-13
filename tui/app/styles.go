@@ -69,6 +69,13 @@ func footerDescStyle() lipgloss.Style {
 		Foreground(t.MutedForeground)
 }
 
+func footerGroupStyle() lipgloss.Style {
+	t := ui.GetCurrentTheme()
+	return lipgloss.NewStyle().
+		Foreground(t.MutedForeground).
+		Width(10)
+}
+
 func statusSuccessStyle() lipgloss.Style {
 	t := ui.GetCurrentTheme()
 	return lipgloss.NewStyle().

@@ -23,6 +23,9 @@ const (
 	stateNoStaged
 	stateError
 	stateVariantPicking
+	stateDiffView
+	stateTypePicker
+	stateUnstaging
 )
 
 // Messages
@@ -68,6 +71,10 @@ type variantsReadyMsg struct {
 	variants []string
 }
 
+type restoreStagedDoneMsg struct {
+	files []git.StagedFile
+}
+
 // Model
 
 type model struct {
@@ -107,6 +114,11 @@ type model struct {
 	// Commit options
 	pendingPush     bool
 	pendingNoVerify bool
+	pendingAmend    bool
+
+	// History navigation ([/] keys)
+	messageHistoryIdx int    // -1 = current; >=0 = index into previousMessages
+	savedMessage      string // preserved current message when browsing history
 
 	// File picker (stateNoStaged)
 	unstagedFiles []git.StagedFile
@@ -116,6 +128,13 @@ type model struct {
 	// Variant picker (stateVariantPicking)
 	variants      []string
 	variantCursor int
+
+	// Type picker (stateTypePicker)
+	typeCursor int
+
+	// Unstaging (stateUnstaging)
+	unstageCursor   int
+	unstageSelected []bool
 }
 
 func newModel(cfg *config.Config, version string) model {
@@ -127,9 +146,10 @@ func newModel(cfg *config.Config, version string) model {
 	ta.SetHeight(8)
 
 	return model{
-		cfg:     cfg,
-		version: version,
-		state:   stateWelcome,
-		loader:  loader.New(loader.InitMessages),
+		cfg:               cfg,
+		version:           version,
+		state:             stateWelcome,
+		loader:            loader.New(loader.InitMessages),
+		messageHistoryIdx: -1,
 	}
 }

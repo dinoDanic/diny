@@ -60,8 +60,19 @@ func loadDiffAndGenerate(cfg *config.Config) tea.Cmd {
 	}
 }
 
-func doCommit(message string, push bool, noVerify bool, cfg *config.Config) tea.Cmd {
+func doCommit(message string, push bool, noVerify bool, amend bool, cfg *config.Config) tea.Cmd {
 	return func() tea.Msg {
+		if amend {
+			args := []string{"commit", "--amend", "-m", message}
+			if noVerify {
+				args = []string{"commit", "--amend", "--no-verify", "-m", message}
+			}
+			cmd := exec.Command("git", args...)
+			if out, err := cmd.CombinedOutput(); err != nil {
+				return errMsg{err: fmt.Errorf("amend failed: %s", strings.TrimSpace(string(out)))}
+			}
+			return commitDoneMsg{hash: "", push: false}
+		}
 		hash, err := commit.TryCommit(message, push, noVerify, cfg)
 		if err != nil {
 			return errMsg{err: err}
@@ -177,6 +188,21 @@ func doGenerateVariants(diff string, cfg *config.Config, previousMessages []stri
 			variants = append(variants, variants[0])
 		}
 		return variantsReadyMsg{variants: variants}
+	}
+}
+
+func doUnstageFiles(paths []string) tea.Cmd {
+	return func() tea.Msg {
+		args := append([]string{"restore", "--staged", "--"}, paths...)
+		cmd := exec.Command("git", args...)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			return errMsg{err: fmt.Errorf("git restore failed: %s", strings.TrimSpace(string(out)))}
+		}
+		files, err := git.GetStagedFiles()
+		if err != nil {
+			return errMsg{err: fmt.Errorf("failed to get staged files: %w", err)}
+		}
+		return restoreStagedDoneMsg{files: files}
 	}
 }
 

@@ -1,16 +1,21 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/tui/loader"
 )
+
+var conventionalTypes = []string{"feat", "fix", "docs", "style", "refactor", "perf", "test", "chore"}
 
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
@@ -56,9 +61,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case diffAndCommitMsg:
 		m.diff = msg.diff
 		m.commitMessage = msg.commitMessage
+		m.messageHistoryIdx = -1
+		m.savedMessage = ""
 		m.state = stateReady
 		m.statusMessage = ""
 		m.statusIsError = false
+		return m, nil
+
+	case restoreStagedDoneMsg:
+		m.stagedFiles = msg.files
+		if len(m.stagedFiles) == 0 {
+			m.state = stateNoStaged
+			return m, loadUnstagedFiles()
+		}
+		m.state = stateReady
 		return m, nil
 
 	case commitDoneMsg:
@@ -119,6 +135,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case stateEditing:
 		m.textarea, cmd = m.textarea.Update(msg)
 		return m, cmd
+	case stateDiffView:
+		m.viewport, cmd = m.viewport.Update(msg)
+		return m, cmd
 	}
 
 	return m, nil
@@ -138,6 +157,12 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleNoStagedKey(msg)
 	case stateVariantPicking:
 		return m.handleVariantPickingKey(msg)
+	case stateDiffView:
+		return m.handleDiffViewKey(msg)
+	case stateTypePicker:
+		return m.handleTypePickerKey(msg)
+	case stateUnstaging:
+		return m.handleUnstagingKey(msg)
 	case stateError, stateSuccess:
 		if msg.String() == "q" || msg.String() == "ctrl+c" {
 			return m, tea.Quit
@@ -155,15 +180,15 @@ func (m model) handleReadyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case msg.String() == "enter":
 		m.state = stateCommitting
 		m.loader = loader.New(loader.CommittingMessages)
-		return m, doCommit(m.commitMessage, false, false, m.cfg)
+		return m, doCommit(m.commitMessage, false, false, m.pendingAmend, m.cfg)
 	case msg.String() == "n":
 		m.state = stateCommitting
 		m.loader = loader.New(loader.CommittingMessages)
-		return m, doCommit(m.commitMessage, false, true, m.cfg)
+		return m, doCommit(m.commitMessage, false, true, m.pendingAmend, m.cfg)
 	case msg.String() == "p":
 		m.state = stateCommitting
 		m.loader = loader.New(loader.CommittingMessages)
-		return m, doCommit(m.commitMessage, true, false, m.cfg)
+		return m, doCommit(m.commitMessage, true, false, m.pendingAmend, m.cfg)
 	case msg.String() == "r":
 		m.state = stateGenerating
 		m.loader = loader.New(loader.GeneratingMessages)
@@ -192,6 +217,84 @@ func (m model) handleReadyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, m.textarea.Cursor.BlinkCmd()
 	case msg.String() == "E":
 		return m.openExternalEditor()
+	case msg.String() == "A":
+		m.pendingAmend = true
+		m.state = stateGenerating
+		m.loader = loader.New(loader.GeneratingMessages)
+		return m, tea.Batch(m.loader.Tick, loadDiffAndGenerate(m.cfg))
+	case msg.String() == "d":
+		vp := viewport.New(m.width-6, m.height-8)
+		vp.SetContent(m.diff)
+		m.viewport = vp
+		m.state = stateDiffView
+		return m, nil
+	case msg.String() == "[":
+		if len(m.previousMessages) == 0 {
+			return m, nil
+		}
+		if m.messageHistoryIdx == -1 {
+			m.savedMessage = m.commitMessage
+			m.messageHistoryIdx = len(m.previousMessages) - 1
+		} else if m.messageHistoryIdx > 0 {
+			m.messageHistoryIdx--
+		}
+		m.commitMessage = m.previousMessages[m.messageHistoryIdx]
+		return m, nil
+	case msg.String() == "]":
+		if m.messageHistoryIdx == -1 {
+			return m, nil
+		}
+		if m.messageHistoryIdx >= len(m.previousMessages)-1 {
+			m.messageHistoryIdx = -1
+			m.commitMessage = m.savedMessage
+		} else {
+			m.messageHistoryIdx++
+			m.commitMessage = m.previousMessages[m.messageHistoryIdx]
+		}
+		return m, nil
+	case msg.String() == "t":
+		if !m.cfg.Commit.Conventional {
+			m.statusMessage = "Enable conventional commits in config"
+			m.statusIsError = false
+			return m, nil
+		}
+		m.typeCursor = 0
+		m.state = stateTypePicker
+		return m, nil
+	case msg.String() == "L":
+		switch m.cfg.Commit.Length {
+		case config.Short:
+			m.cfg.Commit.Length = config.Normal
+		case config.Normal:
+			m.cfg.Commit.Length = config.Long
+		default:
+			m.cfg.Commit.Length = config.Short
+		}
+		m.statusMessage = fmt.Sprintf("Length: %s", m.cfg.Commit.Length)
+		m.statusIsError = false
+		m.state = stateGenerating
+		m.loader = loader.New(loader.GeneratingMessages)
+		prev := m.previousMessages
+		m.previousMessages = append(m.previousMessages, m.commitMessage)
+		return m, tea.Batch(m.loader.Tick, doRegenerate(m.diff, m.cfg, prev, m.commitMessage))
+	case msg.String() == "M":
+		m.cfg.Commit.Emoji = !m.cfg.Commit.Emoji
+		emojiStatus := "off"
+		if m.cfg.Commit.Emoji {
+			emojiStatus = "on"
+		}
+		m.statusMessage = fmt.Sprintf("Emoji: %s", emojiStatus)
+		m.statusIsError = false
+		m.state = stateGenerating
+		m.loader = loader.New(loader.GeneratingMessages)
+		prev := m.previousMessages
+		m.previousMessages = append(m.previousMessages, m.commitMessage)
+		return m, tea.Batch(m.loader.Tick, doRegenerate(m.diff, m.cfg, prev, m.commitMessage))
+	case msg.String() == "x":
+		m.unstageCursor = 0
+		m.unstageSelected = make([]bool, len(m.stagedFiles))
+		m.state = stateUnstaging
+		return m, nil
 	case msg.String() == "s":
 		return m, doSaveDraft(m.commitMessage)
 	case msg.String() == "y":
@@ -319,6 +422,88 @@ func (m model) selectVariant() (model, tea.Cmd) {
 	m.state = stateReady
 	m.statusMessage = "Variant selected"
 	m.statusIsError = false
+	return m, nil
+}
+
+func (m model) handleDiffViewKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "esc", "d", "q":
+		m.state = stateReady
+		return m, nil
+	case "ctrl+c":
+		return m, tea.Quit
+	}
+	var cmd tea.Cmd
+	m.viewport, cmd = m.viewport.Update(msg)
+	return m, cmd
+}
+
+func (m model) handleTypePickerKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "up", "k":
+		if m.typeCursor > 0 {
+			m.typeCursor--
+		}
+	case "down", "j":
+		if m.typeCursor < len(conventionalTypes)-1 {
+			m.typeCursor++
+		}
+	case "1", "2", "3", "4", "5", "6", "7", "8":
+		idx := int(msg.String()[0] - '1')
+		if idx < len(conventionalTypes) {
+			m.typeCursor = idx
+			return m.selectType()
+		}
+	case "enter":
+		return m.selectType()
+	case "esc", "q":
+		m.state = stateReady
+		return m, nil
+	case "ctrl+c":
+		return m, tea.Quit
+	}
+	return m, nil
+}
+
+func (m model) selectType() (model, tea.Cmd) {
+	selected := conventionalTypes[m.typeCursor]
+	m.previousMessages = append(m.previousMessages, m.commitMessage)
+	m.state = stateGenerating
+	m.loader = loader.New(loader.GeneratingMessages)
+	return m, tea.Batch(m.loader.Tick, doFeedback(m.diff, m.cfg, m.commitMessage, "Force type prefix: "+selected))
+}
+
+func (m model) handleUnstagingKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "q", "ctrl+c":
+		return m, tea.Quit
+	case "esc":
+		m.state = stateReady
+		return m, nil
+	case "up", "k":
+		if m.unstageCursor > 0 {
+			m.unstageCursor--
+		}
+	case "down", "j":
+		if m.unstageCursor < len(m.stagedFiles)-1 {
+			m.unstageCursor++
+		}
+	case " ":
+		if m.unstageCursor < len(m.unstageSelected) {
+			m.unstageSelected[m.unstageCursor] = !m.unstageSelected[m.unstageCursor]
+		}
+	case "enter":
+		var paths []string
+		for i, sel := range m.unstageSelected {
+			if sel && i < len(m.stagedFiles) {
+				paths = append(paths, m.stagedFiles[i].Path)
+			}
+		}
+		if len(paths) == 0 {
+			return m, nil
+		}
+		return m, doUnstageFiles(paths)
+	}
 	return m, nil
 }
 

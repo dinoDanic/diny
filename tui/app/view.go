@@ -36,6 +36,12 @@ func (m model) View() string {
 		b.WriteString(m.renderNoStaged())
 	case stateVariantPicking:
 		b.WriteString(m.renderVariantPicking())
+	case stateDiffView:
+		b.WriteString(m.renderDiffView())
+	case stateTypePicker:
+		b.WriteString(m.renderTypePicker())
+	case stateUnstaging:
+		b.WriteString(m.renderUnstaging())
 	case stateError:
 		b.WriteString(m.renderError())
 	}
@@ -61,17 +67,34 @@ func (m model) renderGenerating() string {
 
 	b.WriteString(indent.Render(m.loader.View()))
 	b.WriteString("\n")
+
+	if m.statusMessage != "" {
+		b.WriteString(m.renderStatus())
+	}
+
 	return b.String()
 }
 
 func (m model) renderReady() string {
 	var b strings.Builder
+	indent := indentStyle()
 
 	b.WriteString("\n")
 	b.WriteString(m.renderStagedFiles())
 	b.WriteString("\n")
 	b.WriteString(m.renderCommitMessage())
 	b.WriteString("\n")
+
+	if m.messageHistoryIdx != -1 {
+		pos := fmt.Sprintf("message %d of %d", m.messageHistoryIdx+1, len(m.previousMessages))
+		b.WriteString(indent.Render(metaStyle().Render(pos)))
+		b.WriteString("\n")
+	}
+
+	if m.pendingAmend {
+		b.WriteString(indent.Render(metaStyle().Render("amend mode")))
+		b.WriteString("\n")
+	}
 
 	if m.statusMessage != "" {
 		b.WriteString(m.renderStatus())
@@ -133,11 +156,19 @@ func (m model) renderHelp() string {
 		{"enter", "Commit"},
 		{"n", "Commit (skip hooks / no-verify)"},
 		{"p", "Commit and push"},
+		{"A", "Regenerate from HEAD diff and amend on commit"},
 		{"r", "Regenerate commit message"},
 		{"v", "Pick from 3 variants"},
 		{"f", "Refine with feedback"},
+		{"t", "Force conventional commit type (requires conventional: true)"},
+		{"L", "Cycle length: short → normal → long (session only)"},
+		{"M", "Toggle emoji on/off (session only)"},
 		{"e", "Edit inline"},
 		{"E", "Edit in $EDITOR"},
+		{"d", "View staged diff"},
+		{"[", "Browse previous generated messages"},
+		{"]", "Browse forward through message history"},
+		{"x", "Unstage files"},
 		{"s", "Save as draft"},
 		{"y", "Copy to clipboard"},
 		{"?", "Toggle help"},
@@ -290,6 +321,108 @@ func (m model) renderVariantPicking() string {
 	return b.String()
 }
 
+func (m model) renderDiffView() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(indent.Render(sectionTitleStyle().Render("Staged Diff")))
+	b.WriteString("\n\n")
+	b.WriteString(indent.Render(m.viewport.View()))
+	b.WriteString("\n\n")
+	b.WriteString(indent.Render(metaStyle().Render("↑/k up  ↓/j down  pgup/pgdn scroll  esc close")))
+	b.WriteString("\n")
+
+	return b.String()
+}
+
+func (m model) renderTypePicker() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(m.renderStagedFiles())
+	b.WriteString("\n")
+	b.WriteString(indent.Render(sectionTitleStyle().Render("Force Commit Type")))
+	b.WriteString("\n\n")
+
+	for i, t := range conventionalTypes {
+		cursor := "  "
+		if i == m.typeCursor {
+			cursor = "> "
+		}
+		var style lipgloss.Style
+		if i == m.typeCursor {
+			style = sectionTitleStyle()
+		} else {
+			style = metaStyle()
+		}
+		line := cursor + style.Render(fmt.Sprintf("%d. %s", i+1, t))
+		b.WriteString(indent.Render(line))
+		b.WriteString("\n")
+	}
+
+	b.WriteString("\n")
+	keys := []struct{ key, desc string }{
+		{"↑/k", "up"}, {"↓/j", "down"}, {"1-8", "pick"}, {"enter", "select"}, {"esc", "cancel"},
+	}
+	var parts []string
+	for _, k := range keys {
+		parts = append(parts, footerKeyStyle().Render(k.key)+" "+footerDescStyle().Render(k.desc))
+	}
+	b.WriteString(indent.Render(strings.Join(parts, "  ")))
+	b.WriteString("\n")
+
+	return b.String()
+}
+
+func (m model) renderUnstaging() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(indent.Render(sectionTitleStyle().Render("Unstage Files")))
+	b.WriteString("\n\n")
+
+	for i, f := range m.stagedFiles {
+		cursor := "  "
+		if i == m.unstageCursor {
+			cursor = "> "
+		}
+		checkbox := "[ ]"
+		if i < len(m.unstageSelected) && m.unstageSelected[i] {
+			checkbox = "[x]"
+		}
+		var style lipgloss.Style
+		switch f.Status {
+		case "A":
+			style = fileAddedStyle()
+		case "M":
+			style = fileModifiedStyle()
+		case "D":
+			style = fileDeletedStyle()
+		default:
+			style = metaStyle()
+		}
+		line := cursor + checkbox + " " + style.Render(f.Path)
+		b.WriteString(indent.Render(line))
+		b.WriteString("\n")
+	}
+
+	b.WriteString("\n")
+	keys := []struct{ key, desc string }{
+		{"↑/k", "up"}, {"↓/j", "down"}, {"space", "toggle"}, {"enter", "unstage"}, {"esc", "cancel"}, {"q", "quit"},
+	}
+	var parts []string
+	for _, k := range keys {
+		parts = append(parts, footerKeyStyle().Render(k.key)+" "+footerDescStyle().Render(k.desc))
+	}
+	b.WriteString(indent.Render(strings.Join(parts, "  ")))
+	b.WriteString("\n")
+
+	return b.String()
+}
+
 func (m model) renderError() string {
 	indent := indentStyle()
 	var b strings.Builder
@@ -348,6 +481,16 @@ func (m model) renderCommitMessage() string {
 	b.WriteString(indent.Render(commitMessageStyle().Render(m.commitMessage)))
 	b.WriteString("\n")
 
+	firstLine := m.commitMessage
+	if idx := strings.Index(m.commitMessage, "\n"); idx >= 0 {
+		firstLine = m.commitMessage[:idx]
+	}
+	if len(firstLine) > 72 {
+		warning := fmt.Sprintf("Subject line: %d chars (aim for ≤72)", len(firstLine))
+		b.WriteString(indent.Render(statusErrorStyle().Render(warning)))
+		b.WriteString("\n")
+	}
+
 	return b.String()
 }
 
@@ -364,29 +507,53 @@ func (m model) renderStatus() string {
 
 func (m model) renderFooter() string {
 	indent := indentStyle()
-	keys := []struct {
-		key  string
-		desc string
-	}{
-		{"enter", "commit"},
-		{"n", "no-verify"},
-		{"p", "push"},
-		{"r", "regen"},
-		{"v", "variants"},
-		{"f", "feedback"},
-		{"e", "edit"},
-		{"E", "$EDITOR"},
-		{"s", "draft"},
-		{"y", "copy"},
-		{"?", "help"},
-		{"q", "quit"},
+
+	type kb struct{ key, desc string }
+	type group struct {
+		label string
+		keys  []kb
 	}
 
-	var parts []string
-	for _, k := range keys {
-		parts = append(parts, footerKeyStyle().Render(k.key)+" "+footerDescStyle().Render(k.desc))
+	groups := []group{
+		{"commit", []kb{
+			{"enter", "commit"},
+			{"n", "no-verify"},
+			{"p", "push"},
+			{"A", "amend"},
+		}},
+		{"generate", []kb{
+			{"r", "regen"},
+			{"v", "variants"},
+			{"f", "feedback"},
+			{"t", "type"},
+			{"L", "length"},
+			{"M", "emoji"},
+		}},
+		{"view", []kb{
+			{"d", "diff"},
+			{"[/]", "history"},
+			{"e", "edit"},
+			{"E", "$EDITOR"},
+			{"x", "unstage"},
+		}},
+		{"misc", []kb{
+			{"s", "draft"},
+			{"y", "copy"},
+			{"?", "help"},
+			{"q", "quit"},
+		}},
 	}
 
-	return indent.Render(strings.Join(parts, "  ")) + "\n"
+	var lines []string
+	for _, g := range groups {
+		var parts []string
+		for _, k := range g.keys {
+			parts = append(parts, footerKeyStyle().Render(k.key)+" "+footerDescStyle().Render(k.desc))
+		}
+		line := footerGroupStyle().Render(g.label) + strings.Join(parts, "  ")
+		lines = append(lines, indent.Render(line))
+	}
+
+	return strings.Join(lines, "\n") + "\n"
 }
 
