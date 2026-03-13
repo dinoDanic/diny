@@ -136,6 +136,50 @@ func doStageFiles(paths []string) tea.Cmd {
 	}
 }
 
+func doGenerateVariants(diff string, cfg *config.Config, previousMessages []string, current string) tea.Cmd {
+	return func() tea.Msg {
+		const n = 3
+		type result struct {
+			msg string
+			err error
+		}
+
+		modifiedDiff := diff
+		allPrev := append(previousMessages, current)
+		modifiedDiff += "\n\nPrevious commit messages that were not satisfactory:\n"
+		for i, m := range allPrev {
+			modifiedDiff += fmt.Sprintf("%d. %s\n", i+1, m)
+		}
+		modifiedDiff += "\nPlease generate a different commit message that avoids the style and approach of the previous ones."
+
+		ch := make(chan result, n)
+		for range n {
+			go func() {
+				msg, err := commit.CreateCommitMessage(modifiedDiff, cfg)
+				ch <- result{msg, err}
+			}()
+		}
+
+		var variants []string
+		var lastErr error
+		for range n {
+			r := <-ch
+			if r.err != nil {
+				lastErr = r.err
+			} else {
+				variants = append(variants, r.msg)
+			}
+		}
+		if len(variants) == 0 {
+			return errMsg{err: fmt.Errorf("all variants failed: %w", lastErr)}
+		}
+		for len(variants) < n {
+			variants = append(variants, variants[0])
+		}
+		return variantsReadyMsg{variants: variants}
+	}
+}
+
 func doCopy(message string) tea.Cmd {
 	return func() tea.Msg {
 		if err := clipboard.WriteAll(message); err != nil {

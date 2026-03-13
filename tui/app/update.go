@@ -99,6 +99,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.state = stateReady
 		return m, nil
+
+	case variantsReadyMsg:
+		m.variants = msg.variants
+		m.variantCursor = 0
+		m.state = stateVariantPicking
+		return m, nil
 	}
 
 	// Update sub-components
@@ -130,6 +136,8 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleHelpKey(msg)
 	case stateNoStaged:
 		return m.handleNoStagedKey(msg)
+	case stateVariantPicking:
+		return m.handleVariantPickingKey(msg)
 	case stateError, stateSuccess:
 		if msg.String() == "q" || msg.String() == "ctrl+c" {
 			return m, tea.Quit
@@ -162,6 +170,10 @@ func (m model) handleReadyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		prev := m.previousMessages
 		m.previousMessages = append(m.previousMessages, m.commitMessage)
 		return m, tea.Batch(m.loader.Tick, doRegenerate(m.diff, m.cfg, prev, m.commitMessage))
+	case msg.String() == "v":
+		m.state = stateGenerating
+		m.loader = loader.New(loader.VariantMessages)
+		return m, tea.Batch(m.loader.Tick, doGenerateVariants(m.diff, m.cfg, m.previousMessages, m.commitMessage))
 	case msg.String() == "f":
 		m.state = stateFeedback
 		m.textinput = textinput.New()
@@ -270,6 +282,43 @@ func (m model) handleNoStagedKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		return m, doStageFiles(paths)
 	}
+	return m, nil
+}
+
+func (m model) handleVariantPickingKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "up", "k":
+		if m.variantCursor > 0 {
+			m.variantCursor--
+		}
+	case "down", "j":
+		if m.variantCursor < len(m.variants)-1 {
+			m.variantCursor++
+		}
+	case "1", "2", "3":
+		idx := int(msg.String()[0] - '1')
+		if idx < len(m.variants) {
+			m.variantCursor = idx
+			return m.selectVariant()
+		}
+	case "enter":
+		return m.selectVariant()
+	case "esc", "q":
+		m.state = stateReady
+		return m, nil
+	case "ctrl+c":
+		return m, tea.Quit
+	}
+	return m, nil
+}
+
+func (m model) selectVariant() (model, tea.Cmd) {
+	m.previousMessages = append(m.previousMessages, m.commitMessage)
+	m.commitMessage = m.variants[m.variantCursor]
+	m.variants = nil
+	m.state = stateReady
+	m.statusMessage = "Variant selected"
+	m.statusIsError = false
 	return m, nil
 }
 

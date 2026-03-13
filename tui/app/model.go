@@ -22,6 +22,7 @@ const (
 	stateSuccess
 	stateNoStaged
 	stateError
+	stateVariantPicking
 )
 
 // Messages
@@ -61,6 +62,10 @@ type copiedMsg struct{}
 
 type editorFinishedMsg struct {
 	newMessage string
+}
+
+type variantsReadyMsg struct {
+	variants []string
 }
 
 // Model
@@ -107,6 +112,10 @@ type model struct {
 	unstagedFiles []git.StagedFile
 	fileCursor    int
 	fileSelected  []bool
+
+	// Variant picker (stateVariantPicking)
+	variants      []string
+	variantCursor int
 }
 
 func newModel(cfg *config.Config, version string) model {

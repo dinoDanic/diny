@@ -40,6 +40,13 @@ var CommittingMessages = []string{
 	"no going back now...",
 }
 
+var VariantMessages = []string{
+	"cooking up options...",
+	"brainstorming...",
+	"generating variants...",
+	"thinking of alternatives...",
+}
+
 type Model struct {
 	Tick    tea.Cmd
 	spinner spinner.Model

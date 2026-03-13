@@ -34,6 +34,8 @@ func (m model) View() string {
 		b.WriteString(m.renderSuccess())
 	case stateNoStaged:
 		b.WriteString(m.renderNoStaged())
+	case stateVariantPicking:
+		b.WriteString(m.renderVariantPicking())
 	case stateError:
 		b.WriteString(m.renderError())
 	}
@@ -132,6 +134,7 @@ func (m model) renderHelp() string {
 		{"n", "Commit (skip hooks / no-verify)"},
 		{"p", "Commit and push"},
 		{"r", "Regenerate commit message"},
+		{"v", "Pick from 3 variants"},
 		{"f", "Refine with feedback"},
 		{"e", "Edit inline"},
 		{"E", "Edit in $EDITOR"},
@@ -246,6 +249,47 @@ func (m model) renderNoStaged() string {
 	return b.String()
 }
 
+func (m model) renderVariantPicking() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(m.renderStagedFiles())
+	b.WriteString("\n")
+	b.WriteString(indent.Render(sectionTitleStyle().Render("Pick a Variant")))
+	b.WriteString("\n\n")
+
+	for i, v := range m.variants {
+		cursor := "  "
+		if i == m.variantCursor {
+			cursor = "> "
+		}
+
+		var style lipgloss.Style
+		if i == m.variantCursor {
+			style = sectionTitleStyle()
+		} else {
+			style = metaStyle()
+		}
+
+		line := cursor + style.Render(fmt.Sprintf("%d. %s", i+1, v))
+		b.WriteString(indent.Render(line))
+		b.WriteString("\n\n")
+	}
+
+	keys := []struct{ key, desc string }{
+		{"↑/k", "up"}, {"↓/j", "down"}, {"1/2/3", "pick"}, {"enter", "select"}, {"esc", "cancel"},
+	}
+	var parts []string
+	for _, k := range keys {
+		parts = append(parts, footerKeyStyle().Render(k.key)+" "+footerDescStyle().Render(k.desc))
+	}
+	b.WriteString(indent.Render(strings.Join(parts, "  ")))
+	b.WriteString("\n")
+
+	return b.String()
+}
+
 func (m model) renderError() string {
 	indent := indentStyle()
 	var b strings.Builder
@@ -328,6 +372,7 @@ func (m model) renderFooter() string {
 		{"n", "no-verify"},
 		{"p", "push"},
 		{"r", "regen"},
+		{"v", "variants"},
 		{"f", "feedback"},
 		{"e", "edit"},
 		{"E", "$EDITOR"},
