@@ -25,8 +25,15 @@ const (
 	stateVariantPicking
 	stateDiffView
 	stateTypePicker
-	stateUnstaging
+	stateFilePicker
 )
+
+type fileEntry struct {
+	path          string
+	status        string
+	currentStaged bool
+	wantStaged    bool
+}
 
 // Messages
 
@@ -71,7 +78,11 @@ type variantsReadyMsg struct {
 	variants []string
 }
 
-type restoreStagedDoneMsg struct {
+type allFilesMsg struct {
+	entries []fileEntry
+}
+
+type filePickerDoneMsg struct {
 	files []git.StagedFile
 }
 
@@ -132,9 +143,9 @@ type model struct {
 	// Type picker (stateTypePicker)
 	typeCursor int
 
-	// Unstaging (stateUnstaging)
-	unstageCursor   int
-	unstageSelected []bool
+	// File picker (stateFilePicker)
+	fileEntries      []fileEntry
+	filePickerCursor int
 }
 
 func newModel(cfg *config.Config, version string) model {

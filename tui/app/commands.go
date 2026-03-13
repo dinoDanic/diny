@@ -191,18 +191,48 @@ func doGenerateVariants(diff string, cfg *config.Config, previousMessages []stri
 	}
 }
 
-func doUnstageFiles(paths []string) tea.Cmd {
+func loadAllFiles() tea.Cmd {
 	return func() tea.Msg {
-		args := append([]string{"restore", "--staged", "--"}, paths...)
-		cmd := exec.Command("git", args...)
-		if out, err := cmd.CombinedOutput(); err != nil {
-			return errMsg{err: fmt.Errorf("git restore failed: %s", strings.TrimSpace(string(out)))}
+		staged, err := git.GetStagedFiles()
+		if err != nil {
+			return errMsg{err: fmt.Errorf("failed to get staged files: %w", err)}
+		}
+		unstaged, err := git.GetUnstagedFiles()
+		if err != nil {
+			return errMsg{err: fmt.Errorf("failed to get unstaged files: %w", err)}
+		}
+		var entries []fileEntry
+		for _, f := range staged {
+			entries = append(entries, fileEntry{path: f.Path, status: f.Status, currentStaged: true, wantStaged: true})
+		}
+		for _, f := range unstaged {
+			entries = append(entries, fileEntry{path: f.Path, status: f.Status, currentStaged: false, wantStaged: false})
+		}
+		return allFilesMsg{entries: entries}
+	}
+}
+
+func doApplyFilePicker(entries []fileEntry) tea.Cmd {
+	return func() tea.Msg {
+		for _, e := range entries {
+			if e.wantStaged == e.currentStaged {
+				continue
+			}
+			var cmd *exec.Cmd
+			if e.wantStaged {
+				cmd = exec.Command("git", "add", "--", e.path)
+			} else {
+				cmd = exec.Command("git", "restore", "--staged", "--", e.path)
+			}
+			if out, err := cmd.CombinedOutput(); err != nil {
+				return errMsg{err: fmt.Errorf("git operation failed: %s", strings.TrimSpace(string(out)))}
+			}
 		}
 		files, err := git.GetStagedFiles()
 		if err != nil {
 			return errMsg{err: fmt.Errorf("failed to get staged files: %w", err)}
 		}
-		return restoreStagedDoneMsg{files: files}
+		return filePickerDoneMsg{files: files}
 	}
 }
 

@@ -40,8 +40,8 @@ func (m model) View() string {
 		b.WriteString(m.renderDiffView())
 	case stateTypePicker:
 		b.WriteString(m.renderTypePicker())
-	case stateUnstaging:
-		b.WriteString(m.renderUnstaging())
+	case stateFilePicker:
+		b.WriteString(m.renderFilePicker())
 	case stateError:
 		b.WriteString(m.renderError())
 	}
@@ -168,7 +168,7 @@ func (m model) renderHelp() string {
 		{"d", "View staged diff"},
 		{"[", "Browse previous generated messages"},
 		{"]", "Browse forward through message history"},
-		{"x", "Unstage files"},
+		{"x", "Manage staged/unstaged files"},
 		{"s", "Save as draft"},
 		{"y", "Copy to clipboard"},
 		{"?", "Toggle help"},
@@ -376,42 +376,59 @@ func (m model) renderTypePicker() string {
 	return b.String()
 }
 
-func (m model) renderUnstaging() string {
+func (m model) renderFilePicker() string {
 	indent := indentStyle()
 	var b strings.Builder
 
 	b.WriteString("\n")
-	b.WriteString(indent.Render(sectionTitleStyle().Render("Unstage Files")))
+	b.WriteString(indent.Render(sectionTitleStyle().Render("Manage Staged Files")))
 	b.WriteString("\n\n")
 
-	for i, f := range m.stagedFiles {
+	for i, e := range m.fileEntries {
 		cursor := "  "
-		if i == m.unstageCursor {
+		if i == m.filePickerCursor {
 			cursor = "> "
 		}
-		checkbox := "[ ]"
-		if i < len(m.unstageSelected) && m.unstageSelected[i] {
-			checkbox = "[x]"
-		}
+
+		var indicator string
 		var style lipgloss.Style
-		switch f.Status {
-		case "A":
-			style = fileAddedStyle()
-		case "M":
-			style = fileModifiedStyle()
-		case "D":
+		switch {
+		case e.currentStaged && e.wantStaged:
+			indicator = "[✓]"
+			style = sectionTitleStyle()
+		case e.currentStaged && !e.wantStaged:
+			indicator = "[-]"
 			style = fileDeletedStyle()
+		case !e.currentStaged && e.wantStaged:
+			indicator = "[+]"
+			style = fileAddedStyle()
 		default:
+			indicator = "[ ]"
 			style = metaStyle()
 		}
-		line := cursor + checkbox + " " + style.Render(f.Path)
+
+		var statusIcon string
+		switch e.status {
+		case "A":
+			statusIcon = "+"
+		case "M":
+			statusIcon = "~"
+		case "D":
+			statusIcon = "-"
+		case "R":
+			statusIcon = ">"
+		default:
+			statusIcon = "?"
+		}
+
+		line := cursor + indicator + " " + style.Render(statusIcon+" "+e.path)
 		b.WriteString(indent.Render(line))
 		b.WriteString("\n")
 	}
 
 	b.WriteString("\n")
 	keys := []struct{ key, desc string }{
-		{"↑/k", "up"}, {"↓/j", "down"}, {"space", "toggle"}, {"enter", "unstage"}, {"esc", "cancel"}, {"q", "quit"},
+		{"↑/k", "up"}, {"↓/j", "down"}, {"space", "toggle"}, {"a", "all"}, {"enter", "apply"}, {"esc", "cancel"},
 	}
 	var parts []string
 	for _, k := range keys {
@@ -534,7 +551,7 @@ func (m model) renderFooter() string {
 			{"[/]", "history"},
 			{"e", "edit"},
 			{"E", "$EDITOR"},
-			{"x", "unstage"},
+			{"x", "files"},
 		}},
 		{"misc", []kb{
 			{"s", "draft"},

@@ -68,14 +68,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.statusIsError = false
 		return m, nil
 
-	case restoreStagedDoneMsg:
+	case allFilesMsg:
+		m.fileEntries = msg.entries
+		m.filePickerCursor = 0
+		return m, nil
+
+	case filePickerDoneMsg:
 		m.stagedFiles = msg.files
 		if len(m.stagedFiles) == 0 {
 			m.state = stateNoStaged
 			return m, loadUnstagedFiles()
 		}
-		m.state = stateReady
-		return m, nil
+		m.state = stateGenerating
+		m.loader = loader.New(loader.GeneratingMessages)
+		return m, tea.Batch(m.loader.Tick, loadDiffAndGenerate(m.cfg))
 
 	case commitDoneMsg:
 		m.state = stateSuccess
@@ -161,8 +167,8 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleDiffViewKey(msg)
 	case stateTypePicker:
 		return m.handleTypePickerKey(msg)
-	case stateUnstaging:
-		return m.handleUnstagingKey(msg)
+	case stateFilePicker:
+		return m.handleFilePickerKey(msg)
 	case stateError, stateSuccess:
 		if msg.String() == "q" || msg.String() == "ctrl+c" {
 			return m, tea.Quit
@@ -291,10 +297,8 @@ func (m model) handleReadyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.previousMessages = append(m.previousMessages, m.commitMessage)
 		return m, tea.Batch(m.loader.Tick, doRegenerate(m.diff, m.cfg, prev, m.commitMessage))
 	case msg.String() == "x":
-		m.unstageCursor = 0
-		m.unstageSelected = make([]bool, len(m.stagedFiles))
-		m.state = stateUnstaging
-		return m, nil
+		m.state = stateFilePicker
+		return m, loadAllFiles()
 	case msg.String() == "s":
 		return m, doSaveDraft(m.commitMessage)
 	case msg.String() == "y":
@@ -473,7 +477,7 @@ func (m model) selectType() (model, tea.Cmd) {
 	return m, tea.Batch(m.loader.Tick, doFeedback(m.diff, m.cfg, m.commitMessage, "Force type prefix: "+selected))
 }
 
-func (m model) handleUnstagingKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m model) handleFilePickerKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "q", "ctrl+c":
 		return m, tea.Quit
@@ -481,28 +485,45 @@ func (m model) handleUnstagingKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.state = stateReady
 		return m, nil
 	case "up", "k":
-		if m.unstageCursor > 0 {
-			m.unstageCursor--
+		if m.filePickerCursor > 0 {
+			m.filePickerCursor--
 		}
 	case "down", "j":
-		if m.unstageCursor < len(m.stagedFiles)-1 {
-			m.unstageCursor++
+		if m.filePickerCursor < len(m.fileEntries)-1 {
+			m.filePickerCursor++
 		}
 	case " ":
-		if m.unstageCursor < len(m.unstageSelected) {
-			m.unstageSelected[m.unstageCursor] = !m.unstageSelected[m.unstageCursor]
+		if m.filePickerCursor < len(m.fileEntries) {
+			m.fileEntries[m.filePickerCursor].wantStaged = !m.fileEntries[m.filePickerCursor].wantStaged
 		}
-	case "enter":
-		var paths []string
-		for i, sel := range m.unstageSelected {
-			if sel && i < len(m.stagedFiles) {
-				paths = append(paths, m.stagedFiles[i].Path)
+	case "a":
+		anyPending := false
+		for _, e := range m.fileEntries {
+			if e.wantStaged != e.currentStaged {
+				anyPending = true
+				break
 			}
 		}
-		if len(paths) == 0 {
+		for i := range m.fileEntries {
+			if anyPending {
+				m.fileEntries[i].wantStaged = m.fileEntries[i].currentStaged
+			} else {
+				m.fileEntries[i].wantStaged = !m.fileEntries[i].currentStaged
+			}
+		}
+	case "enter":
+		hasPending := false
+		for _, e := range m.fileEntries {
+			if e.wantStaged != e.currentStaged {
+				hasPending = true
+				break
+			}
+		}
+		if !hasPending {
+			m.state = stateReady
 			return m, nil
 		}
-		return m, doUnstageFiles(paths)
+		return m, doApplyFilePicker(m.fileEntries)
 	}
 	return m, nil
 }
