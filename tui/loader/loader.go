@@ -11,8 +11,8 @@ import (
 )
 
 var brailleSpinner = spinner.Spinner{
-	Frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
-	FPS:    time.Second / 10,
+	Frames: []string{"◐", "◓", "◑", "◒"},
+	FPS:    time.Second / 6,
 }
 
 var InitMessages = []string{
