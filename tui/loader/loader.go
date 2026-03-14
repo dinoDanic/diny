@@ -75,3 +75,15 @@ func (m Model) View() string {
 	style := lipgloss.NewStyle().Foreground(t.PrimaryForeground)
 	return style.Render(m.spinner.View() + " " + m.message)
 }
+
+// SpinnerView returns only the animated spinner frame, styled with the theme's primary color.
+func (m Model) SpinnerView() string {
+	t := ui.GetCurrentTheme()
+	style := lipgloss.NewStyle().Foreground(t.PrimaryForeground)
+	return style.Render(m.spinner.View())
+}
+
+// SpinnerFrame returns the raw (unstyled) current spinner frame.
+func (m Model) SpinnerFrame() string {
+	return m.spinner.View()
+}

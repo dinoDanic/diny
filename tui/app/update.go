@@ -127,6 +127,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.variantCursor = 0
 		m.state = stateVariantPicking
 		return m, nil
+
+	case commitProgressMsg:
+		m.commitProgress = msg.line
+		return m, waitForCommitLine(m.commitOutputCh)
 	}
 
 	// Update sub-components
@@ -186,15 +190,24 @@ func (m model) handleReadyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case msg.String() == "enter":
 		m.state = stateCommitting
 		m.loader = loader.New(loader.CommittingMessages)
-		return m, doCommit(m.commitMessage, false, false, m.pendingAmend, m.cfg)
+		m.commitProgress = ""
+		ch := make(chan string, 20)
+		m.commitOutputCh = ch
+		return m, tea.Batch(doCommit(m.commitMessage, false, false, m.pendingAmend, m.cfg, ch), waitForCommitLine(ch), m.loader.Tick)
 	case msg.String() == "n":
 		m.state = stateCommitting
 		m.loader = loader.New(loader.CommittingMessages)
-		return m, doCommit(m.commitMessage, false, true, m.pendingAmend, m.cfg)
+		m.commitProgress = ""
+		ch := make(chan string, 20)
+		m.commitOutputCh = ch
+		return m, tea.Batch(doCommit(m.commitMessage, false, true, m.pendingAmend, m.cfg, ch), waitForCommitLine(ch), m.loader.Tick)
 	case msg.String() == "p":
 		m.state = stateCommitting
 		m.loader = loader.New(loader.CommittingMessages)
-		return m, doCommit(m.commitMessage, true, false, m.pendingAmend, m.cfg)
+		m.commitProgress = ""
+		ch := make(chan string, 20)
+		m.commitOutputCh = ch
+		return m, tea.Batch(doCommit(m.commitMessage, true, false, m.pendingAmend, m.cfg, ch), waitForCommitLine(ch), m.loader.Tick)
 	case msg.String() == "r":
 		m.state = stateGenerating
 		m.loader = loader.New(loader.GeneratingMessages)

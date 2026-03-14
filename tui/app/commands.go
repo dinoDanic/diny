@@ -1,8 +1,10 @@
 package app
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -12,6 +14,52 @@ import (
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
 )
+
+type commitProgressMsg struct {
+	line string
+}
+
+type lineWriter struct {
+	ch  chan<- string
+	buf []byte
+	all []byte
+}
+
+func (w *lineWriter) Write(p []byte) (int, error) {
+	w.all = append(w.all, p...)
+	w.buf = append(w.buf, p...)
+	for {
+		i := bytes.IndexByte(w.buf, '\n')
+		if i < 0 {
+			break
+		}
+		line := strings.TrimSpace(stripAnsi(string(w.buf[:i])))
+		w.buf = w.buf[i+1:]
+		if line != "" {
+			select {
+			case w.ch <- line:
+			default:
+			}
+		}
+	}
+	return len(p), nil
+}
+
+var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*[mKGJ]`)
+
+func stripAnsi(s string) string {
+	return ansiEscape.ReplaceAllString(s, "")
+}
+
+func waitForCommitLine(ch <-chan string) tea.Cmd {
+	return func() tea.Msg {
+		line, ok := <-ch
+		if !ok {
+			return nil
+		}
+		return commitProgressMsg{line: line}
+	}
+}
 
 func loadRepoInfo() tea.Cmd {
 	return func() tea.Msg {
@@ -60,23 +108,53 @@ func loadDiffAndGenerate(cfg *config.Config) tea.Cmd {
 	}
 }
 
-func doCommit(message string, push bool, noVerify bool, amend bool, cfg *config.Config) tea.Cmd {
+func doCommit(message string, push bool, noVerify bool, amend bool, cfg *config.Config, progressCh chan string) tea.Cmd {
 	return func() tea.Msg {
+		defer close(progressCh)
+
+		// Build args
+		var args []string
 		if amend {
-			args := []string{"commit", "--amend", "-m", message}
-			if noVerify {
-				args = []string{"commit", "--amend", "--no-verify", "-m", message}
-			}
-			cmd := exec.Command("git", args...)
-			if out, err := cmd.CombinedOutput(); err != nil {
-				return errMsg{err: fmt.Errorf("amend failed: %s", strings.TrimSpace(string(out)))}
-			}
+			args = []string{"commit", "--amend", "-m", message}
+		} else {
+			args = []string{"commit", "-m", message}
+		}
+		if noVerify {
+			args = append([]string{args[0], "--no-verify"}, args[1:]...)
+		}
+
+		lw := &lineWriter{ch: progressCh}
+		cmd := exec.Command("git", args...)
+		cmd.Stdout = lw
+		cmd.Stderr = lw
+		if err := cmd.Run(); err != nil {
+			return errMsg{err: fmt.Errorf("commit failed: %s", strings.TrimSpace(string(lw.all)))}
+		}
+
+		if amend {
 			return commitDoneMsg{hash: "", push: false}
 		}
-		hash, err := commit.TryCommit(message, push, noVerify, cfg)
-		if err != nil {
-			return errMsg{err: err}
+
+		// hash after commit
+		var hash string
+		if cfg != nil && cfg.Commit.HashAfterCommit {
+			if out, err := exec.Command("git", "rev-parse", "--short", "HEAD").Output(); err == nil {
+				hash = strings.TrimSpace(string(out))
+				_ = clipboard.WriteAll(hash)
+			}
 		}
+
+		// optional push
+		if push {
+			pushLw := &lineWriter{ch: progressCh}
+			pushCmd := exec.Command("git", "push")
+			pushCmd.Stdout = pushLw
+			pushCmd.Stderr = pushLw
+			if err := pushCmd.Run(); err != nil {
+				return errMsg{err: fmt.Errorf("committed but push failed: %s", strings.TrimSpace(string(pushLw.all)))}
+			}
+		}
+
 		return commitDoneMsg{hash: hash, push: push}
 	}
 }

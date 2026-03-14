@@ -104,6 +104,8 @@ type model struct {
 	diff             string
 	commitMessage    string
 	previousMessages []string
+	commitProgress   string
+	commitOutputCh   <-chan string
 
 	// Components
 	loader   loader.Model

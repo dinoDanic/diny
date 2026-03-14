@@ -215,6 +215,13 @@ func (m model) renderCommitting() string {
 
 	b.WriteString(indent.Render(m.loader.View()))
 	b.WriteString("\n")
+
+	if m.commitProgress != "" {
+		grey := lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+		b.WriteString(indent.Render(grey.Render(m.loader.SpinnerFrame() + " " + m.commitProgress)))
+		b.WriteString("\n")
+	}
+
 	return b.String()
 }
 

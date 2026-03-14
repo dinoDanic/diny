@@ -52,40 +52,48 @@ func GetStagedFiles() ([]StagedFile, error) {
 
 // GetUnstagedFiles returns modified, deleted, and untracked files not yet staged.
 func GetUnstagedFiles() ([]StagedFile, error) {
-	cmd := exec.Command("git", "status", "--porcelain")
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, err
-	}
-	raw := strings.TrimSpace(string(output))
-	if raw == "" {
-		return nil, nil
-	}
 	var files []StagedFile
-	for _, line := range strings.Split(raw, "\n") {
-		if len(line) < 4 {
-			continue
-		}
-		xy := line[:2]
-		path := line[3:]
+	seen := map[string]bool{}
 
-		if xy == "??" {
-			files = append(files, StagedFile{Status: "?", Path: path})
-			continue
+	// 1. Modified/deleted unstaged changes (working tree vs index)
+	diffOut, err := exec.Command("git", "diff", "--name-status").Output()
+	if err == nil {
+		for _, line := range strings.Split(strings.TrimSpace(string(diffOut)), "\n") {
+			if line == "" {
+				continue
+			}
+			parts := strings.SplitN(line, "\t", 2)
+			if len(parts) < 2 {
+				continue
+			}
+			status, path := parts[0], parts[1]
+			if seen[path] {
+				continue
+			}
+			seen[path] = true
+			switch status {
+			case "M":
+				files = append(files, StagedFile{Status: "M", Path: path})
+			case "D":
+				files = append(files, StagedFile{Status: "D", Path: path})
+			default:
+				files = append(files, StagedFile{Status: status, Path: path})
+			}
 		}
-		unstaged := rune(xy[1])
-		if unstaged == ' ' || unstaged == '!' {
-			continue
-		}
-		switch unstaged {
-		case 'M':
-			files = append(files, StagedFile{Status: "M", Path: path})
-		case 'D':
-			files = append(files, StagedFile{Status: "D", Path: path})
-		default:
+	}
+
+	// 2. Untracked (new) files
+	lsOut, err := exec.Command("git", "ls-files", "--others", "--exclude-standard").Output()
+	if err == nil {
+		for _, path := range strings.Split(strings.TrimSpace(string(lsOut)), "\n") {
+			if path == "" || seen[path] {
+				continue
+			}
+			seen[path] = true
 			files = append(files, StagedFile{Status: "?", Path: path})
 		}
 	}
+
 	return files, nil
 }
 
