@@ -30,20 +30,18 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 ## Features
 
+- 🖥️ Full interactive TUI for commit, config, changelog, timeline, and yolo
 - 🔍 Reads staged changes with `git diff`
 - 🧹 Filters out noise (lockfiles, binaries, build artifacts)
 - ⚡ Generates commit messages via AI
-- 📝 Produces concise, consistent messages
-- 🔄 Interactive workflow with multiple options
-- 🧠 Smart regeneration that learns from previous attempts
-- ✍️ Custom feedback system for precise message refinement
-- 🧷 Save to file (stash the generated message for later)
-- 📝 Draft mode (prepare a commit message without committing)
-- ✏️ Edit in your editor before committing
+- 🎛️ Generate 3 message variants and pick your favourite
+- ✏️ Inline editing or open in `$EDITOR`
+- 📂 File picker to stage/unstage files without leaving diny
 - 📊 Timeline analysis of commit history and message patterns
 - 📋 AI-powered changelog generation between tags or commits
 - 🎨 Customizable UI themes (10+ dark and light themes)
 - ⚙️ Three-tier config system (global, project-shared, project-private)
+- 🔓 No API key required
 
 
 ## Install
@@ -75,6 +73,8 @@ Stage your changes, then run:
     git add             # Stage files
     diny commit
 
+Launches the interactive TUI — generate, review, and commit without leaving the terminal.
+
 ### Auto Command (Git Alias)
 
 Set up a git alias that creates a `git auto` command for diny-generated commit messages.
@@ -101,25 +101,20 @@ diny comes with a handful of simple commands. Each one is designed to fit natura
 
     diny auto                                 # Set up a git alias so you can run `git auto`
 
-    diny commit                               # Generate a commit message from your staged changes
-    diny commit  --no-verify                  # Commit without running git hooks
-    diny commit  --print                      # Print generated message to stdout only
-    diny commit  --print | git commit -F -    # Pipe generated message to git commit
-    diny commit  --length short               # Force short commit message length (-l short)
-    diny commit  --length normal              # Force normal commit message length (-l normal)
-    diny commit  --length long                # Force long commit message length (-l long)
-    diny commit  --custom "mention ticket"    # One-off custom instruction for the AI (-c "mention ticket")
+    diny commit                               # Launch interactive TUI
 
     diny yolo                                 # Stage all changes, generate commit, and push (fully automated)
 
     diny changelog                            # Generate an AI-powered changelog (by tag or by commit)
-    diny config                               # Open config file in your editor
+    diny config                               # Interactive TUI config editor (global / versioned / local)
     diny link lazygit                         # Integrate diny with LazyGit
     diny theme                                # List all available UI themes
     diny timeline                             # Summarize and analyze your commit history
     diny update                               # Update diny to the latest version
 
 ## Configuration
+
+Running `diny config` opens a TUI where you can browse and edit all settings interactively — fields with fixed options show a picker, and text fields open an inline input.
 
 diny supports a three-tier configuration system that allows you to customize settings globally, per-project (shared with your team), or per-project (private to you).
 
