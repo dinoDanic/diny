@@ -3,7 +3,7 @@ package app
 import "math/rand"
 
 var tips = []string{
-	"use [ and ] to browse previously generated messages",
+	"use [ and ] to browse previously generated messages in this session",
 	"press t to force a conventional commit type (feat, fix, docs...)",
 	"press L to cycle message length: short → normal → long",
 	"press A to regenerate from HEAD diff and amend on commit",
