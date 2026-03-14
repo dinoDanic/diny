@@ -54,7 +54,7 @@ func CreateTimelineWithGroq(prompt string, cfg *config.Config) (string, error) {
 
 	req, err := http.NewRequestWithContext(context.Background(),
 		http.MethodPost,
-		server.ServerConfig.BaseURL+"/api/v2/timeline",
+		server.ServerConfig.BaseURL+"/api/v3/timeline",
 		bytes.NewReader(buf),
 	)
 	if err != nil {
