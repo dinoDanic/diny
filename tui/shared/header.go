@@ -15,31 +15,24 @@ func RenderHeader(version, repoName, branchName string, width int) string {
 
 	indent := lipgloss.NewStyle().PaddingLeft(2)
 	metaStyle := lipgloss.NewStyle().Foreground(t.MutedForeground)
-	logoStyle := lipgloss.NewStyle().Foreground(t.PrimaryForeground).PaddingRight(2)
+	logoStyle := lipgloss.NewStyle().
+		Foreground(t.PrimaryForeground).
+		Background(t.PrimaryBackground).
+		Padding(0, 1).
+		MarginRight(2)
 
-	logo := logoStyle.Render("▗▄▄▄▄▖\n▐████▌\n▝▀▀▀▀▘")
-	logoW := lipgloss.Width(logoStyle.Render("▗▄▄▄▄▖"))
+	logo := logoStyle.Render("diny")
 
 	pwd, _ := os.Getwd()
-	metaAvail := width - 2 - logoW
 
-	var parts []string
+	parts := []string{"v" + version}
 	if repoName != "" {
 		parts = append(parts, repoName)
 	}
 	if branchName != "" {
 		parts = append(parts, "⎇ "+branchName)
 	}
-
-	versionText := metaStyle.Render("v" + version)
-	row1 := versionText
-	if len(parts) > 0 {
-		rightText := metaStyle.Render(strings.Join(parts, "  "))
-		gap := metaAvail - lipgloss.Width(versionText) - lipgloss.Width(rightText)
-		if gap > 0 {
-			row1 = versionText + strings.Repeat(" ", gap) + rightText
-		}
-	}
+	row1 := metaStyle.Render(strings.Join(parts, "  "))
 
 	metaBlock := strings.Join([]string{row1, metaStyle.Render(pwd), ""}, "\n")
 	sep := metaStyle.Render(strings.Repeat("─", width))
