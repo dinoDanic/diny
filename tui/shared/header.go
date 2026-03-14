@@ -13,32 +13,44 @@ import (
 func RenderHeader(version, repoName, branchName string, width int) string {
 	t := ui.GetCurrentTheme()
 
-	indent := lipgloss.NewStyle().PaddingLeft(3)
+	indent := lipgloss.NewStyle().PaddingLeft(2)
 	metaStyle := lipgloss.NewStyle().Foreground(t.MutedForeground)
-	sectionTitleStyle := lipgloss.NewStyle().Foreground(t.PrimaryForeground).Bold(true)
-	primaryStyle := lipgloss.NewStyle().Foreground(t.PrimaryForeground)
+	badgeStyle := lipgloss.NewStyle().
+		Background(t.PrimaryForeground).
+		Foreground(t.PrimaryBackground).
+		Padding(0, 1).Bold(true)
 
-	line1 := sectionTitleStyle.Render("diny") + "  " + metaStyle.Render("v"+version)
+	// Row 1: left = badge + version, right = repo ⎇ branch
+	left := badgeStyle.Render("diny") + "  " + metaStyle.Render("v"+version)
 
-	var infoParts []string
+	var right string
+	var parts []string
 	if repoName != "" {
-		infoParts = append(infoParts, repoName)
+		parts = append(parts, repoName)
 	}
 	if branchName != "" {
-		infoParts = append(infoParts, branchName)
+		parts = append(parts, "⎇ "+branchName)
+	}
+	if len(parts) > 0 {
+		right = metaStyle.Render(strings.Join(parts, "  "))
+	}
+
+	// Fill gap between left and right (accounting for 2-char indent)
+	innerWidth := width - 2
+	row1 := left
+	if right != "" {
+		gap := innerWidth - lipgloss.Width(left) - lipgloss.Width(right)
+		if gap > 0 {
+			row1 = left + strings.Repeat(" ", gap) + right
+		}
 	}
 
 	pwd, _ := os.Getwd()
-
-	var rows []string
-	rows = append(rows, indent.Render(line1))
-	if len(infoParts) > 0 {
-		rows = append(rows, indent.Render(primaryStyle.Render(strings.Join(infoParts, " • "))))
-	}
-	rows = append(rows, indent.Render(metaStyle.Render(pwd)))
-
 	sep := metaStyle.Render(strings.Repeat("─", width))
-	rows = append(rows, sep, )
 
-	return strings.Join(rows, "\n") + "\n" 
+	return strings.Join([]string{
+		indent.Render(row1),
+		indent.Render(metaStyle.Render(pwd)),
+		sep,
+	}, "\n") + "\n"
 }

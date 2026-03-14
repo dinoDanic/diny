@@ -69,7 +69,7 @@ func (m model) renderGenerating() string {
 	b.WriteString("\n")
 
 	if m.currentTip != "" {
-		b.WriteString(indent.Render(metaStyle().Render("tip  " + m.currentTip)))
+		b.WriteString(indent.Render(metaStyle().Render("• tip: '" + m.currentTip + "'")))
 		b.WriteString("\n")
 	}
 
@@ -106,7 +106,8 @@ func (m model) renderReady() string {
 	}
 
 	if m.currentTip != "" {
-		b.WriteString(indent.Render(metaStyle().Render("tip  " + m.currentTip)))
+		b.WriteString(indent.Render(metaStyle().Render("• tip: '" + m.currentTip + "'")))
+		b.WriteString("\n")
 		b.WriteString("\n")
 	}
 
