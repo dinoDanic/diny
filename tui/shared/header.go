@@ -15,15 +15,14 @@ func RenderHeader(version, repoName, branchName string, width int) string {
 
 	indent := lipgloss.NewStyle().PaddingLeft(2)
 	metaStyle := lipgloss.NewStyle().Foreground(t.MutedForeground)
-	badgeStyle := lipgloss.NewStyle().
-		Background(t.PrimaryForeground).
-		Foreground(t.PrimaryBackground).
-		Padding(0, 1).Bold(true)
+	logoStyle := lipgloss.NewStyle().Foreground(t.PrimaryForeground).PaddingRight(2)
 
-	// Row 1: left = badge + version, right = repo ⎇ branch
-	left := badgeStyle.Render("diny") + "  " + metaStyle.Render("v"+version)
+	logo := logoStyle.Render("▗▄▄▄▄▖\n▐████▌\n▝▀▀▀▀▘")
+	logoW := lipgloss.Width(logoStyle.Render("▗▄▄▄▄▖"))
 
-	var right string
+	pwd, _ := os.Getwd()
+	metaAvail := width - 2 - logoW
+
 	var parts []string
 	if repoName != "" {
 		parts = append(parts, repoName)
@@ -31,26 +30,22 @@ func RenderHeader(version, repoName, branchName string, width int) string {
 	if branchName != "" {
 		parts = append(parts, "⎇ "+branchName)
 	}
-	if len(parts) > 0 {
-		right = metaStyle.Render(strings.Join(parts, "  "))
-	}
 
-	// Fill gap between left and right (accounting for 2-char indent)
-	innerWidth := width - 2
-	row1 := left
-	if right != "" {
-		gap := innerWidth - lipgloss.Width(left) - lipgloss.Width(right)
+	versionText := metaStyle.Render("v" + version)
+	row1 := versionText
+	if len(parts) > 0 {
+		rightText := metaStyle.Render(strings.Join(parts, "  "))
+		gap := metaAvail - lipgloss.Width(versionText) - lipgloss.Width(rightText)
 		if gap > 0 {
-			row1 = left + strings.Repeat(" ", gap) + right
+			row1 = versionText + strings.Repeat(" ", gap) + rightText
 		}
 	}
 
-	pwd, _ := os.Getwd()
+	metaBlock := strings.Join([]string{row1, metaStyle.Render(pwd), ""}, "\n")
 	sep := metaStyle.Render(strings.Repeat("─", width))
 
 	return strings.Join([]string{
-		indent.Render(row1),
-		indent.Render(metaStyle.Render(pwd)),
+		indent.Render(lipgloss.JoinHorizontal(lipgloss.Top, logo, metaBlock)),
 		sep,
 	}, "\n") + "\n"
 }
