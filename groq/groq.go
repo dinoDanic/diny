@@ -54,7 +54,7 @@ func CreateCommitMessageWithGroq(gitDiff string, cfg *config.Config) (string, er
 
 	req, err := http.NewRequestWithContext(context.Background(),
 		http.MethodPost,
-		server.ServerConfig.BaseURL+"/api/v2/commit",
+		server.ServerConfig.BaseURL+"/api/v3/commit",
 		bytes.NewReader(buf),
 	)
 	if err != nil {

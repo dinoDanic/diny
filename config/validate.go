@@ -26,13 +26,5 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("invalid length '%s', must be one of: short, normal, long", c.Commit.Length)
 	}
 
-	if len(c.Commit.ConventionalFormat) == 0 {
-		return fmt.Errorf("conventional_format is required")
-	}
-
-	if c.Commit.EmojiMap == nil {
-		return fmt.Errorf("emoji_map is required")
-	}
-
 	return nil
 }
