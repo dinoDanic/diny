@@ -115,6 +115,7 @@ type model struct {
 	statusMessage string
 	statusIsError bool
 	err           error
+	currentTip    string
 
 	// Welcome timing
 	welcomeReady bool // min display timer elapsed
@@ -162,5 +163,6 @@ func newModel(cfg *config.Config, version string) model {
 		state:             stateWelcome,
 		loader:            loader.New(loader.InitMessages),
 		messageHistoryIdx: -1,
+		currentTip:        randomTip(),
 	}
 }

@@ -68,6 +68,11 @@ func (m model) renderGenerating() string {
 	b.WriteString(indent.Render(m.loader.View()))
 	b.WriteString("\n")
 
+	if m.currentTip != "" {
+		b.WriteString(indent.Render(metaStyle().Render("tip  " + m.currentTip)))
+		b.WriteString("\n")
+	}
+
 	if m.statusMessage != "" {
 		b.WriteString(m.renderStatus())
 	}
@@ -98,6 +103,11 @@ func (m model) renderReady() string {
 
 	if m.statusMessage != "" {
 		b.WriteString(m.renderStatus())
+	}
+
+	if m.currentTip != "" {
+		b.WriteString(indent.Render(metaStyle().Render("tip  " + m.currentTip)))
+		b.WriteString("\n")
 	}
 
 	b.WriteString(m.renderFooter())
@@ -526,51 +536,30 @@ func (m model) renderFooter() string {
 	indent := indentStyle()
 
 	type kb struct{ key, desc string }
-	type group struct {
-		label string
-		keys  []kb
+
+	row1 := []kb{
+		{"enter", "commit"},
+		{"n", "no-verify"},
+		{"p", "push"},
+		{"r", "regen"},
+		{"v", "variants"},
+		{"f", "feedback"},
+	}
+	row2 := []kb{
+		{"E", "$EDITOR"},
+		{"x", "files"},
+		{"q", "quit"},
+		{"?", "more"},
 	}
 
-	groups := []group{
-		{"commit", []kb{
-			{"enter", "commit"},
-			{"n", "no-verify"},
-			{"p", "push"},
-			{"A", "amend"},
-		}},
-		{"generate", []kb{
-			{"r", "regen"},
-			{"v", "variants"},
-			{"f", "feedback"},
-			{"t", "type"},
-			{"L", "length"},
-			{"M", "emoji"},
-		}},
-		{"view", []kb{
-			{"d", "diff"},
-			{"[/]", "history"},
-			{"e", "edit"},
-			{"E", "$EDITOR"},
-			{"x", "files"},
-		}},
-		{"misc", []kb{
-			{"s", "draft"},
-			{"y", "copy"},
-			{"?", "help"},
-			{"q", "quit"},
-		}},
-	}
-
-	var lines []string
-	for _, g := range groups {
+	render := func(keys []kb) string {
 		var parts []string
-		for _, k := range g.keys {
+		for _, k := range keys {
 			parts = append(parts, footerKeyStyle().Render(k.key)+" "+footerDescStyle().Render(k.desc))
 		}
-		line := footerGroupStyle().Render(g.label) + strings.Join(parts, "  ")
-		lines = append(lines, indent.Render(line))
+		return indent.Render(strings.Join(parts, "  "))
 	}
 
-	return strings.Join(lines, "\n") + "\n"
+	return render(row1) + "\n" + render(row2) + "\n"
 }
 
