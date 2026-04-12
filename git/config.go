@@ -19,6 +19,15 @@ func GetGitName() string {
 	return strings.TrimSpace(string(output))
 }
 
+func GetGitEmail() string {
+	cmd := exec.Command("git", "config", "user.email")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(output))
+}
+
 func GetRepoName() string {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
 	output, err := cmd.Output()

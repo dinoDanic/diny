@@ -16,35 +16,36 @@ import (
 	"github.com/dinoDanic/diny/version"
 )
 
-type CommitRequest struct {
-	GitDiff    string         `json:"gitDiff"`
+type Request struct {
+	Type       string         `json:"type"`
+	UserPrompt string         `json:"userPrompt"`
 	Version    string         `json:"version"`
 	Name       string         `json:"name"`
+	Email      string         `json:"email"`
 	RepoName   string         `json:"repoName"`
 	Config     *config.Config `json:"config"`
 	System     string         `json:"system,omitempty"`
 }
 
-type commitData struct {
-	CommitMessage string `json:"commitMessage"`
+type responseData struct {
+	Message string `json:"message"`
 }
 
-type commitResp struct {
-	Error *string     `json:"error,omitempty"`
-	Data  *commitData `json:"data,omitempty"`
+type response struct {
+	Error *string       `json:"error,omitempty"`
+	Data  *responseData `json:"data,omitempty"`
 }
 
-func CreateCommitMessageWithGroq(gitDiff string, cfg *config.Config) (string, error) {
-	gitName := git.GetGitName()
-	repoName := git.GetRepoName()
-
-	payload := CommitRequest{
-		Config: cfg,
+func sendRequest(reqType string, userPrompt string, cfg *config.Config) (string, error) {
+	payload := Request{
+		Type:       reqType,
+		Config:     cfg,
 		Version:    version.Get(),
-		GitDiff:    gitDiff,
-		Name:       gitName,
-		RepoName:   repoName,
-		System:     getOS(),
+		UserPrompt: userPrompt,
+		Name:       git.GetGitName(),
+		Email:      git.GetGitEmail(),
+		RepoName:   git.GetRepoName(),
+		System:     runtime.GOOS,
 	}
 
 	buf, err := json.Marshal(payload)
@@ -54,7 +55,7 @@ func CreateCommitMessageWithGroq(gitDiff string, cfg *config.Config) (string, er
 
 	req, err := http.NewRequestWithContext(context.Background(),
 		http.MethodPost,
-		server.ServerConfig.BaseURL+"/api/v3/commit",
+		server.ServerConfig.BaseURL+"/api/requests",
 		bytes.NewReader(buf),
 	)
 	if err != nil {
@@ -65,17 +66,14 @@ func CreateCommitMessageWithGroq(gitDiff string, cfg *config.Config) (string, er
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	res, err := client.Do(req)
-
 	if err != nil {
 		return "", fmt.Errorf("do request: %w", err)
 	}
-
 	defer res.Body.Close()
 
 	body, _ := io.ReadAll(res.Body)
 
-	var out commitResp
-
+	var out response
 	if err := json.Unmarshal(body, &out); err != nil {
 		return "", fmt.Errorf("decode response: %w", err)
 	}
@@ -88,13 +86,17 @@ func CreateCommitMessageWithGroq(gitDiff string, cfg *config.Config) (string, er
 		return "", fmt.Errorf("no data in response")
 	}
 
-	if out.Data.CommitMessage == "" {
-		return "", fmt.Errorf("empty commit message from server")
+	if out.Data.Message == "" {
+		return "", fmt.Errorf("empty message from server")
 	}
 
-	return out.Data.CommitMessage, nil
+	return out.Data.Message, nil
 }
 
-func getOS() string {
-	return runtime.GOOS
+func CreateCommitMessageWithGroq(gitDiff string, cfg *config.Config) (string, error) {
+	return sendRequest("commit", gitDiff, cfg)
+}
+
+func CreateTimelineWithGroq(prompt string, cfg *config.Config) (string, error) {
+	return sendRequest("timeline", prompt, cfg)
 }

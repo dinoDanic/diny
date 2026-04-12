@@ -32,7 +32,7 @@ const (
 
 type Config struct {
 	Theme  string       `yaml:"theme" json:"Theme"`
-	Commit CommitConfig `yaml:"commit" json:"Commit"`
+	Commit CommitConfig `yaml:"commit" json:"Request"`
 }
 
 type CommitConfig struct {
