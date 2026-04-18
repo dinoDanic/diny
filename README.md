@@ -1,14 +1,13 @@
 <div align="center">
 
-<img src="https://diny-cli.vercel.app/diny-v2-200-light.png" alt="diny logo" width="200"/>
+<img src="https://diny.run/diny-v2-200-light.png" alt="diny logo" width="200"/>
 
 # diny
 
-### from git diff to clean commits
+### Free AI git commit messages. No API key. No signup.
 
 
-diny is a tiny dinosaur that writes your git commit messages for you.  
-It looks at your staged changes and generates clear, conventional-friendly messages.
+Open-source CLI that turns staged diffs into clean commits in one command.
 
 🔓 **No API key required** • 🔌 Plug and play • ⚡ Fast and reliable • 🌟 Open source
 
@@ -16,13 +15,13 @@ It looks at your staged changes and generates clear, conventional-friendly messa
 
 <div align="center">
     <br />
-<a href="https://peerlist.io/dinodanic/project/diny"><img src="https://diny-cli.vercel.app/peerlist-project-of-the-day.png" alt="diny showcase" width="200"></a>
+<a href="https://peerlist.io/dinodanic/project/diny"><img src="https://diny.run/peerlist-project-of-the-day.png" alt="diny showcase" width="200"></a>
     <br />
-<img src="https://diny-cli.vercel.app/showcase/2.png" alt="diny showcase" width="700"/>
-<img src="https://diny-cli.vercel.app/showcase/3.png" alt="diny showcase" width="700"/>
-<img src="https://diny-cli.vercel.app/showcase/4.png" alt="diny showcase" width="700"/>
-<img src="https://diny-cli.vercel.app/showcase/5.png" alt="diny showcase" width="700"/>
-<img src="https://diny-cli.vercel.app/showcase/6.png" alt="diny showcase" width="700"/>
+<img src="https://diny.run/showcase/2.png" alt="diny showcase" width="700"/>
+<img src="https://diny.run/showcase/3.png" alt="diny showcase" width="700"/>
+<img src="https://diny.run/showcase/4.png" alt="diny showcase" width="700"/>
+<img src="https://diny.run/showcase/5.png" alt="diny showcase" width="700"/>
+<img src="https://diny.run/showcase/6.png" alt="diny showcase" width="700"/>
 
 </div>
 
