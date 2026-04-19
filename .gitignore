@@ -6,4 +6,5 @@ diny.exe
 install.ps1
 dist/
 .env
+stats/
 release.sh
