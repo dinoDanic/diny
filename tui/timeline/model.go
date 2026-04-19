@@ -10,10 +10,9 @@ type state int
 
 const (
 	stateDateSelect state = iota
-	stateEnterDate
-	stateEnterStartDate
-	stateEnterEndDate
-	statePickDate
+	statePickDate      // single custom date
+	statePickStartDate // range: pick start
+	statePickEndDate   // range: pick end
 	stateFetching
 	stateResults
 	stateFeedbackInput
@@ -70,9 +69,10 @@ type model struct {
 	previousAnalyses []string
 	fullPrompt       string
 
-	loader    loader.Model
-	textinput textinput.Model
-	picker    datePicker
+	loader           loader.Model
+	textinput        textinput.Model
+	picker           datePicker
+	savedStartPicker datePicker // preserved start picker when editing end date
 
 	statusMessage string
 	statusIsError bool

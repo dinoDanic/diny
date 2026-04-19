@@ -25,13 +25,6 @@ func commitMessageStyle() lipgloss.Style {
 	return lipgloss.NewStyle().PaddingLeft(2)
 }
 
-func successBigStyle() lipgloss.Style {
-	t := ui.GetCurrentTheme()
-	return lipgloss.NewStyle().
-		Foreground(t.SuccessForeground).
-		Bold(true)
-}
-
 func errorStyle() lipgloss.Style {
 	t := ui.GetCurrentTheme()
 	return lipgloss.NewStyle().Foreground(t.ErrorForeground)

@@ -68,7 +68,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Update textinput for input states
 	switch m.state {
-	case stateEnterDate, stateEnterStartDate, stateEnterEndDate, stateFeedbackInput:
+	case stateFeedbackInput:
 		var cmd tea.Cmd
 		m.textinput, cmd = m.textinput.Update(msg)
 		return m, cmd
@@ -97,65 +97,6 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m.confirmDateChoice()
 		case "q", "ctrl+c":
 			return m, tea.Quit
-		}
-
-	case stateEnterDate:
-		switch key {
-		case "enter":
-			val := m.textinput.Value()
-			m.startDate = val
-			m.dateRange = val
-			m.state = stateFetching
-			m.loader = loader.New(loader.GeneratingMessages)
-			return m, tea.Batch(m.loader.Tick, fetchAndGenerate(m.dateChoice, m.startDate, m.endDate, m.dateRange, m.cfg))
-		case "esc":
-			m.state = stateDateSelect
-			return m, nil
-		default:
-			var cmd tea.Cmd
-			m.textinput, cmd = m.textinput.Update(msg)
-			return m, cmd
-		}
-
-	case stateEnterStartDate:
-		switch key {
-		case "enter":
-			m.startDate = m.textinput.Value()
-			m.state = stateEnterEndDate
-			ti := textinput.New()
-			ti.Placeholder = "YYYY-MM-DD"
-			ti.Focus()
-			m.textinput = ti
-			return m, nil
-		case "esc":
-			m.state = stateDateSelect
-			return m, nil
-		default:
-			var cmd tea.Cmd
-			m.textinput, cmd = m.textinput.Update(msg)
-			return m, cmd
-		}
-
-	case stateEnterEndDate:
-		switch key {
-		case "enter":
-			m.endDate = m.textinput.Value()
-			m.dateRange = m.startDate + " to " + m.endDate
-			m.state = stateFetching
-			m.loader = loader.New(loader.GeneratingMessages)
-			return m, tea.Batch(m.loader.Tick, fetchAndGenerate(m.dateChoice, m.startDate, m.endDate, m.dateRange, m.cfg))
-		case "esc":
-			m.state = stateEnterStartDate
-			ti := textinput.New()
-			ti.Placeholder = "YYYY-MM-DD"
-			ti.SetValue(m.startDate)
-			ti.Focus()
-			m.textinput = ti
-			return m, nil
-		default:
-			var cmd tea.Cmd
-			m.textinput, cmd = m.textinput.Update(msg)
-			return m, cmd
 		}
 
 	case statePickDate:
@@ -187,6 +128,79 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, tea.Batch(m.loader.Tick, fetchAndGenerate(m.dateChoice, m.startDate, m.endDate, m.dateRange, m.cfg))
 		case "esc":
 			m.state = stateDateSelect
+			return m, nil
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		}
+		return m, nil
+
+	case statePickStartDate:
+		switch key {
+		case "left", "h":
+			m.picker.moveFocus(-1)
+			return m, nil
+		case "right", "l":
+			m.picker.moveFocus(1)
+			return m, nil
+		case "up", "k":
+			m.picker.adjust(1)
+			return m, nil
+		case "down", "j":
+			m.picker.adjust(-1)
+			return m, nil
+		case "pgup", "shift+up":
+			m.picker.adjust(10)
+			return m, nil
+		case "pgdown", "shift+down":
+			m.picker.adjust(-10)
+			return m, nil
+		case "enter":
+			m.startDate = m.picker.dateString()
+			m.savedStartPicker = m.picker
+			m.picker = newDatePicker("Pick end date")
+			m.state = statePickEndDate
+			return m, nil
+		case "esc":
+			m.state = stateDateSelect
+			return m, nil
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		}
+		return m, nil
+
+	case statePickEndDate:
+		switch key {
+		case "left", "h":
+			m.picker.moveFocus(-1)
+			return m, nil
+		case "right", "l":
+			m.picker.moveFocus(1)
+			return m, nil
+		case "up", "k":
+			m.picker.adjust(1)
+			return m, nil
+		case "down", "j":
+			m.picker.adjust(-1)
+			return m, nil
+		case "pgup", "shift+up":
+			m.picker.adjust(10)
+			return m, nil
+		case "pgdown", "shift+down":
+			m.picker.adjust(-10)
+			return m, nil
+		case "enter":
+			m.endDate = m.picker.dateString()
+			if m.endDate < m.startDate {
+				m.picker.errMsg = "End date must be on or after start date"
+				return m, nil
+			}
+			m.dateRange = m.startDate + " to " + m.endDate
+			m.state = stateFetching
+			m.loader = loader.New(loader.GeneratingMessages)
+			return m, tea.Batch(m.loader.Tick, fetchAndGenerate(m.dateChoice, m.startDate, m.endDate, m.dateRange, m.cfg))
+		case "esc":
+			m.picker = m.savedStartPicker
+			m.state = statePickStartDate
 			return m, nil
 		case "q", "ctrl+c":
 			return m, tea.Quit
@@ -289,11 +303,8 @@ func (m model) confirmDateChoice() (tea.Model, tea.Cmd) {
 		return m, nil
 	case 1: // Date range
 		m.dateChoice = "range"
-		m.state = stateEnterStartDate
-		ti := textinput.New()
-		ti.Placeholder = "YYYY-MM-DD"
-		ti.Focus()
-		m.textinput = ti
+		m.state = statePickStartDate
+		m.picker = newDatePicker("Pick start date")
 		return m, nil
 	}
 	return m, nil

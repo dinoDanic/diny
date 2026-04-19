@@ -18,14 +18,8 @@ func (m model) View() string {
 	switch m.state {
 	case stateDateSelect:
 		b.WriteString(m.renderDateSelect())
-	case stateEnterDate:
-		b.WriteString(m.renderTextInput("Enter date (YYYY-MM-DD):"))
-	case statePickDate:
+	case statePickDate, statePickStartDate, statePickEndDate:
 		b.WriteString(m.renderDatePicker())
-	case stateEnterStartDate:
-		b.WriteString(m.renderTextInput("Enter start date (YYYY-MM-DD):"))
-	case stateEnterEndDate:
-		b.WriteString(m.renderTextInput("Enter end date (YYYY-MM-DD):"))
 	case stateFetching, stateRegenerating:
 		b.WriteString(m.renderLoading())
 	case stateResults:
@@ -69,23 +63,6 @@ func (m model) renderDateSelect() string {
 		footerKeyStyle().Render("j/k") + " " + footerDescStyle().Render("move") + "  " +
 			footerKeyStyle().Render("enter") + " " + footerDescStyle().Render("confirm") + "  " +
 			footerKeyStyle().Render("q") + " " + footerDescStyle().Render("quit"),
-	))
-	b.WriteString("\n")
-
-	return b.String()
-}
-
-func (m model) renderTextInput(title string) string {
-	indent := indentStyle()
-	var b strings.Builder
-
-	b.WriteString(indent.Render(sectionTitleStyle().Render(title)))
-	b.WriteString("\n")
-	b.WriteString(indent.Render(m.textinput.View()))
-	b.WriteString("\n\n")
-	b.WriteString(indent.Render(
-		footerKeyStyle().Render("enter") + " " + footerDescStyle().Render("confirm") + "  " +
-			footerKeyStyle().Render("esc") + " " + footerDescStyle().Render("back"),
 	))
 	b.WriteString("\n")
 
@@ -270,5 +247,3 @@ func (m model) renderDatePicker() string {
 	return b.String()
 }
 
-// successBigStyle is defined in styles.go but referenced here to suppress unused warning
-var _ = successBigStyle
