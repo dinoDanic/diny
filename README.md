@@ -36,7 +36,7 @@ Open-source CLI that turns staged diffs into clean commits in one command.
 - 🎛️ Generate 3 message variants and pick your favourite
 - ✏️ Inline editing or open in `$EDITOR`
 - 📂 File picker to stage/unstage files without leaving diny
-- 📊 Timeline analysis of commit history and message patterns
+- 📊 Timeline analysis with date presets (today, this week, last month…) or a custom date/range picker
 - 📋 AI-powered changelog generation between tags or commits
 - 🎨 Customizable UI themes (10+ dark and light themes)
 - ⚙️ Three-tier config system (global, project-shared, project-private)
