@@ -39,16 +39,15 @@ func (m model) View() string {
 	return b.String()
 }
 
-var dateMenuItems = []string{"Today", "Specific date", "Date range"}
-
 func (m model) renderDateSelect() string {
 	indent := indentStyle()
+	items := dateMenuLabels()
 	var b strings.Builder
 
 	b.WriteString(indent.Render(sectionTitleStyle().Render("Select timeline period")))
 	b.WriteString("\n\n")
 
-	for i, item := range dateMenuItems {
+	for i, item := range items {
 		var line string
 		if i == m.dateCursor {
 			line = footerKeyStyle().Render("▶") + "  " +

@@ -1,6 +1,8 @@
 package timeline
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dinoDanic/diny/tui/loader"
@@ -87,7 +89,7 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case "down", "j":
-			if m.dateCursor < len(dateMenuItems)-1 {
+			if m.dateCursor < dateMenuCount-1 {
 				m.dateCursor++
 			}
 			return m, nil
@@ -221,14 +223,31 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) confirmDateChoice() (tea.Model, tea.Cmd) {
-	switch m.dateCursor {
-	case 0: // Today
-		m.dateChoice = "today"
-		m.dateRange = "today"
+	presets := resolvePresets(time.Now())
+
+	// Preset selections (indices 0–5): resolve dates and go straight to fetching
+	if m.dateCursor < len(presets) {
+		p := presets[m.dateCursor]
+		m.dateRange = presetDateRange(p)
+		m.startDate = p.start.Format("2006-01-02")
+		m.endDate = p.end.Format("2006-01-02")
+
+		if p.name == "Today" {
+			m.dateChoice = "today"
+		} else if p.start.Equal(p.end) {
+			m.dateChoice = "date"
+		} else {
+			m.dateChoice = "range"
+		}
+
 		m.state = stateFetching
 		m.loader = loader.New(loader.GeneratingMessages)
-		return m, tea.Batch(m.loader.Tick, fetchAndGenerate("today", "", "", "today", m.cfg))
-	case 1: // Specific date
+		return m, tea.Batch(m.loader.Tick, fetchAndGenerate(m.dateChoice, m.startDate, m.endDate, m.dateRange, m.cfg))
+	}
+
+	// Custom selections
+	switch m.dateCursor - len(presets) {
+	case 0: // Specific date
 		m.dateChoice = "date"
 		m.state = stateEnterDate
 		ti := textinput.New()
@@ -236,7 +255,7 @@ func (m model) confirmDateChoice() (tea.Model, tea.Cmd) {
 		ti.Focus()
 		m.textinput = ti
 		return m, nil
-	case 2: // Date range
+	case 1: // Date range
 		m.dateChoice = "range"
 		m.state = stateEnterStartDate
 		ti := textinput.New()
