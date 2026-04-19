@@ -13,6 +13,7 @@ const (
 	stateEnterDate
 	stateEnterStartDate
 	stateEnterEndDate
+	statePickDate
 	stateFetching
 	stateResults
 	stateFeedbackInput
@@ -71,6 +72,7 @@ type model struct {
 
 	loader    loader.Model
 	textinput textinput.Model
+	picker    datePicker
 
 	statusMessage string
 	statusIsError bool

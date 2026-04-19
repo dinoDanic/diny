@@ -58,3 +58,24 @@ func footerDescStyle() lipgloss.Style {
 	t := ui.GetCurrentTheme()
 	return lipgloss.NewStyle().Foreground(t.MutedForeground)
 }
+
+func pickerFocusedStyle() lipgloss.Style {
+	t := ui.GetCurrentTheme()
+	return lipgloss.NewStyle().
+		Foreground(t.PrimaryForeground).
+		Bold(true).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(t.PrimaryForeground).
+		Align(lipgloss.Center).
+		Width(8)
+}
+
+func pickerNormalStyle() lipgloss.Style {
+	t := ui.GetCurrentTheme()
+	return lipgloss.NewStyle().
+		Foreground(t.MutedForeground).
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(t.MutedForeground).
+		Align(lipgloss.Center).
+		Width(8)
+}

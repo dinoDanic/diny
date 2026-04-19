@@ -20,6 +20,8 @@ func (m model) View() string {
 		b.WriteString(m.renderDateSelect())
 	case stateEnterDate:
 		b.WriteString(m.renderTextInput("Enter date (YYYY-MM-DD):"))
+	case statePickDate:
+		b.WriteString(m.renderDatePicker())
 	case stateEnterStartDate:
 		b.WriteString(m.renderTextInput("Enter start date (YYYY-MM-DD):"))
 	case stateEnterEndDate:
@@ -213,6 +215,56 @@ func (m model) renderAnalysis() string {
 	}
 	analysisStyle := lipgloss.NewStyle().Width(w)
 	b.WriteString(indent.Render(analysisStyle.Render(m.analysis)))
+	b.WriteString("\n")
+
+	return b.String()
+}
+
+func (m model) renderDatePicker() string {
+	indent := indentStyle()
+	dp := m.picker
+	var b strings.Builder
+
+	b.WriteString(indent.Render(sectionTitleStyle().Render(dp.label)))
+	b.WriteString("\n\n")
+
+	// Render three columns: Year, Month, Day
+	labels := []string{"Year", "Month", "Day"}
+	values := []string{
+		fmt.Sprintf("%04d", dp.year),
+		fmt.Sprintf("%02d", dp.month),
+		fmt.Sprintf("%02d", dp.day),
+	}
+
+	var columns []string
+	for i := 0; i < 3; i++ {
+		lbl := labels[i]
+		val := values[i]
+		if i == dp.focus {
+			col := pickerFocusedStyle().Render(fmt.Sprintf(" %s \n %s ", lbl, val))
+			columns = append(columns, col)
+		} else {
+			col := pickerNormalStyle().Render(fmt.Sprintf(" %s \n %s ", lbl, val))
+			columns = append(columns, col)
+		}
+	}
+
+	row := lipgloss.JoinHorizontal(lipgloss.Top, columns[0], "  ", columns[1], "  ", columns[2])
+	b.WriteString(indent.Render(row))
+	b.WriteString("\n\n")
+
+	if dp.errMsg != "" {
+		b.WriteString(indent.Render(errorStyle().Render(dp.errMsg)))
+		b.WriteString("\n\n")
+	}
+
+	b.WriteString(indent.Render(
+		footerKeyStyle().Render("\u2190/\u2192") + " " + footerDescStyle().Render("move") + "  " +
+			footerKeyStyle().Render("\u2191/\u2193") + " " + footerDescStyle().Render("adjust") + "  " +
+			footerKeyStyle().Render("PgUp/Dn") + " " + footerDescStyle().Render("jump") + "  " +
+			footerKeyStyle().Render("enter") + " " + footerDescStyle().Render("confirm") + "  " +
+			footerKeyStyle().Render("esc") + " " + footerDescStyle().Render("back"),
+	))
 	b.WriteString("\n")
 
 	return b.String()

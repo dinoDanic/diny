@@ -158,6 +158,41 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
+	case statePickDate:
+		switch key {
+		case "left", "h":
+			m.picker.moveFocus(-1)
+			return m, nil
+		case "right", "l":
+			m.picker.moveFocus(1)
+			return m, nil
+		case "up", "k":
+			m.picker.adjust(1)
+			return m, nil
+		case "down", "j":
+			m.picker.adjust(-1)
+			return m, nil
+		case "pgup", "shift+up":
+			m.picker.adjust(10)
+			return m, nil
+		case "pgdown", "shift+down":
+			m.picker.adjust(-10)
+			return m, nil
+		case "enter":
+			date := m.picker.dateString()
+			m.startDate = date
+			m.dateRange = date
+			m.state = stateFetching
+			m.loader = loader.New(loader.GeneratingMessages)
+			return m, tea.Batch(m.loader.Tick, fetchAndGenerate(m.dateChoice, m.startDate, m.endDate, m.dateRange, m.cfg))
+		case "esc":
+			m.state = stateDateSelect
+			return m, nil
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		}
+		return m, nil
+
 	case stateResults:
 		switch key {
 		case "c":
@@ -249,11 +284,8 @@ func (m model) confirmDateChoice() (tea.Model, tea.Cmd) {
 	switch m.dateCursor - len(presets) {
 	case 0: // Specific date
 		m.dateChoice = "date"
-		m.state = stateEnterDate
-		ti := textinput.New()
-		ti.Placeholder = "YYYY-MM-DD"
-		ti.Focus()
-		m.textinput = ti
+		m.state = statePickDate
+		m.picker = newDatePicker("Pick a date")
 		return m, nil
 	case 1: // Date range
 		m.dateChoice = "range"
