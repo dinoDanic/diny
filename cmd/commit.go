@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/dinoDanic/diny/tui/app"
+	"github.com/dinoDanic/diny/update"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +14,12 @@ var commitCmd = &cobra.Command{
 Diny reads your staged changes and propose a commit message, and lets
 you commit, edit, regenerate, or refine it—all`,
 	Run: func(cmd *cobra.Command, args []string) {
+		checker := update.NewUpdateChecker(Version)
+		updateCh := checker.CheckAsync()
+
 		app.Run(AppConfig, Version)
+
+		checker.PromptIfAvailable(updateCh)
 	},
 }
 

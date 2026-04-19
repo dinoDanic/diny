@@ -9,7 +9,6 @@ import (
 
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/ui"
-	"github.com/dinoDanic/diny/update"
 	"github.com/spf13/cobra"
 )
 
@@ -34,9 +33,6 @@ spending time manually writing messages.
 		if cmd.Name() == "theme" {
 			return
 		}
-
-		checker := update.NewUpdateChecker(Version)
-		checker.CheckForUpdate()
 
 		result, err := config.LoadOrRecoverWithProject("")
 		if err != nil {
