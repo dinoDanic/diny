@@ -122,8 +122,11 @@ func Load(cfgFile string) (*Config, error) {
 		}
 	}
 
-	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
+	cfg, err := loadDefaultConfig()
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal(data, cfg); err != nil {
 		return nil, fmt.Errorf("invalid config file: %w", err)
 	}
 
@@ -131,7 +134,7 @@ func Load(cfgFile string) (*Config, error) {
 		return nil, fmt.Errorf("config validation failed: %w", err)
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }
 
 type LoadResult struct {
