@@ -46,9 +46,8 @@ type starOption struct {
 
 var starOptions = []starOption{
 	{"starred", '1', "Star it"},
-	{"dismissed", '2', "Don't ask again"},
-	{"already_given", '3', "Already starred"},
-	{"dismissed", '0', "Close"},
+	{"already_given", '2', "Already starred"},
+	{"dismissed", '0', "Don't ask again"},
 }
 
 type starModel struct {
