@@ -9,6 +9,7 @@ import (
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/feedback"
 	"github.com/dinoDanic/diny/git"
+	tuiprompts "github.com/dinoDanic/diny/tui/prompts"
 	"github.com/dinoDanic/diny/version"
 	"github.com/mattn/go-isatty"
 )
@@ -78,16 +79,25 @@ func showStarPrompt(state *State, cfg *config.Config) {
 	outcome := ShowStar(state, cfg)
 	_ = SaveState(state)
 
-	if outcome != "" {
-		feedback.Send(feedback.Payload{
-			Type:     "star",
-			Value:    outcome,
-			Email:    git.GetGitEmail(),
-			Name:     git.GetGitName(),
-			Version:  version.Get(),
-			System:   runtime.GOOS,
-			RepoName: git.GetRepoName(),
-		})
+	if outcome == "" {
+		return
+	}
+
+	feedback.Send(feedback.Payload{
+		Type:     "star",
+		Value:    outcome,
+		Email:    git.GetGitEmail(),
+		Name:     git.GetGitName(),
+		Version:  version.Get(),
+		System:   runtime.GOOS,
+		RepoName: git.GetRepoName(),
+	})
+
+	switch outcome {
+	case "starred":
+		tuiprompts.PrintThanks("Thanks for starring! ⭐")
+	case "already_given":
+		tuiprompts.PrintThanks("Thanks!")
 	}
 }
 
@@ -95,7 +105,7 @@ func showRatingPrompt(state *State, cfg *config.Config) {
 	value := ShowRating(state, cfg)
 	_ = SaveState(state)
 
-	// Only POST if the user rated (1-3), not on dismiss (0) or error (-1).
+	// Only POST + thank if the user rated (1-3), not on dismiss (0) or cancel (-1).
 	if value >= 1 && value <= 3 {
 		feedback.Send(feedback.Payload{
 			Type:     "rating",
@@ -106,6 +116,7 @@ func showRatingPrompt(state *State, cfg *config.Config) {
 			System:   runtime.GOOS,
 			RepoName: git.GetRepoName(),
 		})
+		tuiprompts.PrintThanks("Thanks for the feedback!")
 	}
 }
 
@@ -123,5 +134,6 @@ func showFeedbackPrompt(state *State, cfg *config.Config) {
 			System:   runtime.GOOS,
 			RepoName: git.GetRepoName(),
 		})
+		tuiprompts.PrintThanks("Thanks for the feedback!")
 	}
 }
