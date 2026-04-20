@@ -4,6 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
+	"github.com/dinoDanic/diny/commit"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/tui/loader"
@@ -26,6 +27,12 @@ const (
 	stateDiffView
 	stateTypePicker
 	stateFilePicker
+	stateSplitGenerating
+	stateSplitPlan
+	stateSplitCommitting
+	stateSplitSuccess
+	stateSplitFailure
+	stateSplitFeedback
 )
 
 type fileEntry struct {
@@ -74,6 +81,11 @@ type editorFinishedMsg struct {
 	newMessage string
 }
 
+type splitEditorFinishedMsg struct {
+	groupIdx   int
+	newMessage string
+}
+
 type variantsReadyMsg struct {
 	variants []string
 }
@@ -84,6 +96,24 @@ type allFilesMsg struct {
 
 type filePickerDoneMsg struct {
 	files []git.StagedFile
+}
+
+type splitPlanReadyMsg struct {
+	plan []commit.SplitGroup
+}
+
+type splitCommitDoneMsg struct {
+	hashes []string
+}
+
+// splitCommitFailureMsg reports a structured failure after one or more
+// successful commits have already landed.
+type splitCommitFailureMsg struct {
+	committedHashes []string       // hashes from groups that succeeded (indexed 0..K-1)
+	failedIndex     int            // index of the failing group in the plan
+	failedStderr    string         // stderr from git for the failing group
+	remainingFiles  []string       // files from groups that never ran
+	failedFiles     []string       // files from the failing group (left staged)
 }
 
 // Model
@@ -149,9 +179,32 @@ type model struct {
 	// File picker (stateFilePicker)
 	fileEntries      []fileEntry
 	filePickerCursor int
+
+	// Split plan (stateSplitPlan / stateSplitCommitting / stateSplitSuccess)
+	splitPlan     []commit.SplitGroup
+	splitCursor   int
+	splitExpanded map[int]bool
+	splitHashes   []string
+	splitFailure  *splitCommitFailureMsg
+	splitPushed   bool
+
+	// Split move mode — reassigning a file from its current group to another
+	splitMoveMode     bool // cursor is on a file in splitCursor's group
+	splitMoveFileIdx  int  // index into splitPlan[splitCursor].Files
+	splitMovePickDest bool // second step: choose destination group (>9 groups or via enter)
+	splitMoveDestIdx  int  // cursor into destination group list
+
+	// Split regeneration — session history and overlay
+	splitPrevPlans    [][]commit.SplitGroup // all rejected plans in this session
+	splitRegenerating bool                  // spinner overlay on plan view
+
+	// CLI flags forwarded from cobra
+	cliNoVerify bool
+	cliPush     bool
+	cliPrint    bool
 }
 
-func newModel(cfg *config.Config, version string) model {
+func newModel(cfg *config.Config, version string, opts Options) model {
 	ti := textinput.New()
 	ti.Placeholder = "Describe what to change..."
 	ti.CharLimit = 200
@@ -166,5 +219,8 @@ func newModel(cfg *config.Config, version string) model {
 		loader:            loader.New(loader.InitMessages),
 		messageHistoryIdx: -1,
 		currentTip:        randomTip(),
+		cliNoVerify:       opts.NoVerify,
+		cliPush:           opts.Push,
+		cliPrint:          opts.Print,
 	}
 }

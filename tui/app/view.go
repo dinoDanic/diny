@@ -44,6 +44,18 @@ func (m model) View() string {
 		b.WriteString(m.renderFilePicker())
 	case stateError:
 		b.WriteString(m.renderError())
+	case stateSplitGenerating:
+		b.WriteString(m.renderSplitGenerating())
+	case stateSplitPlan:
+		b.WriteString(m.renderSplitPlan())
+	case stateSplitCommitting:
+		b.WriteString(m.renderSplitCommitting())
+	case stateSplitSuccess:
+		b.WriteString(m.renderSplitSuccess())
+	case stateSplitFailure:
+		b.WriteString(m.renderSplitFailure())
+	case stateSplitFeedback:
+		b.WriteString(m.renderSplitFeedback())
 	}
 
 	return b.String()
@@ -180,6 +192,7 @@ func (m model) renderHelp() string {
 		{"[", "Browse previous generated messages"},
 		{"]", "Browse forward through message history"},
 		{"x", "Manage staged/unstaged files"},
+		{"S", "Split staged changes into multiple commits"},
 		{"s", "Save as draft"},
 		{"y", "Copy to clipboard"},
 		{"?", "Toggle help"},
@@ -540,6 +553,313 @@ func (m model) renderStatus() string {
 	return indent.Render(style.Render(m.statusMessage)) + "\n"
 }
 
+func (m model) renderSplitGenerating() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(m.renderStagedFiles())
+	b.WriteString("\n")
+	b.WriteString(indent.Render(sectionTitleStyle().Render("Planning split")))
+	b.WriteString("\n")
+	b.WriteString(indent.Render(m.loader.View()))
+	b.WriteString("\n")
+	b.WriteString(indent.Render(metaStyle().Render("grouping staged files into logical commits...")))
+	b.WriteString("\n")
+	return b.String()
+}
+
+func (m model) renderSplitPlan() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	total := len(m.splitPlan)
+
+	title := fmt.Sprintf("Split plan — %d commit(s)", total)
+	if m.splitMoveMode {
+		if m.splitMovePickDest {
+			title += " — pick destination group"
+		} else {
+			title += " — move mode"
+		}
+	}
+	b.WriteString("\n")
+	b.WriteString(indent.Render(sectionTitleStyle().Render(title)))
+	b.WriteString("\n\n")
+
+	if m.splitRegenerating {
+		b.WriteString(indent.Render(m.loader.View()))
+		b.WriteString("\n")
+		b.WriteString(indent.Render(metaStyle().Render("regenerating plan...")))
+		b.WriteString("\n\n")
+	}
+
+	for i, g := range m.splitPlan {
+		groupSelected := i == m.splitCursor
+		destHighlight := m.splitMoveMode && m.splitMovePickDest && i == m.splitMoveDestIdx && i != m.splitCursor
+		expanded := m.splitExpanded[i]
+
+		cursor := "  "
+		if groupSelected {
+			cursor = "> "
+		} else if destHighlight {
+			cursor = "→ "
+		}
+
+		caret := "▸"
+		if expanded {
+			caret = "▾"
+		}
+
+		firstLine := g.Message
+		if idx := strings.Index(g.Message, "\n"); idx >= 0 {
+			firstLine = g.Message[:idx]
+		}
+
+		header := fmt.Sprintf("[%d/%d] %s — %s", g.Order, total, g.Type, firstLine)
+		var headerStyle lipgloss.Style
+		switch {
+		case groupSelected:
+			headerStyle = sectionTitleStyle()
+		case destHighlight:
+			headerStyle = splitDestStyle()
+		default:
+			headerStyle = lipgloss.NewStyle()
+		}
+		line := cursor + caret + " " + headerStyle.Render(header)
+		b.WriteString(indent.Render(line))
+		b.WriteString("\n")
+
+		if expanded {
+			for fi, f := range g.Files {
+				status := m.stagedStatus(f)
+				var statusStyle lipgloss.Style
+				switch status {
+				case "A":
+					statusStyle = fileAddedStyle()
+				case "M":
+					statusStyle = fileModifiedStyle()
+				case "D":
+					statusStyle = fileDeletedStyle()
+				case "R":
+					statusStyle = fileRenamedStyle()
+				default:
+					statusStyle = metaStyle()
+				}
+
+				marker := "  "
+				if m.splitMoveMode && !m.splitMovePickDest && groupSelected && fi == m.splitMoveFileIdx {
+					marker = splitMoveCursorStyle().Render("▶ ")
+				}
+
+				fileLine := "   " + marker + statusStyle.Render(status+" "+f)
+				b.WriteString(indent.Render(fileLine))
+				b.WriteString("\n")
+			}
+		}
+	}
+
+	b.WriteString("\n")
+
+	if m.statusMessage != "" {
+		b.WriteString(m.renderStatus())
+	}
+
+	var keys []struct{ key, desc string }
+	if m.splitMoveMode {
+		if m.splitMovePickDest {
+			keys = []struct{ key, desc string }{
+				{"↑/k", "prev group"},
+				{"↓/j", "next group"},
+				{"enter", "move here"},
+				{"esc", "back"},
+			}
+		} else {
+			if len(m.splitPlan) <= 9 {
+				keys = []struct{ key, desc string }{
+					{"↑/k", "prev file"},
+					{"↓/j", "next file"},
+					{"1-9", "reassign to group"},
+					{"enter", "pick dest"},
+					{"esc", "cancel"},
+				}
+			} else {
+				keys = []struct{ key, desc string }{
+					{"↑/k", "prev file"},
+					{"↓/j", "next file"},
+					{"enter", "pick dest"},
+					{"esc", "cancel"},
+				}
+			}
+		}
+	} else {
+		keys = []struct{ key, desc string }{
+			{"↑/k", "up"},
+			{"↓/j", "down"},
+			{"enter/space", "expand"},
+			{"e", "edit msg"},
+			{"m", "move file"},
+			{"r", "regen"},
+			{"f", "regen w/ feedback"},
+			{"c", "confirm all"},
+			{"esc/q", "cancel"},
+		}
+	}
+	var parts []string
+	for _, k := range keys {
+		parts = append(parts, footerKeyStyle().Render(k.key)+" "+footerDescStyle().Render(k.desc))
+	}
+	b.WriteString(indent.Render(strings.Join(parts, "  ")))
+	b.WriteString("\n")
+
+	return b.String()
+}
+
+func (m model) renderSplitCommitting() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(indent.Render(sectionTitleStyle().Render(fmt.Sprintf("Splitting into %d commit(s)", len(m.splitPlan)))))
+	b.WriteString("\n")
+	b.WriteString(indent.Render(m.loader.View()))
+	b.WriteString("\n")
+	return b.String()
+}
+
+func (m model) renderSplitSuccess() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	b.WriteString("\n")
+	headline := fmt.Sprintf("Created %d commit(s)!", len(m.splitHashes))
+	if m.splitPushed {
+		headline += " Pushed!"
+	}
+	b.WriteString(indent.Render(successBigStyle().Render(headline)))
+	b.WriteString("\n\n")
+
+	for i, g := range m.splitPlan {
+		hash := ""
+		if i < len(m.splitHashes) {
+			hash = m.splitHashes[i]
+		}
+		firstLine := g.Message
+		if idx := strings.Index(g.Message, "\n"); idx >= 0 {
+			firstLine = g.Message[:idx]
+		}
+		line := fmt.Sprintf("  %s %s", hash, firstLine)
+		b.WriteString(indent.Render(line))
+		b.WriteString("\n")
+	}
+
+	b.WriteString("\n")
+	return b.String()
+}
+
+func (m model) renderSplitFeedback() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	b.WriteString("\n")
+	b.WriteString(indent.Render(sectionTitleStyle().Render("Plan feedback")))
+	b.WriteString("\n")
+	b.WriteString(indent.Render(metaStyle().Render("Describe what's off so the model regroups differently on the next plan.")))
+	b.WriteString("\n\n")
+	b.WriteString(indent.Render(m.textinput.View()))
+	b.WriteString("\n\n")
+	b.WriteString(indent.Render(footerKeyStyle().Render("enter") + " " + footerDescStyle().Render("submit") + "  " + footerKeyStyle().Render("esc") + " " + footerDescStyle().Render("cancel")))
+	b.WriteString("\n")
+	return b.String()
+}
+
+func (m model) renderSplitFailure() string {
+	indent := indentStyle()
+	var b strings.Builder
+
+	if m.splitFailure == nil {
+		return ""
+	}
+	f := m.splitFailure
+
+	b.WriteString("\n")
+	b.WriteString(indent.Render(errorStyle().Render("Split stopped — one commit failed")))
+	b.WriteString("\n\n")
+
+	committed := len(f.committedHashes)
+	if committed > 0 {
+		b.WriteString(indent.Render(sectionTitleStyle().Render(fmt.Sprintf("Landed (%d):", committed))))
+		b.WriteString("\n")
+		for i := 0; i < committed && i < len(m.splitPlan); i++ {
+			hash := f.committedHashes[i]
+			firstLine := m.splitPlan[i].Message
+			if idx := strings.Index(firstLine, "\n"); idx >= 0 {
+				firstLine = firstLine[:idx]
+			}
+			b.WriteString(indent.Render(fmt.Sprintf("  %s %s", hash, firstLine)))
+			b.WriteString("\n")
+		}
+		b.WriteString("\n")
+	} else {
+		b.WriteString(indent.Render(metaStyle().Render("No commits landed before the failure.")))
+		b.WriteString("\n\n")
+	}
+
+	if f.failedIndex >= 0 && f.failedIndex < len(m.splitPlan) {
+		g := m.splitPlan[f.failedIndex]
+		firstLine := g.Message
+		if idx := strings.Index(firstLine, "\n"); idx >= 0 {
+			firstLine = firstLine[:idx]
+		}
+		b.WriteString(indent.Render(sectionTitleStyle().Render(fmt.Sprintf("Failed group [%d/%d] %s — %s", g.Order, len(m.splitPlan), g.Type, firstLine))))
+		b.WriteString("\n")
+	}
+
+	if f.failedStderr != "" {
+		b.WriteString(indent.Render(metaStyle().Render("git stderr:")))
+		b.WriteString("\n")
+		for _, line := range strings.Split(f.failedStderr, "\n") {
+			b.WriteString(indent.Render("  " + statusErrorStyle().Render(line)))
+			b.WriteString("\n")
+		}
+		b.WriteString("\n")
+	}
+
+	if len(f.failedFiles) > 0 {
+		b.WriteString(indent.Render(sectionTitleStyle().Render("Still staged (failed group's files):")))
+		b.WriteString("\n")
+		for _, path := range f.failedFiles {
+			b.WriteString(indent.Render("  " + metaStyle().Render(path)))
+			b.WriteString("\n")
+		}
+		b.WriteString("\n")
+	}
+
+	if len(f.remainingFiles) > 0 {
+		b.WriteString(indent.Render(sectionTitleStyle().Render(fmt.Sprintf("Unstaged — groups that never ran (%d files):", len(f.remainingFiles)))))
+		b.WriteString("\n")
+		for _, path := range f.remainingFiles {
+			b.WriteString(indent.Render("  " + metaStyle().Render(path)))
+			b.WriteString("\n")
+		}
+		b.WriteString("\n")
+	}
+
+	b.WriteString(indent.Render(footerKeyStyle().Render("enter/q") + " " + footerDescStyle().Render("quit")))
+	b.WriteString("\n")
+
+	return b.String()
+}
+
+func (m model) stagedStatus(path string) string {
+	for _, f := range m.stagedFiles {
+		if f.Path == path {
+			return f.Status
+		}
+	}
+	return "?"
+}
+
 func (m model) renderFooter() string {
 	indent := indentStyle()
 
@@ -556,6 +876,7 @@ func (m model) renderFooter() string {
 	row2 := []kb{
 		{"E", "$EDITOR"},
 		{"x", "files"},
+		{"S", "split"},
 		{"q", "quit"},
 		{"?", "more"},
 	}

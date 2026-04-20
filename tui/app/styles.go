@@ -125,3 +125,17 @@ func indentStyle() lipgloss.Style {
 	return lipgloss.NewStyle().PaddingLeft(3)
 }
 
+func splitDestStyle() lipgloss.Style {
+	t := ui.GetCurrentTheme()
+	return lipgloss.NewStyle().
+		Foreground(t.PrimaryForeground).
+		Underline(true)
+}
+
+func splitMoveCursorStyle() lipgloss.Style {
+	t := ui.GetCurrentTheme()
+	return lipgloss.NewStyle().
+		Foreground(t.PrimaryForeground).
+		Bold(true)
+}
+

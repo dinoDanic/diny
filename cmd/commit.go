@@ -18,7 +18,15 @@ you commit, edit, regenerate, or refine it—all`,
 		checker := update.NewUpdateChecker(Version)
 		updateCh := checker.CheckAsync()
 
-		result := app.Run(AppConfig, Version)
+		noVerify, _ := cmd.Flags().GetBool("no-verify")
+		push, _ := cmd.Flags().GetBool("push")
+		print, _ := cmd.Flags().GetBool("print")
+
+		result := app.Run(AppConfig, Version, app.Options{
+			NoVerify: noVerify,
+			Push:     push,
+			Print:    print,
+		})
 
 		if result.CommitSucceeded {
 			prompts.MaybeShow(AppConfig)
@@ -29,5 +37,8 @@ you commit, edit, regenerate, or refine it—all`,
 }
 
 func init() {
+	commitCmd.Flags().Bool("no-verify", false, "Skip pre-commit and commit-msg hooks on every commit")
+	commitCmd.Flags().Bool("push", false, "Push after committing (after the final commit when splitting)")
+	commitCmd.Flags().Bool("print", false, "Print the generated message to stdout (incompatible with split)")
 	rootCmd.AddCommand(commitCmd)
 }

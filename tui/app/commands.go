@@ -322,3 +322,92 @@ func doCopy(message string) tea.Cmd {
 		return copiedMsg{}
 	}
 }
+
+func loadSplitPlan(diff string, cfg *config.Config, staged []git.StagedFile, previousPlans [][]commit.SplitGroup, feedback string) tea.Cmd {
+	return func() tea.Msg {
+		var extras *commit.SplitRequestExtras
+		if len(previousPlans) > 0 || feedback != "" {
+			extras = &commit.SplitRequestExtras{
+				PreviousPlans: previousPlans,
+				Feedback:      feedback,
+			}
+		}
+		plan, err := commit.CreateSplitPlan(diff, cfg, extras)
+		if err != nil {
+			return errMsg{err: fmt.Errorf("failed to generate split plan: %w", err)}
+		}
+		plan = commit.NormalizePlan(plan)
+		if err := commit.ValidatePlan(plan, staged); err != nil {
+			return errMsg{err: fmt.Errorf("invalid split plan: %w", err)}
+		}
+		return splitPlanReadyMsg{plan: plan}
+	}
+}
+
+func doExecuteSplit(plan []commit.SplitGroup, noVerify bool, push bool, cfg *config.Config) tea.Cmd {
+	return func() tea.Msg {
+		if out, err := exec.Command("git", "reset").CombinedOutput(); err != nil {
+			return errMsg{err: fmt.Errorf("git reset failed: %s", strings.TrimSpace(string(out)))}
+		}
+
+		hashes := make([]string, 0, len(plan))
+		for i, g := range plan {
+			addArgs := append([]string{"add", "--"}, g.Files...)
+			if out, err := exec.Command("git", addArgs...).CombinedOutput(); err != nil {
+				return splitCommitFailureMsg{
+					committedHashes: hashes,
+					failedIndex:     i,
+					failedStderr:    strings.TrimSpace(string(out)),
+					failedFiles:     g.Files,
+					remainingFiles:  filesFromGroups(plan[i+1:]),
+				}
+			}
+
+			args := []string{"commit", "-m", g.Message}
+			if noVerify {
+				args = []string{"commit", "--no-verify", "-m", g.Message}
+			}
+			commitCmd := exec.Command("git", args...)
+			if out, err := commitCmd.CombinedOutput(); err != nil {
+				return splitCommitFailureMsg{
+					committedHashes: hashes,
+					failedIndex:     i,
+					failedStderr:    strings.TrimSpace(string(out)),
+					failedFiles:     g.Files,
+					remainingFiles:  filesFromGroups(plan[i+1:]),
+				}
+			}
+
+			hash := ""
+			if out, err := exec.Command("git", "rev-parse", "--short", "HEAD").Output(); err == nil {
+				hash = strings.TrimSpace(string(out))
+			}
+			hashes = append(hashes, hash)
+		}
+
+		// Copy final hash to clipboard if config requests it.
+		if cfg != nil && cfg.Commit.HashAfterCommit && len(hashes) > 0 {
+			if finalHash := hashes[len(hashes)-1]; finalHash != "" {
+				_ = clipboard.WriteAll(finalHash)
+			}
+		}
+
+		// Optional push after the final commit.
+		if push {
+			pushCmd := exec.Command("git", "push")
+			if out, err := pushCmd.CombinedOutput(); err != nil {
+				return errMsg{err: fmt.Errorf("committed %d group(s) but push failed: %s", len(hashes), strings.TrimSpace(string(out)))}
+			}
+		}
+
+		return splitCommitDoneMsg{hashes: hashes}
+	}
+}
+
+func filesFromGroups(groups []commit.SplitGroup) []string {
+	var out []string
+	for _, g := range groups {
+		out = append(out, g.Files...)
+	}
+	return out
+}

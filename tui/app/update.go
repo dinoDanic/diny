@@ -10,10 +10,26 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dinoDanic/diny/commit"
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/tui/loader"
 )
+
+func clonePlan(plan []commit.SplitGroup) []commit.SplitGroup {
+	out := make([]commit.SplitGroup, len(plan))
+	for i, g := range plan {
+		files := make([]string, len(g.Files))
+		copy(files, g.Files)
+		out[i] = commit.SplitGroup{
+			Order:   g.Order,
+			Type:    g.Type,
+			Message: g.Message,
+			Files:   files,
+		}
+	}
+	return out
+}
 
 var conventionalTypes = []string{"feat", "fix", "docs", "style", "refactor", "perf", "test", "chore"}
 
@@ -122,6 +138,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.state = stateReady
 		return m, nil
 
+	case splitEditorFinishedMsg:
+		if msg.newMessage != "" && msg.groupIdx >= 0 && msg.groupIdx < len(m.splitPlan) {
+			m.splitPlan[msg.groupIdx].Message = msg.newMessage
+		}
+		return m, nil
+
 	case variantsReadyMsg:
 		m.variants = msg.variants
 		m.variantCursor = 0
@@ -131,15 +153,43 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case commitProgressMsg:
 		m.commitProgress = msg.line
 		return m, waitForCommitLine(m.commitOutputCh)
+
+	case splitPlanReadyMsg:
+		m.splitPlan = msg.plan
+		m.splitCursor = 0
+		m.splitExpanded = map[int]bool{}
+		m.splitRegenerating = false
+		m.state = stateSplitPlan
+		m.statusMessage = ""
+		m.statusIsError = false
+		return m, nil
+
+	case splitCommitDoneMsg:
+		m.splitHashes = msg.hashes
+		m.splitPushed = m.cliPush
+		m.state = stateSplitSuccess
+		return m, tea.Quit
+
+	case splitCommitFailureMsg:
+		failure := msg
+		m.splitFailure = &failure
+		m.splitHashes = msg.committedHashes
+		m.state = stateSplitFailure
+		return m, nil
 	}
 
 	// Update sub-components
 	var cmd tea.Cmd
 	switch m.state {
-	case stateWelcome, stateGenerating, stateCommitting:
+	case stateWelcome, stateGenerating, stateCommitting, stateSplitGenerating, stateSplitCommitting:
 		m.loader, cmd = m.loader.Update(msg)
 		return m, cmd
-	case stateFeedback:
+	case stateSplitPlan:
+		if m.splitRegenerating {
+			m.loader, cmd = m.loader.Update(msg)
+			return m, cmd
+		}
+	case stateFeedback, stateSplitFeedback:
 		m.textinput, cmd = m.textinput.Update(msg)
 		return m, cmd
 	case stateEditing:
@@ -173,11 +223,23 @@ func (m model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleTypePickerKey(msg)
 	case stateFilePicker:
 		return m.handleFilePickerKey(msg)
+	case stateSplitPlan:
+		return m.handleSplitPlanKey(msg)
+	case stateSplitFeedback:
+		return m.handleSplitFeedbackKey(msg)
+	case stateSplitSuccess:
+		if msg.String() == "q" || msg.String() == "ctrl+c" || msg.String() == "enter" {
+			return m, tea.Quit
+		}
+	case stateSplitFailure:
+		if msg.String() == "q" || msg.String() == "ctrl+c" || msg.String() == "enter" {
+			return m, tea.Quit
+		}
 	case stateError, stateSuccess:
 		if msg.String() == "q" || msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
-	case stateWelcome, stateGenerating, stateCommitting:
+	case stateWelcome, stateGenerating, stateCommitting, stateSplitGenerating, stateSplitCommitting:
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
@@ -314,6 +376,20 @@ func (m model) handleReadyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, loadAllFiles()
 	case msg.String() == "s":
 		return m, doSaveDraft(m.commitMessage)
+	case msg.String() == "S":
+		if m.cliPrint {
+			m.statusMessage = "--print is incompatible with split; rerun without --print"
+			m.statusIsError = true
+			return m, nil
+		}
+		if len(m.stagedFiles) == 0 {
+			m.statusMessage = "No staged files to split"
+			m.statusIsError = true
+			return m, nil
+		}
+		m.state = stateSplitGenerating
+		m.loader = loader.New(loader.GeneratingMessages)
+		return m, tea.Batch(m.loader.Tick, loadSplitPlan(m.diff, m.cfg, m.stagedFiles, nil, ""))
 	case msg.String() == "y":
 		return m, doCopy(m.commitMessage)
 	case msg.String() == "?":
@@ -561,6 +637,317 @@ func (m model) checkWelcomeDone() (tea.Model, tea.Cmd) {
 	m.state = stateGenerating
 	m.loader = loader.New(loader.GeneratingMessages)
 	return m, tea.Batch(m.loader.Tick, loadDiffAndGenerate(m.cfg))
+}
+
+func (m model) handleSplitFeedbackKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "enter":
+		feedback := strings.TrimSpace(m.textinput.Value())
+		if feedback == "" {
+			m.state = stateSplitPlan
+			return m, nil
+		}
+		prev := append([][]commit.SplitGroup(nil), m.splitPrevPlans...)
+		prev = append(prev, clonePlan(m.splitPlan))
+		m.splitPrevPlans = prev
+		m.splitRegenerating = true
+		m.state = stateSplitPlan
+		m.loader = loader.New(loader.GeneratingMessages)
+		return m, tea.Batch(m.loader.Tick, loadSplitPlan(m.diff, m.cfg, m.stagedFiles, prev, feedback))
+	case "esc":
+		m.state = stateSplitPlan
+		return m, nil
+	case "ctrl+c":
+		return m, tea.Quit
+	}
+	var cmd tea.Cmd
+	m.textinput, cmd = m.textinput.Update(msg)
+	return m, cmd
+}
+
+func (m model) handleSplitPlanKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.splitMoveMode {
+		return m.handleSplitMoveKey(msg)
+	}
+
+	switch msg.String() {
+	case "q", "esc":
+		m.state = stateReady
+		m.splitPlan = nil
+		m.splitExpanded = nil
+		m.splitCursor = 0
+		m.statusMessage = ""
+		m.statusIsError = false
+		return m, nil
+	case "ctrl+c":
+		return m, tea.Quit
+	case "up", "k":
+		if m.splitCursor > 0 {
+			m.splitCursor--
+		}
+		return m, nil
+	case "down", "j":
+		if m.splitCursor < len(m.splitPlan)-1 {
+			m.splitCursor++
+		}
+		return m, nil
+	case "enter", " ":
+		if m.splitExpanded == nil {
+			m.splitExpanded = map[int]bool{}
+		}
+		m.splitExpanded[m.splitCursor] = !m.splitExpanded[m.splitCursor]
+		return m, nil
+	case "e":
+		if m.splitCursor < 0 || m.splitCursor >= len(m.splitPlan) {
+			return m, nil
+		}
+		return m.openSplitGroupEditor(m.splitCursor)
+	case "r":
+		if m.splitRegenerating {
+			return m, nil
+		}
+		prev := append([][]commit.SplitGroup(nil), m.splitPrevPlans...)
+		prev = append(prev, clonePlan(m.splitPlan))
+		m.splitPrevPlans = prev
+		m.splitRegenerating = true
+		m.loader = loader.New(loader.GeneratingMessages)
+		return m, tea.Batch(m.loader.Tick, loadSplitPlan(m.diff, m.cfg, m.stagedFiles, prev, ""))
+	case "f":
+		m.state = stateSplitFeedback
+		m.textinput = textinput.New()
+		m.textinput.Placeholder = "What's wrong with this plan? (e.g. 'merge the refactor with the fix')"
+		m.textinput.CharLimit = 400
+		m.textinput.Width = 80
+		m.textinput.Focus()
+		return m, m.textinput.Cursor.BlinkCmd()
+	case "m":
+		if m.splitCursor < 0 || m.splitCursor >= len(m.splitPlan) {
+			return m, nil
+		}
+		if len(m.splitPlan[m.splitCursor].Files) == 0 {
+			return m, nil
+		}
+		m.splitMoveMode = true
+		m.splitMoveFileIdx = 0
+		m.splitMovePickDest = false
+		m.splitMoveDestIdx = 0
+		if m.splitExpanded == nil {
+			m.splitExpanded = map[int]bool{}
+		}
+		m.splitExpanded[m.splitCursor] = true
+		m.statusMessage = ""
+		m.statusIsError = false
+		return m, nil
+	case "c":
+		m.state = stateSplitCommitting
+		m.loader = loader.New(loader.CommittingMessages)
+		return m, tea.Batch(m.loader.Tick, doExecuteSplit(m.splitPlan, m.cliNoVerify, m.cliPush, m.cfg))
+	}
+	return m, nil
+}
+
+func (m model) handleSplitMoveKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if m.splitCursor < 0 || m.splitCursor >= len(m.splitPlan) {
+		m = m.exitSplitMoveMode()
+		return m, nil
+	}
+	srcGroup := m.splitPlan[m.splitCursor]
+
+	if m.splitMovePickDest {
+		return m.handleSplitMoveDestKey(msg)
+	}
+
+	switch msg.String() {
+	case "esc", "q":
+		m = m.exitSplitMoveMode()
+		return m, nil
+	case "ctrl+c":
+		return m, tea.Quit
+	case "up", "k":
+		if m.splitMoveFileIdx > 0 {
+			m.splitMoveFileIdx--
+		}
+		return m, nil
+	case "down", "j":
+		if m.splitMoveFileIdx < len(srcGroup.Files)-1 {
+			m.splitMoveFileIdx++
+		}
+		return m, nil
+	case "enter":
+		// Enter destination picker (arrow selection)
+		m.splitMovePickDest = true
+		m.splitMoveDestIdx = 0
+		// Skip over source group — can't move a file to its own group
+		if m.splitMoveDestIdx == m.splitCursor && len(m.splitPlan) > 1 {
+			m.splitMoveDestIdx = 1
+			if m.splitCursor == 0 {
+				m.splitMoveDestIdx = 1
+			} else {
+				m.splitMoveDestIdx = 0
+			}
+		}
+		return m, nil
+	}
+
+	// Digit shortcuts 1..9 for ≤9 groups
+	if len(m.splitPlan) <= 9 {
+		s := msg.String()
+		if len(s) == 1 && s[0] >= '1' && s[0] <= '9' {
+			dest := int(s[0]-'1') // zero-based
+			if dest >= 0 && dest < len(m.splitPlan) && dest != m.splitCursor {
+				return m.applySplitMove(dest)
+			}
+		}
+	}
+	return m, nil
+}
+
+func (m model) handleSplitMoveDestKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "esc":
+		m.splitMovePickDest = false
+		return m, nil
+	case "q":
+		m = m.exitSplitMoveMode()
+		return m, nil
+	case "ctrl+c":
+		return m, tea.Quit
+	case "up", "k":
+		m.splitMoveDestIdx = m.prevOtherGroup(m.splitMoveDestIdx)
+		return m, nil
+	case "down", "j":
+		m.splitMoveDestIdx = m.nextOtherGroup(m.splitMoveDestIdx)
+		return m, nil
+	case "enter":
+		dest := m.splitMoveDestIdx
+		if dest == m.splitCursor || dest < 0 || dest >= len(m.splitPlan) {
+			return m, nil
+		}
+		return m.applySplitMove(dest)
+	}
+	return m, nil
+}
+
+func (m model) nextOtherGroup(i int) int {
+	n := len(m.splitPlan)
+	if n <= 1 {
+		return i
+	}
+	for step := 1; step <= n; step++ {
+		cand := (i + step) % n
+		if cand != m.splitCursor {
+			return cand
+		}
+	}
+	return i
+}
+
+func (m model) prevOtherGroup(i int) int {
+	n := len(m.splitPlan)
+	if n <= 1 {
+		return i
+	}
+	for step := 1; step <= n; step++ {
+		cand := (i - step + n) % n
+		if cand != m.splitCursor {
+			return cand
+		}
+	}
+	return i
+}
+
+func (m model) applySplitMove(dest int) (tea.Model, tea.Cmd) {
+	src := m.splitCursor
+	if src == dest || src < 0 || src >= len(m.splitPlan) || dest < 0 || dest >= len(m.splitPlan) {
+		m = m.exitSplitMoveMode()
+		return m, nil
+	}
+	srcGroup := &m.splitPlan[src]
+	if m.splitMoveFileIdx < 0 || m.splitMoveFileIdx >= len(srcGroup.Files) {
+		m = m.exitSplitMoveMode()
+		return m, nil
+	}
+	file := srcGroup.Files[m.splitMoveFileIdx]
+	srcGroup.Files = append(srcGroup.Files[:m.splitMoveFileIdx], srcGroup.Files[m.splitMoveFileIdx+1:]...)
+	m.splitPlan[dest].Files = append(m.splitPlan[dest].Files, file)
+
+	// If source group is now empty, remove it and adjust cursor.
+	if len(srcGroup.Files) == 0 {
+		m.splitPlan = append(m.splitPlan[:src], m.splitPlan[src+1:]...)
+		// Renumber and fix orders.
+		for i := range m.splitPlan {
+			m.splitPlan[i].Order = i + 1
+		}
+		// Adjust cursor to the destination's new index.
+		newDest := dest
+		if dest > src {
+			newDest = dest - 1
+		}
+		m.splitCursor = newDest
+		// Rebuild expanded map by index shift.
+		newExp := map[int]bool{}
+		for k, v := range m.splitExpanded {
+			if k == src {
+				continue
+			}
+			nk := k
+			if k > src {
+				nk = k - 1
+			}
+			newExp[nk] = v
+		}
+		m.splitExpanded = newExp
+	}
+	m.statusMessage = fmt.Sprintf("moved %s", file)
+	m.statusIsError = false
+	m = m.exitSplitMoveMode()
+	return m, nil
+}
+
+func (m model) exitSplitMoveMode() model {
+	m.splitMoveMode = false
+	m.splitMovePickDest = false
+	m.splitMoveFileIdx = 0
+	m.splitMoveDestIdx = 0
+	return m
+}
+
+func (m model) openSplitGroupEditor(idx int) (tea.Model, tea.Cmd) {
+	if idx < 0 || idx >= len(m.splitPlan) {
+		return m, nil
+	}
+	editor := git.GetGitEditor()
+	editorArgs := strings.Fields(editor)
+
+	tmpFile, err := os.CreateTemp("", "diny-split-*.txt")
+	if err != nil {
+		m.statusMessage = "Failed to create temp file"
+		m.statusIsError = true
+		return m, nil
+	}
+	if _, err := tmpFile.WriteString(m.splitPlan[idx].Message); err != nil {
+		os.Remove(tmpFile.Name())
+		m.statusMessage = "Failed to write temp file"
+		m.statusIsError = true
+		return m, nil
+	}
+	tmpFile.Close()
+	tmpPath := tmpFile.Name()
+
+	args := append(editorArgs[1:], tmpPath)
+	c := exec.Command(editorArgs[0], args...)
+
+	return m, tea.ExecProcess(c, func(err error) tea.Msg {
+		defer os.Remove(tmpPath)
+		if err != nil {
+			return splitEditorFinishedMsg{groupIdx: idx, newMessage: ""}
+		}
+		content, readErr := os.ReadFile(tmpPath)
+		if readErr != nil {
+			return splitEditorFinishedMsg{groupIdx: idx, newMessage: ""}
+		}
+		return splitEditorFinishedMsg{groupIdx: idx, newMessage: strings.TrimSpace(string(content))}
+	})
 }
 
 func (m model) openExternalEditor() (tea.Model, tea.Cmd) {
