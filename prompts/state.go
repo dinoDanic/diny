@@ -24,6 +24,12 @@ const (
 	// StatusDismissed is shared with rating.
 )
 
+// Status values for feedback prompt.
+const (
+	StatusSubmitted = "submitted"
+	// StatusDismissed is shared.
+)
+
 type RatingState struct {
 	Status     string     `yaml:"status"`
 	Value      int        `yaml:"value,omitempty"`
@@ -35,10 +41,15 @@ type StarState struct {
 	AnsweredAt *time.Time `yaml:"answered_at,omitempty"`
 }
 
+type FeedbackState struct {
+	Status     string     `yaml:"status"`
+	AnsweredAt *time.Time `yaml:"answered_at,omitempty"`
+}
+
 type PromptsState struct {
-	CommitCount int         `yaml:"commit_count"`
-	Rating      RatingState `yaml:"rating"`
-	Star        StarState   `yaml:"star"`
+	Rating   RatingState   `yaml:"rating"`
+	Star     StarState     `yaml:"star"`
+	Feedback FeedbackState `yaml:"feedback"`
 }
 
 type State struct {
@@ -48,9 +59,9 @@ type State struct {
 func defaultState() *State {
 	return &State{
 		Prompts: PromptsState{
-			CommitCount: 0,
-			Rating:      RatingState{Status: StatusPending},
-			Star:        StarState{Status: StatusPending},
+			Rating:   RatingState{Status: StatusPending},
+			Star:     StarState{Status: StatusPending},
+			Feedback: FeedbackState{Status: StatusPending},
 		},
 	}
 }
@@ -91,6 +102,9 @@ func LoadState() *State {
 	}
 	if s.Prompts.Star.Status == "" {
 		s.Prompts.Star.Status = StatusPending
+	}
+	if s.Prompts.Feedback.Status == "" {
+		s.Prompts.Feedback.Status = StatusPending
 	}
 
 	return &s
