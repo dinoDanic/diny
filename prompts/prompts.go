@@ -18,10 +18,6 @@ import (
 func MaybeShow(cfg *config.Config) {
 	state := LoadState()
 
-	// Always increment commit count on successful commit.
-	state.Prompts.CommitCount++
-	_ = SaveState(state)
-
 	// Gate: prompts.enabled config flag.
 	if !cfg.Prompts.Enabled {
 		return
@@ -32,16 +28,19 @@ func MaybeShow(cfg *config.Config) {
 		return
 	}
 
-	// Gate: minimum commits.
-	if state.Prompts.CommitCount < MinCommitsBeforePrompt {
-		return
+	pending := []string{}
+	if state.Prompts.Rating.Status == StatusPending {
+		pending = append(pending, "rating")
+	}
+	if state.Prompts.Star.Status == StatusPending {
+		pending = append(pending, "star")
+	}
+	if state.Prompts.Feedback.Status == StatusPending {
+		pending = append(pending, "feedback")
 	}
 
-	ratingPending := state.Prompts.Rating.Status == StatusPending
-	starPending := state.Prompts.Star.Status == StatusPending
-
 	// Gate: at least one prompt must be pending.
-	if !ratingPending && !starPending {
+	if len(pending) == 0 {
 		return
 	}
 
@@ -51,17 +50,13 @@ func MaybeShow(cfg *config.Config) {
 	}
 
 	// Pick which prompt to show (at most one per invocation).
-	switch {
-	case ratingPending && starPending:
-		if rand.Intn(2) == 0 {
-			showRatingPrompt(state)
-		} else {
-			showStarPrompt(state)
-		}
-	case ratingPending:
-		showRatingPrompt(state)
-	case starPending:
-		showStarPrompt(state)
+	switch pending[rand.Intn(len(pending))] {
+	case "rating":
+		showRatingPrompt(state, cfg)
+	case "star":
+		showStarPrompt(state, cfg)
+	case "feedback":
+		showFeedbackPrompt(state, cfg)
 	}
 }
 
@@ -79,12 +74,10 @@ func isInteractive() bool {
 	return true
 }
 
-func showStarPrompt(state *State) {
-	outcome := ShowStar(state)
+func showStarPrompt(state *State, cfg *config.Config) {
+	outcome := ShowStar(state, cfg)
 	_ = SaveState(state)
 
-	// All star outcomes are POSTed (starred, already_given, dismissed).
-	// Empty string means read error — don't POST.
 	if outcome != "" {
 		feedback.Send(feedback.Payload{
 			Type:     "star",
@@ -98,15 +91,32 @@ func showStarPrompt(state *State) {
 	}
 }
 
-func showRatingPrompt(state *State) {
-	value := ShowRating(state)
+func showRatingPrompt(state *State, cfg *config.Config) {
+	value := ShowRating(state, cfg)
 	_ = SaveState(state)
 
-	// Only POST if the user rated (1-5), not on dismiss (0) or error (-1).
-	if value >= 1 && value <= 5 {
+	// Only POST if the user rated (1-3), not on dismiss (0) or error (-1).
+	if value >= 1 && value <= 3 {
 		feedback.Send(feedback.Payload{
 			Type:     "rating",
 			Value:    strconv.Itoa(value),
+			Email:    git.GetGitEmail(),
+			Name:     git.GetGitName(),
+			Version:  version.Get(),
+			System:   runtime.GOOS,
+			RepoName: git.GetRepoName(),
+		})
+	}
+}
+
+func showFeedbackPrompt(state *State, cfg *config.Config) {
+	text := ShowFeedback(state, cfg)
+	_ = SaveState(state)
+
+	if text != "" {
+		feedback.Send(feedback.Payload{
+			Type:     "feedback",
+			Value:    text,
 			Email:    git.GetGitEmail(),
 			Name:     git.GetGitName(),
 			Version:  version.Get(),
