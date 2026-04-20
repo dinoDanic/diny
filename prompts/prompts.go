@@ -37,15 +37,35 @@ func MaybeShow(cfg *config.Config) {
 		return
 	}
 
-	// Phase 1: always show when eligible (TriggerProbability = 1.0).
+	// Phase 2: always show when eligible (TriggerProbability = 1.0).
 	// Phase 3 will add random roll here.
 
-	// Phase 1: only rating prompt. Star prompt added in Phase 2.
-	// When both are pending, show rating first (deterministic for Phase 1).
+	// When both are pending, show rating first (deterministic for Phase 2).
+	// Phase 3 will add 50/50 random selection.
 	if ratingPending {
 		showRatingPrompt(state)
+	} else if starPending {
+		showStarPrompt(state)
 	}
-	// Star prompt will be added in Phase 2.
+}
+
+func showStarPrompt(state *State) {
+	outcome := ShowStar(state)
+	_ = SaveState(state)
+
+	// All star outcomes are POSTed (starred, already_given, dismissed).
+	// Empty string means read error — don't POST.
+	if outcome != "" {
+		feedback.Send(feedback.Payload{
+			Type:     "star",
+			Value:    outcome,
+			Email:    git.GetGitEmail(),
+			Name:     git.GetGitName(),
+			Version:  version.Get(),
+			System:   runtime.GOOS,
+			RepoName: git.GetRepoName(),
+		})
+	}
 }
 
 func showRatingPrompt(state *State) {
