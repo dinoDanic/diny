@@ -387,6 +387,11 @@ func (m model) handleReadyKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.statusIsError = true
 			return m, nil
 		}
+		if len(m.stagedFiles) == 1 {
+			m.statusMessage = "Only one file staged — nothing to split; just commit it"
+			m.statusIsError = false
+			return m, nil
+		}
 		m.state = stateSplitGenerating
 		m.loader = loader.New(loader.GeneratingMessages)
 		return m, tea.Batch(m.loader.Tick, loadSplitPlan(m.diff, m.cfg, m.stagedFiles, nil, ""))
