@@ -101,7 +101,7 @@ func (m feedbackModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+s", "ctrl+d":
+		case "enter":
 			text := strings.TrimSpace(m.textarea.Value())
 			if text != "" {
 				m.text = text

@@ -86,7 +86,7 @@ func (m feedbackModel) View() string {
 	b.WriteString("\n\n")
 
 	b.WriteString(indent.Render(
-		footerKeyStyle().Render("ctrl+s") + " " + footerDescStyle().Render("submit") + "  " +
+		footerKeyStyle().Render("enter") + " " + footerDescStyle().Render("submit") + "  " +
 			footerKeyStyle().Render("esc") + " " + footerDescStyle().Render("skip") + "  " +
 			footerKeyStyle().Render("ctrl+c") + " " + footerDescStyle().Render("quit"),
 	))
