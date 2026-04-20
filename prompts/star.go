@@ -11,10 +11,10 @@ import (
 )
 
 // ShowStar runs the star TUI and mutates state.
-// Returns "starred" | "already_given" | "dismissed"; "" on error.
+// Returns the outcome string for the backend, or "" when cancelled (state unchanged).
 func ShowStar(state *State, cfg *config.Config) string {
 	res := tuiprompts.RunStar(cfg)
-	if res.Outcome == "" {
+	if res.Cancelled || res.Outcome == "" {
 		return ""
 	}
 
