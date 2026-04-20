@@ -33,3 +33,7 @@ commit:
 
   # Show and copy commit hash to clipboard after committing
   hash_after_commit: false
+
+# Prompt settings (rating & star prompts after commit)
+prompts:
+  enabled: true

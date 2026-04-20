@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/dinoDanic/diny/prompts"
 	"github.com/dinoDanic/diny/tui/app"
 	"github.com/dinoDanic/diny/update"
 	"github.com/spf13/cobra"
@@ -17,7 +18,11 @@ you commit, edit, regenerate, or refine it—all`,
 		checker := update.NewUpdateChecker(Version)
 		updateCh := checker.CheckAsync()
 
-		app.Run(AppConfig, Version)
+		result := app.Run(AppConfig, Version)
+
+		if result.CommitSucceeded {
+			prompts.MaybeShow(AppConfig)
+		}
 
 		checker.PromptIfAvailable(updateCh)
 	},

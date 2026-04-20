@@ -8,11 +8,23 @@ import (
 	"github.com/dinoDanic/diny/config"
 )
 
-func Run(cfg *config.Config, version string) {
+// RunResult holds the outcome of the TUI session.
+type RunResult struct {
+	CommitSucceeded bool
+}
+
+func Run(cfg *config.Config, version string) RunResult {
 	m := newModel(cfg, version)
 	p := tea.NewProgram(m) // NO alt-screen — inline rendering
-	if _, err := p.Run(); err != nil {
+	finalModel, err := p.Run()
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+
+	if fm, ok := finalModel.(model); ok && fm.state == stateSuccess {
+		return RunResult{CommitSucceeded: true}
+	}
+
+	return RunResult{}
 }

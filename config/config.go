@@ -30,9 +30,14 @@ const (
 	Long   Length = "long"
 )
 
+type PromptsConfig struct {
+	Enabled bool `yaml:"enabled" json:"Enabled"`
+}
+
 type Config struct {
-	Theme  string       `yaml:"theme" json:"Theme"`
-	Commit CommitConfig `yaml:"commit" json:"Request"`
+	Theme   string        `yaml:"theme" json:"Theme"`
+	Commit  CommitConfig  `yaml:"commit" json:"Request"`
+	Prompts PromptsConfig `yaml:"prompts" json:"Prompts"`
 }
 
 type CommitConfig struct {
@@ -44,9 +49,14 @@ type CommitConfig struct {
 	HashAfterCommit    bool   `yaml:"hash_after_commit" json:"HashAfterCommit"`
 }
 
+type LocalPromptsConfig struct {
+	Enabled *bool `yaml:"enabled,omitempty"`
+}
+
 type LocalConfig struct {
-	Theme  string            `yaml:"theme,omitempty"`
-	Commit LocalCommitConfig `yaml:"commit,omitempty"`
+	Theme   string             `yaml:"theme,omitempty"`
+	Commit  LocalCommitConfig  `yaml:"commit,omitempty"`
+	Prompts LocalPromptsConfig `yaml:"prompts,omitempty"`
 }
 
 type LocalCommitConfig struct {
@@ -229,6 +239,9 @@ func mergeConfigWithLocal(base *Config, overlay *LocalConfig) *Config {
 			CustomInstructions: base.Commit.CustomInstructions,
 			HashAfterCommit:    base.Commit.HashAfterCommit,
 		},
+		Prompts: PromptsConfig{
+			Enabled: base.Prompts.Enabled,
+		},
 	}
 
 	if overlay.Theme != "" {
@@ -251,6 +264,9 @@ func mergeConfigWithLocal(base *Config, overlay *LocalConfig) *Config {
 	}
 	if overlay.Commit.CustomInstructions != "" {
 		merged.Commit.CustomInstructions = overlay.Commit.CustomInstructions
+	}
+	if overlay.Prompts.Enabled != nil {
+		merged.Prompts.Enabled = *overlay.Prompts.Enabled
 	}
 
 	return merged
