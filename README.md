@@ -17,6 +17,7 @@ Open-source CLI that turns staged diffs into clean commits in one command.
 - Interactive TUI for commit, config, changelog, timeline, and yolo
 - Reads staged changes with `git diff` and filters out noise (lockfiles, binaries, build artifacts)
 - Generates 3 message variants; inline editing or open in `$EDITOR`
+- Split staged changes into multiple commits grouped by concern
 - File picker to stage/unstage without leaving diny
 - Timeline analysis with date presets or custom ranges
 - AI-powered changelog generation between tags or commits
@@ -53,6 +54,8 @@ diny commit
 ```
 
 This launches the interactive TUI — generate, review, and commit without leaving the terminal.
+
+Staged too much at once? Press `S` on the ready screen to split the diff into multiple commits grouped by concern — edit, reassign files, regenerate, then commit them in order.
 
 ## Commands
 

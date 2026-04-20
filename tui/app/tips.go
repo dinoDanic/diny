@@ -19,6 +19,7 @@ var tips = []string{
 	"press r to regenerate the message from scratch",
 	"press v to cycle through alternate message variants",
 	"press f to give feedback and refine the current message",
+	"press S to split staged changes into multiple commits by concern",
 	"run `diny timeline` to summarize recent commits for a standup or PR body",
 	"run `diny changelog` to draft release notes from git history",
 	"run `diny link lazygit` to wire diny into your lazygit keybindings",
