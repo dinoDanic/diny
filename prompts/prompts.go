@@ -1,6 +1,8 @@
 package prompts
 
 import (
+	"math/rand"
+	"os"
 	"runtime"
 	"strconv"
 
@@ -8,6 +10,7 @@ import (
 	"github.com/dinoDanic/diny/feedback"
 	"github.com/dinoDanic/diny/git"
 	"github.com/dinoDanic/diny/version"
+	"github.com/mattn/go-isatty"
 )
 
 // MaybeShow is called once after a successful commit. It handles all side effects:
@@ -24,6 +27,11 @@ func MaybeShow(cfg *config.Config) {
 		return
 	}
 
+	// Gate: non-interactive environments (CI, piped stdout).
+	if !isInteractive() {
+		return
+	}
+
 	// Gate: minimum commits.
 	if state.Prompts.CommitCount < MinCommitsBeforePrompt {
 		return
@@ -37,16 +45,38 @@ func MaybeShow(cfg *config.Config) {
 		return
 	}
 
-	// Phase 2: always show when eligible (TriggerProbability = 1.0).
-	// Phase 3 will add random roll here.
+	// Gate: random roll — only show on ~15% of eligible commits.
+	if rand.Float64() >= TriggerProbability {
+		return
+	}
 
-	// When both are pending, show rating first (deterministic for Phase 2).
-	// Phase 3 will add 50/50 random selection.
-	if ratingPending {
+	// Pick which prompt to show (at most one per invocation).
+	switch {
+	case ratingPending && starPending:
+		if rand.Intn(2) == 0 {
+			showRatingPrompt(state)
+		} else {
+			showStarPrompt(state)
+		}
+	case ratingPending:
 		showRatingPrompt(state)
-	} else if starPending {
+	case starPending:
 		showStarPrompt(state)
 	}
+}
+
+// isInteractive returns false when prompts should be suppressed:
+// stdout is not a TTY, or common CI env vars are set.
+func isInteractive() bool {
+	if !isatty.IsTerminal(os.Stdout.Fd()) && !isatty.IsCygwinTerminal(os.Stdout.Fd()) {
+		return false
+	}
+	for _, env := range []string{"CI", "GITHUB_ACTIONS", "NONINTERACTIVE"} {
+		if v := os.Getenv(env); v != "" {
+			return false
+		}
+	}
+	return true
 }
 
 func showStarPrompt(state *State) {
