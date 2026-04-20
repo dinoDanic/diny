@@ -6,49 +6,33 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/dinoDanic/diny/ui"
+	"github.com/dinoDanic/diny/config"
+	tuiprompts "github.com/dinoDanic/diny/tui/prompts"
 )
 
-// ShowStar displays the GitHub star prompt and handles the user's keypress.
-// Returns the outcome string for the backend: "starred", "already_given", "dismissed",
-// or "" on read error.
-func ShowStar(state *State) string {
-	ui.Box("Diny is free & open source. A GitHub star helps a lot!",
-		"[1] Star it  [2] Don't ask again  [3] Already starred  [0] Close")
-
-	for {
-		r := readSingleRune()
-		if r == 0 {
-			return "" // read error
-		}
-
-		now := time.Now()
-
-		switch r {
-		case '1':
-			state.Prompts.Star.Status = StatusStarred
-			state.Prompts.Star.AnsweredAt = &now
-			openBrowser(GitHubRepoURL)
-			fmt.Println()
-			ui.Success("Thanks for starring!")
-			return "starred"
-
-		case '2', '0':
-			state.Prompts.Star.Status = StatusDismissed
-			state.Prompts.Star.AnsweredAt = &now
-			return "dismissed"
-
-		case '3':
-			state.Prompts.Star.Status = StatusAlreadyGiven
-			state.Prompts.Star.AnsweredAt = &now
-			fmt.Println()
-			ui.Success("Thanks!")
-			return "already_given"
-
-		default:
-			continue
-		}
+// ShowStar runs the star TUI and mutates state.
+// Returns "starred" | "already_given" | "dismissed"; "" on error.
+func ShowStar(state *State, cfg *config.Config) string {
+	res := tuiprompts.RunStar(cfg)
+	if res.Outcome == "" {
+		return ""
 	}
+
+	now := time.Now()
+	switch res.Outcome {
+	case "starred":
+		state.Prompts.Star.Status = StatusStarred
+		state.Prompts.Star.AnsweredAt = &now
+		openBrowser(GitHubRepoURL)
+	case "already_given":
+		state.Prompts.Star.Status = StatusAlreadyGiven
+		state.Prompts.Star.AnsweredAt = &now
+	case "dismissed":
+		state.Prompts.Star.Status = StatusDismissed
+		state.Prompts.Star.AnsweredAt = &now
+	}
+
+	return res.Outcome
 }
 
 // openBrowser opens the given URL in the default browser.
