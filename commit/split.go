@@ -21,8 +21,29 @@ func CreateSplitPlan(gitDiff string, cfg *config.Config, extras *SplitRequestExt
 	return groq.CreateSplitPlanWithGroq(gitDiff, cfg, extras)
 }
 
+// normalizePlanPath strips bogus prefixes that LLMs sometimes add to file
+// paths in split plans (e.g. "a/", "b/", "i/", "c/" copied from git diff
+// headers, or leading "./"). The returned path can be compared against the
+// real staged-file set.
+func normalizePlanPath(p string) string {
+	p = strings.TrimSpace(p)
+	for {
+		switch {
+		case strings.HasPrefix(p, "./"):
+			p = p[2:]
+		case len(p) >= 2 && p[1] == '/' && strings.ContainsRune("abciw", rune(p[0])):
+			p = p[2:]
+		default:
+			return p
+		}
+	}
+}
+
 // ValidatePlan checks that every staged file appears in exactly one group and
-// no group references files that are not currently staged.
+// no group references files that are not currently staged. File paths returned
+// by the model are normalized first (see normalizePlanPath) and the plan is
+// mutated in place to use the canonical staged path, so downstream `git add`
+// calls receive valid paths. Returns the (possibly rewritten) plan.
 func ValidatePlan(plan []SplitGroup, staged []git.StagedFile) error {
 	if len(plan) == 0 {
 		return fmt.Errorf("plan has no groups")
@@ -34,15 +55,23 @@ func ValidatePlan(plan []SplitGroup, staged []git.StagedFile) error {
 	}
 
 	seen := make(map[string]int, len(staged))
-	for _, g := range plan {
-		for _, f := range g.Files {
-			if _, ok := stagedSet[f]; !ok {
+	for gi := range plan {
+		g := &plan[gi]
+		for fi, f := range g.Files {
+			canonical := f
+			if _, ok := stagedSet[canonical]; !ok {
+				canonical = normalizePlanPath(f)
+			}
+			if _, ok := stagedSet[canonical]; !ok {
 				return fmt.Errorf("plan references %q which is not staged", f)
 			}
-			if groupIdx, dup := seen[f]; dup {
-				return fmt.Errorf("plan assigns %q to groups %d and %d", f, groupIdx+1, g.Order)
+			if canonical != f {
+				g.Files[fi] = canonical
 			}
-			seen[f] = g.Order - 1
+			if groupIdx, dup := seen[canonical]; dup {
+				return fmt.Errorf("plan assigns %q to groups %d and %d", canonical, groupIdx+1, g.Order)
+			}
+			seen[canonical] = g.Order - 1
 		}
 	}
 

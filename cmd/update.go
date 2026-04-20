@@ -8,6 +8,7 @@ import (
 
 	"github.com/dinoDanic/diny/ui"
 	"github.com/dinoDanic/diny/update"
+	"github.com/dinoDanic/diny/version"
 	"github.com/spf13/cobra"
 )
 
@@ -39,15 +40,16 @@ func init() {
 func runUpdate(force bool) {
 	ui.RenderTitle("Checking for diny updates...")
 
-	checker := update.NewUpdateChecker(Version)
+	current := version.Get()
+	checker := update.NewUpdateChecker(current)
 	latestVersion, err := checker.GetLatestVersion()
 	if err != nil {
 		ui.Error("Failed to check for updates: %v", err)
 		os.Exit(1)
 	}
 
-	if !force && !checker.CompareVersions(Version, latestVersion) {
-		ui.Success("You're already on the latest version (%s)", Version)
+	if !force && !checker.CompareVersions(current, latestVersion) {
+		ui.Success("You're already on the latest version (%s)", current)
 		return
 	}
 

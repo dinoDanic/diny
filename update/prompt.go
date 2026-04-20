@@ -10,20 +10,20 @@ import (
 
 // PromptIfAvailable consumes the channel returned by CheckAsync with a short
 // timeout and, if a newer version is available, asks the user whether to
-// update. A "no" snoozes the prompt for 48h.
-func (uc *UpdateChecker) PromptIfAvailable(ch <-chan string) {
+// update. Returns true when the user was shown the update prompt.
+func (uc *UpdateChecker) PromptIfAvailable(ch <-chan string) bool {
 	var latest string
 	select {
 	case latest = <-ch:
 	case <-time.After(300 * time.Millisecond):
-		return
+		return false
 	}
 
 	if latest == "" {
-		return
+		return false
 	}
 	if !uc.compareVersions(uc.currentVersion, latest) {
-		return
+		return false
 	}
 
 	fmt.Println()
@@ -36,15 +36,15 @@ func (uc *UpdateChecker) PromptIfAvailable(ch <-chan string) {
 		Value(&confirmed).
 		Run()
 	if err != nil {
-		return
+		return true
 	}
 
 	if !confirmed {
-		_ = dismiss()
-		return
+		return true
 	}
 
 	if err := uc.PerformUpdate(); err != nil {
 		ui.Error("Update failed: %v", err)
 	}
+	return true
 }

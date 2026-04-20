@@ -9,13 +9,11 @@ import (
 
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/ui"
+	"github.com/dinoDanic/diny/version"
 	"github.com/spf13/cobra"
 )
 
 var AppConfig *config.Config
-
-// Version will be set at build time via ldflags
-var Version = "dev"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -66,7 +64,7 @@ func Execute() {
 
 func init() {
 	// Set version for the root command
-	rootCmd.Version = Version
+	rootCmd.Version = version.Get()
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,

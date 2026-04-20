@@ -7,6 +7,7 @@ import (
 	"github.com/dinoDanic/diny/config"
 	"github.com/dinoDanic/diny/git"
 	configtui "github.com/dinoDanic/diny/tui/config"
+	"github.com/dinoDanic/diny/version"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +50,7 @@ func openConfigTUI() {
 		}
 	}
 
-	configtui.Run(Version, repoName, branchName, configPath, configType, cfg)
+	configtui.Run(version.Get(), repoName, branchName, configPath, configType, cfg)
 }
 
 func init() {

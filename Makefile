@@ -2,7 +2,7 @@
 BINARY_NAME=diny
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 VERSION_CLEAN := $(shell echo $(VERSION) | sed 's/^v//')
-LDFLAGS=-ldflags "-X github.com/dinoDanic/diny/cmd.Version=$(VERSION_CLEAN)"
+LDFLAGS=-ldflags "-X github.com/dinoDanic/diny/version.Version=$(VERSION_CLEAN)"
 
 # bump tag 
 .PHONY: bump

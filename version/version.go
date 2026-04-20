@@ -1,12 +1,9 @@
 package version
 
-import (
-	"runtime/debug"
-)
+// Version is set at build time via ldflags
+// (-X github.com/dinoDanic/diny/version.Version=...).
+var Version = "dev"
 
 func Get() string {
-	if info, ok := debug.ReadBuildInfo(); ok {
-		return info.Main.Version
-	}
-	return "dev"
+	return Version
 }

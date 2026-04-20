@@ -77,23 +77,9 @@ func (uc *UpdateChecker) CheckForUpdate() {
 }
 
 // CheckAsync fires the latest-version fetch in a goroutine and returns a
-// channel that emits the latest version string (or empty on error/skip).
-// If the user has snoozed updates, no network call is made. If a recent
-// cached value exists, it is returned without a network call.
+// channel that emits the latest version string (or empty on error).
 func (uc *UpdateChecker) CheckAsync() <-chan string {
 	ch := make(chan string, 1)
-
-	if isSnoozed() {
-		ch <- ""
-		close(ch)
-		return ch
-	}
-
-	if cached, fresh := cachedVersion(); fresh {
-		ch <- cached
-		close(ch)
-		return ch
-	}
 
 	go func() {
 		defer close(ch)
@@ -102,7 +88,6 @@ func (uc *UpdateChecker) CheckAsync() <-chan string {
 			ch <- ""
 			return
 		}
-		_ = saveFetchedVersion(latest)
 		ch <- latest
 	}()
 

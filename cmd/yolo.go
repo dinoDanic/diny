@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/dinoDanic/diny/tui/yolo"
+	"github.com/dinoDanic/diny/version"
 	"github.com/spf13/cobra"
 )
 
@@ -21,5 +22,5 @@ func init() {
 }
 
 func runYolo() {
-	yolo.Run(AppConfig, Version)
+	yolo.Run(AppConfig, version.Get())
 }

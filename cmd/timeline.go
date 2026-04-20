@@ -5,6 +5,7 @@ package cmd
 
 import (
 	tuitimeline "github.com/dinoDanic/diny/tui/timeline"
+	"github.com/dinoDanic/diny/version"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +23,7 @@ You can analyze commits from:
 This will show you statistics about your commit message style,
 including conventional commit usage, average length, and common patterns.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		tuitimeline.Run(AppConfig, Version)
+		tuitimeline.Run(AppConfig, version.Get())
 	},
 }
 
