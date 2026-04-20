@@ -9,18 +9,19 @@ import (
 
 // ShowFeedback runs the feedback TUI and mutates state.
 // Returns the submitted text when the user confirmed non-empty input,
-// or "" when they dismissed/quit (still persisted as dismissed).
+// or "" when cancelled (state unchanged).
 func ShowFeedback(state *State, cfg *config.Config) string {
 	res := tuiprompts.RunFeedback(cfg)
-	now := time.Now()
+	if res.Cancelled {
+		return ""
+	}
 
+	now := time.Now()
 	if res.Submitted && res.Text != "" {
 		state.Prompts.Feedback.Status = StatusSubmitted
 		state.Prompts.Feedback.AnsweredAt = &now
 		return res.Text
 	}
 
-	state.Prompts.Feedback.Status = StatusDismissed
-	state.Prompts.Feedback.AnsweredAt = &now
 	return ""
 }
