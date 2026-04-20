@@ -25,15 +25,14 @@ type ratingModel struct {
 	cursor int
 
 	// Set on exit.
-	done  bool
-	value int // 1..3 if rated, 0 if dismissed, -1 if quit
+	cancelled bool
+	value     int // 1..3 if rated, 0 if dismissed
 }
 
 func newRatingModel(cfg *config.Config) ratingModel {
 	return ratingModel{
 		cfg:    cfg,
 		cursor: 0,
-		value:  -1,
 	}
 }
 
@@ -57,8 +56,8 @@ type starModel struct {
 	width  int
 	cursor int
 
-	done    bool
-	outcome string // "starred" | "already_given" | "dismissed" | "" if quit
+	cancelled bool
+	outcome   string // "starred" | "already_given" | "dismissed"
 }
 
 func newStarModel(cfg *config.Config) starModel {
@@ -75,7 +74,7 @@ type feedbackModel struct {
 	width    int
 	textarea textarea.Model
 
-	done      bool
+	cancelled bool
 	submitted bool
 	text      string
 }
